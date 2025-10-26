@@ -4,6 +4,8 @@ import SpotlightCarousel from '@/components/SpotlightCarousel';
 import MostRecommended from '@/components/MostRecommended';
 import Explore from '@/components/Explore';
 import About from '@/components/About';
+import Testimonials from '@/components/Testimonials';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
@@ -15,6 +17,8 @@ export default function Home() {
         <MostRecommended />
         <Explore />
         <About />
+        <Testimonials />
+        <Footer />
       </main>
     </>
   );
