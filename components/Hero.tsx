@@ -7,16 +7,20 @@ const Hero = () => {
   const isMobile = useMedia('(max-width: 768px)');
 
   return (
-    <section className="relative w-full h-[80vh] overflow-hidden">
+    <section className="relative w-full h-screen overflow-hidden">
       {/* Desktop: background image */}
       {!isMobile && (
-        <Image
-          src="/mocks/mock_hero_desktop.jpg"
-          alt="Hero background"
-          fill
-          priority
-          className="object-cover"
-        />
+        <div className="relative w-full h-full p-12">
+          <div className="relative w-full h-full overflow-hidden rounded-md">
+            <Image
+              src="/mocks/mock_hero_desktop_2.webp"
+              alt="Hero background"
+              fill
+              priority
+              className="object-cover"
+            />
+          </div>
+        </div>
       )}
 
       {/* Mobile: portrait video */}
