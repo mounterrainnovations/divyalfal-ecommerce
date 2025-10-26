@@ -6,15 +6,22 @@ import { useState, useEffect } from 'react';
  * Custom Hook to check ViewPort Width
  */
 export function useMedia(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  const [matches, setMatches] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const media = window.matchMedia(query);
+    const updateMatch = () => setMatches(media.matches);
 
-    const listener = () => setMatches(media.matches);
-    media.addEventListener('change', listener);
+    // Initial check
+    updateMatch();
 
-    return () => media.removeEventListener('change', listener);
+    // Listen for changes
+    media.addEventListener('change', updateMatch);
+
+    // Cleanup
+    return () => media.removeEventListener('change', updateMatch);
   }, [query]);
 
   return matches;
