@@ -27,7 +27,7 @@ const NavBar = () => {
   const navLinks = ['Home', 'Catalog', 'All Products', 'Contact'];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
       <div className="mx-auto px-4 sm:px-6 lg:px-34">
         <div className="flex justify-between items-center h-24">
           <div className="shrink-0 font-bold text-xl">DivyaFal</div>
