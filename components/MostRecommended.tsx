@@ -88,7 +88,8 @@ const freshArrivals: Product[] = [
 const ProductCard = ({ product }: { product: Product }) => (
   <div className="relative shrink-0 w-72 md:w-md group">
     <div
-      className={`${product.bgColor} rounded-3xl overflow-hidden h-96 md:h-146 flex items-center justify-center transition-transform duration-300 group-hover:scale-[1.02]`}
+      className={`${product.bgColor} rounded-3xl overflow-hidden h-96 md:h-146 flex items-center justify-center
+                  transition-transform duration-300 group-hover:scale-[1.02]`}
     >
       <Image
         src={product.image}
@@ -135,7 +136,7 @@ export default function MostRecommended() {
       <div className="flex flex-col md:flex-row md:px-20 relative">
         {/* Left Section */}
         <aside
-          className="w-full md:w-1/3 px-6 md:px-12 py-10 md:py-16 border-b md:border-b-0 md:border-r border-gray-200
+          className="w-full md:w-1/3 px-6 md:px-12 py-10 md:py-16 border-b md:border-b-0 border-gray-200
                           md:sticky md:top-24 md:self-start h-fit"
         >
           <h2 className="text-4xl md:text-5xl font-serif font-light mb-10 md:mb-16 text-black">
