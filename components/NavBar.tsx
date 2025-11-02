@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Menu, Search } from 'lucide-react';
+import Image from 'next/image';
 
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -27,12 +28,21 @@ const NavBar = () => {
   const navLinks = ['Home', 'Catalogue', 'All Products', 'Contact'];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
+    <nav className="fixed font-serif top-0 left-0 right-0 z-50 bg-white shadow-lg">
       <div className="mx-auto px-4 sm:px-6 lg:px-34">
         <div className="flex justify-between items-center h-24">
-          <div className="shrink-0 font-bold text-xl">DivyaFal</div>
+          <div className="shrink-0 flex items-center">
+            <Image
+              src="/DivyafalLogo.png"
+              alt="DivyaFal Logo"
+              width={140}
+              height={60}
+              className="h-12 w-auto sm:h-12 md:h-14 lg:h-16 object-contain"
+              priority
+            />
+          </div>
 
-          <div className="hidden text-lg font-semibold md:flex space-x-8">
+          <div className="hidden text-xl font-semibold md:flex space-x-8">
             {navLinks.map(link => (
               <a key={link} href="#" className="relative text-gray-900 transition group">
                 {link}
