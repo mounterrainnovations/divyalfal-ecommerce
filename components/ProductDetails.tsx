@@ -59,7 +59,7 @@ const ProductDetails = () => {
 
       {/* Size Chart */}
       <div>
-        <Link href="#" className="text-lg font-bold underline hover:no-underline">
+        <Link href="#" className="text-base font-bold underline hover:no-underline">
           Size Chart
         </Link>
       </div>

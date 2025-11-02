@@ -37,6 +37,18 @@ const products: Product[] = [
     price: 'Rs. 39,999.00',
     image: '/photo.jpg',
   },
+  {
+    id: 5,
+    name: 'Rajsi Baaraat – Heritage Doli Motif',
+    price: 'Rs. 45,999.00',
+    image: '/photo.jpg',
+  },
+  {
+    id: 6,
+    name: 'Royal Purple Hand Embroidered',
+    price: 'Rs. 52,999.00',
+    image: '/photo.jpg',
+  },
 ];
 
 const YouMayAlsoLike = () => {
@@ -84,7 +96,7 @@ const YouMayAlsoLike = () => {
             ref={scrollContainerRef}
             className="overflow-x-auto scrollbar-hide"
           >
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4">
               {products.map(product => (
                 <Link
                   key={product.id}

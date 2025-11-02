@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
@@ -25,6 +26,21 @@ const ProductHero = () => {
 
   return (
     <div className="space-y-6 font-poppins">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm">
+        <Link href="/" className="hover:underline">
+          Home
+        </Link>
+        <ChevronRight className="w-4 h-4" />
+        <Link href="/products" className="hover:underline">
+          All Product
+        </Link>
+        <ChevronRight className="w-4 h-4" />
+        <span className="text-muted-foreground">
+          Regal Purple Banarasi Silk Saree with Zardosi Work
+        </span>
+      </nav>
+
       {/* Main Image with Navigation */}
       <div className="relative rounded-lg overflow-hidden bg-gray-100">
         <div className="relative aspect-[3/4] w-full">

@@ -15,9 +15,9 @@ export default function Explore() {
 
   return (
     <section className="bg-white">
-      <div className="flex flex-col md:flex-row md:px-20 relative py-10 md:pt-16">
+      <div className="flex flex-col md:flex-row md:px-8 xl:px-20 relative py-10 md:pt-16">
         {/* Left Section (Heading) */}
-        <aside className="w-full md:w-1/3 px-6 md:px-12 mb-8 md:mb-0">
+        <aside className="w-full md:w-1/3 px-6 md:px-8 xl:px-12 mb-8 md:mb-0">
           <h2 className="text-4xl md:text-5xl font-serif font-light text-black mb-6 md:mb-12">
             Explore Our Collection
           </h2>
@@ -38,7 +38,7 @@ export default function Explore() {
         </aside>
 
         {/* Right Section */}
-        <div className="flex-1 overflow-x-hidden px-4 md:px-8 md:pr-12">
+        <div className="flex-1 overflow-x-hidden px-4 md:px-4 xl:px-8 xl:pr-12">
           <div className="flex gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto">
             {products.map(p => (
               <div
