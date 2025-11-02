@@ -24,7 +24,7 @@ const NavBar = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  const navLinks = ['Home', 'Catalog', 'All Products', 'Contact'];
+  const navLinks = ['Home', 'Catalogue', 'All Products', 'Contact'];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">

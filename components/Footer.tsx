@@ -96,7 +96,7 @@ export default function Footer() {
               <h2 className="font-semibold text-gray-900 mb-5">RESOURCES</h2>
               <ul className="space-y-2 text-sm text-gray-500">
                 <li>
-                  <Link href="#">Catalog</Link>
+                  <Link href="#">Catalogue</Link>
                 </li>
                 <li>
                   <Link href="#">About</Link>
