@@ -24,8 +24,7 @@ const values = [
   {
     icon: Award,
     title: 'Quality',
-    description:
-      'Premium materials and craftsmanship that stand the test of time and trends.',
+    description: 'Premium materials and craftsmanship that stand the test of time and trends.',
   },
   {
     icon: Palette,
@@ -36,8 +35,7 @@ const values = [
   {
     icon: TrendingUp,
     title: 'Growth',
-    description:
-      'Continuously evolving and adapting to meet the changing needs of modern fashion.',
+    description: 'Continuously evolving and adapting to meet the changing needs of modern fashion.',
   },
 ];
 

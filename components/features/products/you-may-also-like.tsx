@@ -54,7 +54,7 @@ const YouMayAlsoLike = () => {
                 href="/product"
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
               >
-                <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
+                <div className="relative aspect-3/4 overflow-hidden bg-gray-100">
                   <Image
                     src={product.image}
                     alt={product.name}
@@ -63,7 +63,7 @@ const YouMayAlsoLike = () => {
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="text-sm md:text-base font-medium mb-1 line-clamp-2 min-h-[2.5rem]">
+                  <h3 className="text-sm md:text-base font-medium mb-1 line-clamp-2 min-h-10">
                     {product.name}
                   </h3>
                   <p className="text-sm md:text-base font-semibold">From {product.price}</p>

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function Footer() {
+const Footer = () => {
   return (
     <footer className="w-full border-t border-gray-200 bg-white">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 xl:px-32">
@@ -23,7 +23,7 @@ export default function Footer() {
 
             <p className="mt-6 text-sm text-gray-500 leading-relaxed">
               Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
-              has been the industry’s standard dummy text ever since the 1500s.
+              has been the industry`&apos;`s standard dummy text ever since the 1500s.
             </p>
 
             {/* Social Links */}
@@ -141,4 +141,6 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

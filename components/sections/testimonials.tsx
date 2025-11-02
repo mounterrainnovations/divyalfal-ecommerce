@@ -15,7 +15,7 @@ const testimonials: Testimonial[] = [
     name: 'Mayank Ramani',
     role: 'CEO TPC',
     message:
-      "I've been using Divyafal’s handcrafted products for nearly two years, and the quality and detailing are just unmatched. Every piece feels personal.",
+      "I've been using Divyafal's handcrafted products for nearly two years, and the quality and detailing are just unmatched. Every piece feels personal.",
     image: '/mocks/mock_mayank.webp',
     rating: 5,
   },
@@ -37,7 +37,7 @@ const testimonials: Testimonial[] = [
   },
 ];
 
-export default function Testimonials() {
+const Testimonials = () => {
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
@@ -97,4 +97,6 @@ export default function Testimonials() {
       </div>
     </section>
   );
-}
+};
+
+export default Testimonials;

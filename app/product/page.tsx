@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import ProductHero from '@/components/ProductHero';
-import ProductDetails from '@/components/ProductDetails';
-import YouMayAlsoLike from '@/components/YouMayAlsoLike';
-import Footer from '@/components/Footer';
+import ProductHero from '@/components/features/products/product-hero';
+import ProductDetails from '@/components/features/products/product-details';
+import YouMayAlsoLike from '@/components/features/products/you-may-also-like';
+import Footer from '@/components/layout/footer';
 
 export default function ProductPage() {
   return (

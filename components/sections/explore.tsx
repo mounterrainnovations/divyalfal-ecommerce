@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
-export default function Explore() {
+const Explore = () => {
   const products = [
     { id: 1, name: 'Ivory Saree Set', price: '₹30,999' },
     { id: 2, name: 'Blue Indo-Western', price: '₹21,999' },
@@ -64,4 +64,6 @@ export default function Explore() {
       </div>
     </section>
   );
-}
+};
+
+export default Explore;

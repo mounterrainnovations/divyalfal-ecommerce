@@ -54,7 +54,9 @@ const ContactForm = () => {
 
               <div className="space-y-2">
                 <p className="text-lg md:text-xl font-semibold">Phone: 9977057045</p>
-                <p className="text-lg md:text-xl font-semibold">Gmail: divyafalthecreations@gmail.com</p>
+                <p className="text-lg md:text-xl font-semibold">
+                  Gmail: divyafalthecreations@gmail.com
+                </p>
               </div>
             </div>
           </div>

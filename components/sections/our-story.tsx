@@ -20,9 +20,7 @@ const OurStory = () => {
 
           {/* Right: Content */}
           <div className="space-y-6">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif mb-8">
-              Our Story
-            </h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif mb-8">Our Story</h2>
             <div className="space-y-4 text-base md:text-lg leading-relaxed text-muted-foreground">
               <p>
                 In 2010, our founder embarked on an extraordinary journey with nothing but a dream
@@ -35,7 +33,7 @@ const OurStory = () => {
                 years of artistic exploration and the celebration of individual style.
               </p>
               <p>
-                This year's showcase promises to be our most spectacular yet, featuring
+                This year`&apos;`s showcase promises to be our most spectacular yet, featuring
                 cutting-edge designs, world-class models, and an unforgettable experience that
                 defines luxury fashion.
               </p>

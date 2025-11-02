@@ -1,11 +1,11 @@
-import Hero from '@/components/Hero';
-import Categories from '@/components/Categories';
-import SpotlightCarousel from '@/components/SpotlightCarousel';
-import MostRecommended from '@/components/MostRecommended';
-import Explore from '@/components/Explore';
-import About from '@/components/About';
-import Testimonials from '@/components/Testimonials';
-import Footer from '@/components/Footer';
+import Hero from '@/components/layout/hero';
+import Categories from '@/components/sections/categories';
+import SpotlightCarousel from '@/components/features/carousel/spotlight-carousel';
+import MostRecommended from '@/components/sections/most-recommended';
+import Explore from '@/components/sections/explore';
+import About from '@/components/sections/about';
+import Testimonials from '@/components/sections/testimonials';
+import Footer from '@/components/layout/footer';
 
 export default function Home() {
   return (

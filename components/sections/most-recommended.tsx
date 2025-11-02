@@ -4,8 +4,7 @@ import { ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
 
-// Type for product
-interface Product {
+interface MostRecommendedProduct {
   id: number;
   name: string;
   price: string;
@@ -15,7 +14,7 @@ interface Product {
 }
 
 // Product Data
-const bestSellers: Product[] = [
+const bestSellers: MostRecommendedProduct[] = [
   {
     id: 1,
     name: 'Ivory Draped Saree Set with...',
@@ -50,7 +49,7 @@ const bestSellers: Product[] = [
   },
 ];
 
-const freshArrivals: Product[] = [
+const freshArrivals: MostRecommendedProduct[] = [
   {
     id: 5,
     name: 'Emerald Green Silk Saree...',
@@ -85,7 +84,7 @@ const freshArrivals: Product[] = [
   },
 ];
 
-const ProductCard = ({ product }: { product: Product }) => (
+const ProductCard = ({ product }: { product: MostRecommendedProduct }) => (
   <div className="relative shrink-0 w-72 xl:w-md group">
     <div
       className={`${product.bgColor} rounded-3xl overflow-hidden h-96 xl:h-146 flex items-center justify-center

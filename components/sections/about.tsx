@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 
-export default function About() {
+const About = () => {
   return (
     <section className="bg-white">
       <div className="flex flex-col md:flex-row md:px-8 xl:px-20 relative py-10">
@@ -66,4 +66,6 @@ export default function About() {
       </div>
     </section>
   );
-}
+};
+
+export default About;

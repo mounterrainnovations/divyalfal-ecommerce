@@ -17,9 +17,7 @@ const ContactUsHero = () => {
         </nav>
 
         {/* Hero Heading */}
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-center">
-          Contact Us
-        </h1>
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-center">Contact Us</h1>
       </div>
     </section>
   );

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono, EB_Garamond, Poppins } from 'next/font/google';
 import './globals.css';
 
-import NavBar from '@/components/NavBar';
+import NavBar from '@/components/layout/navbar';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -38,7 +38,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} ${poppins.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} ${poppins.variable} antialiased`}
+      >
         <NavBar />
         <main className="pt-24">{children}</main>
       </body>

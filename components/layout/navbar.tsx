@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Menu, Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { NavLink } from '@/types';
 
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,7 +27,7 @@ const NavBar = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { name: 'Home', href: '/' },
     { name: 'All Products', href: '/products' },
     { name: 'Contact', href: '/contact-us' },

@@ -2,14 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-}
+import type { Product } from '@/types';
 
 interface ProductCardProps {
   product: Product;

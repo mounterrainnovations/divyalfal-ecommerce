@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
-import ProductCard from '@/components/ProductCard';
+import ProductCard from '@/components/features/products/product-card';
 import { SortDropdown } from '@/components/ui/sort-dropdown';
-import { mockProducts, categories, priceRanges, sortOptions } from '@/lib/data/mockProducts';
+import { mockProducts, categories, priceRanges, sortOptions } from '@/lib/data/mock-products';
 
 interface FilterState {
   search: string;

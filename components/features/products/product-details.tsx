@@ -128,8 +128,7 @@ const ProductDetails = () => {
           Kadwa Zari Weaving: Intricately handwoven motifs in rich gold tone
         </p>
         <p className="text-base font-poppins">
-          Zardosi Embroidery: Handcrafted embellishments on the border and blouse for regal
-          detail
+          Zardosi Embroidery: Handcrafted embellishments on the border and blouse for regal detail
         </p>
         <p className="text-base font-poppins">
           <span className="font-semibold">Color:</span> Deep Purple with Antique Gold accents
@@ -165,7 +164,7 @@ const ProductDetails = () => {
         </CollapsibleSection>
 
         <CollapsibleSection title="Care Instruction">
-          <p>Dry clean only to maintain the fabric's quality and embellishments.</p>
+          <p>Dry clean only to maintain the fabric`&apos;`s quality and embellishments.</p>
           <p>Store in a cool, dry place away from direct sunlight.</p>
           <p>Avoid contact with perfumes, deodorants, and other chemicals.</p>
           <p>
@@ -185,7 +184,7 @@ const ProductDetails = () => {
           </p>
           <p>Custom orders and Made-to-Order pieces are non-returnable and non-exchangeable.</p>
           <p>
-            Please check the size chart carefully before placing your order. Alterations may be
+            Please check the size chart carefully before placing an order. Alterations may be
             charged separately.
           </p>
           <p>We do not accept returns on sale items or final sale merchandise.</p>

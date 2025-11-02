@@ -21,7 +21,7 @@ const ProductHero = () => {
     <div className="space-y-6 font-poppins">
       {/* Main Image with Navigation */}
       <div className="relative rounded-lg overflow-hidden bg-gray-100">
-        <div className="relative aspect-[3/4] w-full">
+        <div className="relative aspect-3/4 w-full">
           <Image src={images[selectedImage]} alt="Product" fill className="object-cover" priority />
         </div>
 
@@ -48,7 +48,7 @@ const ProductHero = () => {
           <button
             key={index}
             onClick={() => setSelectedImage(index)}
-            className={`relative flex-shrink-0 w-20 h-24 rounded-md overflow-hidden border-2 transition ${
+            className={`relative shrink-0 w-20 h-24 rounded-md overflow-hidden border-2 transition ${
               selectedImage === index ? 'border-black' : 'border-transparent'
             }`}
           >
