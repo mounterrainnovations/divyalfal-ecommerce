@@ -21,14 +21,14 @@ const SpotlightCarousel = () => {
 
   return (
     <section className="py-6 bg-white">
-      <div className="md:max-w-4/5 mx-auto px-4">
+      <div className="px-4 md:px-8 xl:px-20">
         <h2 className="text-2xl font-semibold mb-6 text-center">Our Spotlight</h2>
 
         <div
           ref={scrollRef}
           className="
             flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory scroll-smooth
-            pb-4
+            pb-4 xl:max-w-[95%] xl:mx-auto
           "
         >
           {spotlightItems.map(item => (
@@ -36,7 +36,7 @@ const SpotlightCarousel = () => {
               key={item.id}
               className="
                 shrink-0 snap-center
-                w-[48%] md:w-[23.5%]
+                w-[48%] md:w-[calc((100%-1.5rem*3)/4)]
                 rounded-xl overflow-hidden shadow-md
               "
             >

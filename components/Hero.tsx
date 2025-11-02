@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useMedia } from '@/lib/hooks/useMedia';
 
 const Hero = () => {
-  const isMobile = useMedia('(max-width: 768px)');
+  const isMobile = useMedia('(max-width: 1024px)');
 
   return (
     <section className="relative w-full h-screen overflow-hidden">

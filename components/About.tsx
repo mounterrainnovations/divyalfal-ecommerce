@@ -5,7 +5,7 @@ import Image from 'next/image';
 export default function About() {
   return (
     <section className="bg-white">
-      <div className="flex flex-col md:flex-row md:px-20 relative py-10">
+      <div className="flex flex-col md:flex-row md:px-8 xl:px-20 relative py-10">
         {/* Left Section: Image with floating card */}
         <div className="w-full md:w-1/2 relative px-6 md:px-0 mb-12 md:mb-0">
           <div className="rounded-3xl overflow-hidden shadow-sm transform md:scale-95 origin-center">
@@ -40,7 +40,7 @@ export default function About() {
         </div>
 
         {/* Right Section: Text and Stats */}
-        <div className="flex-1 px-6 md:px-12 flex flex-col justify-center">
+        <div className="flex-1 px-6 md:px-8 xl:px-12 flex flex-col justify-center">
           <h2 className="text-4xl md:text-5xl font-serif font-light text-gray-900 mb-8">
             About Divyafal
           </h2>
