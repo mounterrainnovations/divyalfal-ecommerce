@@ -34,7 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} antialiased`}>
         <NavBar />
-        <main>{children}</main>
+        <main className="pt-24">{children}</main>
       </body>
     </html>
   );

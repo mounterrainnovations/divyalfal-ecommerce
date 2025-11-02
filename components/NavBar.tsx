@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Menu, Search } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,7 +26,12 @@ const NavBar = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  const navLinks = ['Home', 'Catalogue', 'All Products', 'Contact'];
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'Catalogue', href: '/catalogue' },
+    { name: 'All Products', href: '/products' },
+    { name: 'Contact', href: '/contact-us' },
+  ];
 
   return (
     <nav className="fixed font-serif top-0 left-0 right-0 z-50 bg-white shadow-lg">
@@ -44,14 +50,14 @@ const NavBar = () => {
 
           <div className="hidden text-xl font-semibold md:flex space-x-8">
             {navLinks.map(link => (
-              <a key={link} href="#" className="relative text-gray-900 transition group">
-                {link}
+              <Link key={link.name} href={link.href} className="relative text-gray-900 transition group">
+                {link.name}
                 <span
                   className="absolute left-0 bottom-0 h-px w-full bg-gray-900
                     transform scale-x-0 transition-transform duration-300
                     origin-right group-hover:scale-x-100 group-hover:origin-left"
                 ></span>
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -103,14 +109,14 @@ const NavBar = () => {
 
           <div className="flex flex-col space-y-4 px-10">
             {navLinks.map(link => (
-              <a
-                key={link}
-                href="#"
+              <Link
+                key={link.name}
+                href={link.href}
                 className="text-gray-700 hover:text-gray-900 transition text-xl"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {link}
-              </a>
+                {link.name}
+              </Link>
             ))}
           </div>
         </div>
