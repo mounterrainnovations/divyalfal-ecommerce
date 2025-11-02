@@ -28,7 +28,6 @@ const NavBar = () => {
 
   const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'Catalogue', href: '/catalogue' },
     { name: 'All Products', href: '/products' },
     { name: 'Contact', href: '/contact-us' },
   ];
@@ -38,19 +37,25 @@ const NavBar = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-34">
         <div className="flex justify-between items-center h-24">
           <div className="shrink-0 flex items-center">
-            <Image
-              src="/DivyafalLogo.png"
-              alt="DivyaFal Logo"
-              width={140}
-              height={60}
-              className="h-12 w-auto sm:h-12 md:h-14 lg:h-16 object-contain"
-              priority
-            />
+            <Link key="Home" href="/">
+              <Image
+                src="/DivyafalLogo.png"
+                alt="DivyaFal Logo"
+                width={140}
+                height={60}
+                className="h-12 w-auto sm:h-12 md:h-14 lg:h-16 object-contain"
+                priority
+              />
+            </Link>
           </div>
 
           <div className="hidden text-xl font-semibold md:flex space-x-8">
             {navLinks.map(link => (
-              <Link key={link.name} href={link.href} className="relative text-gray-900 transition group">
+              <Link
+                key={link.name}
+                href={link.href}
+                className="relative text-gray-900 transition group"
+              >
                 {link.name}
                 <span
                   className="absolute left-0 bottom-0 h-px w-full bg-gray-900
