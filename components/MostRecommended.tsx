@@ -86,9 +86,9 @@ const freshArrivals: Product[] = [
 ];
 
 const ProductCard = ({ product }: { product: Product }) => (
-  <div className="relative shrink-0 w-72 md:w-md group">
+  <div className="relative shrink-0 w-72 xl:w-md group">
     <div
-      className={`${product.bgColor} rounded-3xl overflow-hidden h-96 md:h-146 flex items-center justify-center
+      className={`${product.bgColor} rounded-3xl overflow-hidden h-96 xl:h-146 flex items-center justify-center
                   transition-transform duration-300 group-hover:scale-[1.02]`}
     >
       <Image
@@ -133,19 +133,19 @@ export default function MostRecommended() {
   // Main Layout
   return (
     <section className="bg-white">
-      <div className="flex flex-col md:flex-row md:px-20 relative">
+      <div className="flex flex-col xl:flex-row xl:px-20 relative">
         {/* Left Section */}
         <aside
-          className="w-full md:w-1/3 px-6 md:px-12 py-10 md:py-16 border-b md:border-b-0 border-gray-200
-                          md:sticky md:top-24 md:self-start h-fit"
+          className="w-full xl:w-1/3 px-6 xl:px-12 py-10 xl:py-16 border-b xl:border-b-0 border-gray-200
+                          xl:sticky xl:top-24 xl:self-start h-fit"
         >
-          <h2 className="text-4xl md:text-5xl font-serif font-light mb-10 md:mb-16 text-black">
+          <h2 className="text-4xl xl:text-5xl font-serif font-light mb-10 xl:mb-16 text-black">
             Most Recommended
           </h2>
 
-          <div className="flex md:gap-4 gap-0">
+          <div className="flex xl:gap-4 gap-0">
             {/* Vertical bar (desktop only) */}
-            <div className="hidden md:block relative w-1 h-56">
+            <div className="hidden xl:block relative w-1 h-56">
               <div className="absolute inset-0 bg-gray-300" />
               <div
                 className={`absolute left-0 w-1 bg-black transition-all duration-300 ${
@@ -155,17 +155,17 @@ export default function MostRecommended() {
             </div>
 
             {/* Section buttons */}
-            <div className="flex-1 flex md:flex-col gap-8 md:gap-0">
+            <div className="flex-1 flex xl:flex-col gap-8 xl:gap-0">
               <button
                 onClick={() => setActiveSection('bestSellers')}
-                className={`text-left pb-4 border-b-2 md:border-b-0 transition-colors ${
+                className={`text-left pb-4 border-b-2 xl:border-b-0 transition-colors ${
                   activeSection === 'bestSellers' ? 'border-black' : 'border-gray-200'
                 }`}
               >
-                <h3 className="text-lg md:text-2xl font-serif font-light text-black">
+                <h3 className="text-lg xl:text-2xl font-serif font-light text-black">
                   Best Sellers
                 </h3>
-                <p className="text-xs md:text-sm text-gray-700 mt-2 md:mt-4">
+                <p className="text-xs xl:text-sm text-gray-700 mt-2 xl:mt-4">
                   Discover our top-selling styles, loved by customers for their elegance and
                   quality. Shop from our most popular collections.
                 </p>
@@ -173,15 +173,15 @@ export default function MostRecommended() {
 
               <button
                 onClick={() => setActiveSection('freshArrivals')}
-                className={`text-left pb-4 md:pb-0 border-b-2 md:border-b-0 transition-colors ${
+                className={`text-left pb-4 xl:pb-0 border-b-2 xl:border-b-0 transition-colors ${
                   activeSection === 'freshArrivals' ? 'border-black' : 'border-gray-200'
                 }`}
               >
-                <h3 className="text-lg md:text-2xl font-serif font-light text-black">
+                <h3 className="text-lg xl:text-2xl font-serif font-light text-black">
                   Fresh Arrivals
                 </h3>
 
-                <p className="text-xs md:text-sm text-gray-700 mt-2 md:mt-4">
+                <p className="text-xs xl:text-sm text-gray-700 mt-2 xl:mt-4">
                   Explore our latest collection of stunning pieces just added to our store —
                   featuring the newest designs and trends.
                 </p>
@@ -191,9 +191,9 @@ export default function MostRecommended() {
         </aside>
 
         {/* Right Section */}
-        <div className="flex-1 px-4 md:px-8 py-8 md:py-16 overflow-x-auto md:overflow-x-visible">
+        <div className="flex-1 px-4 xl:px-8 py-8 xl:py-16 overflow-x-auto xl:overflow-x-visible">
           {/* Mobile - Horizontal */}
-          <div className="flex md:hidden gap-6 pb-4 overflow-x-auto snap-x snap-mandatory">
+          <div className="flex xl:hidden gap-6 pb-4 overflow-x-auto snap-x snap-mandatory">
             {products.map(p => (
               <div key={p.id} className="snap-center">
                 <ProductCard product={p} />
@@ -202,7 +202,7 @@ export default function MostRecommended() {
           </div>
 
           {/* Desktop - Masonry Grid */}
-          <div className="hidden md:grid grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="hidden xl:grid grid-cols-2 gap-8 max-w-5xl mx-auto">
             <div className="flex flex-col gap-8">
               <ProductCard product={products[0]} />
               <ProductCard product={products[2]} />
