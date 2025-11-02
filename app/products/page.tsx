@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
+import { SortDropdown } from '@/components/ui/sort-dropdown';
 import { mockProducts, categories, priceRanges, sortOptions } from '@/lib/data/mockProducts';
 
 interface FilterState {
@@ -21,6 +24,24 @@ const ProductsPage = () => {
   });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [isMobileFiltersAnimating, setIsMobileFiltersAnimating] = useState(false);
+
+  // Control Animation - Similar to navbar
+  const closeMobileFilters = () => {
+    setIsMobileFiltersAnimating(true);
+    setTimeout(() => {
+      setShowMobileFilters(false);
+      setIsMobileFiltersAnimating(false);
+    }, 600);
+  };
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMobileFilters();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
@@ -54,11 +75,8 @@ const ProductsPage = () => {
       case 'price-high':
         result.sort((a, b) => b.price - a.price);
         break;
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
-        break;
       case 'newest':
-        result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+        result.sort((a, b) => b.id - a.id); // Assuming higher ID = newer
         break;
       default:
         // Default order
@@ -103,20 +121,27 @@ const ProductsPage = () => {
     (filters.search ? 1 : 0) + filters.categories.length + (filters.priceRange ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 mb-4">
-            All Products
-          </h1>
-          <p className="text-gray-600">
-            Discover our complete collection of traditional and contemporary fashion
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section - Similar to Contact Us */}
+      <section className="relative w-full py-20 md:py-32 border-b">
+        <div className="container mx-auto px-4 lg:px-12 xl:px-16">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center justify-center gap-2 mb-8 text-sm md:text-base">
+            <Link href="/" className="hover:underline transition-all">
+              Home
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-muted-foreground">All Products</span>
+          </nav>
 
+          {/* Hero Heading */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-center">All Products</h1>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 lg:px-12 xl:px-16 py-8">
         {/* Search and Mobile Filter Button */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="mb-8 flex flex-col sm:flex-row gap-4">
           {/* Search Bar */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -131,7 +156,7 @@ const ProductsPage = () => {
 
           {/* Mobile Filter Button */}
           <button
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            onClick={() => setShowMobileFilters(true)}
             className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors lg:hidden"
           >
             <SlidersHorizontal className="w-5 h-5" />
@@ -144,76 +169,79 @@ const ProductsPage = () => {
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-12">
           {/* Desktop Sidebar Filters */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
+          <div className="hidden lg:block w-80 shrink-0">
             <ProductFilters
               filters={filters}
               onCategoryToggle={handleCategoryToggle}
               onPriceRangeChange={handlePriceRangeChange}
-              onSortChange={handleSortChange}
               onClearFilters={clearAllFilters}
               activeFiltersCount={activeFiltersCount}
             />
           </div>
 
-          {/* Mobile Filters Overlay */}
-          {showMobileFilters && (
-            <div className="fixed inset-0 z-50 lg:hidden">
-              <div
-                className="fixed inset-0 bg-black bg-opacity-50"
-                onClick={() => setShowMobileFilters(false)}
-              />
-              <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-poppins font-bold">Filters</h2>
-                    <button
-                      onClick={() => setShowMobileFilters(false)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <ProductFilters
-                    filters={filters}
-                    onCategoryToggle={handleCategoryToggle}
-                    onPriceRangeChange={handlePriceRangeChange}
-                    onSortChange={handleSortChange}
-                    onClearFilters={clearAllFilters}
-                    activeFiltersCount={activeFiltersCount}
-                    isMobile={true}
-                    onClose={() => setShowMobileFilters(false)}
-                  />
-                </div>
+          {/* Mobile slide-in filters (always rendered) - Similar to navbar */}
+          <div
+            className={`fixed inset-0 z-50 flex transition-opacity duration-300 lg:hidden ${
+              showMobileFilters ? 'opacity-100 visible' : 'opacity-0 invisible'
+            }`}
+          >
+            {/* Panel */}
+            <div
+              className={`bg-white w-full h-full shadow-lg transform transition-transform duration-600 ease-in-out
+                ${
+                  isMobileFiltersAnimating
+                    ? 'translate-x-full'
+                    : showMobileFilters
+                      ? 'translate-x-0'
+                      : 'translate-x-full'
+                }`}
+            >
+              {/* Header */}
+              <div className="flex justify-end px-6 h-24 border-b">
+                <button
+                  aria-label="Close filters"
+                  onClick={closeMobileFilters}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X size={28} />
+                </button>
+              </div>
+
+              {/* Filters Content */}
+              <div className="p-6 overflow-y-auto h-[calc(100vh-6rem)]">
+                <ProductFilters
+                  filters={filters}
+                  onCategoryToggle={handleCategoryToggle}
+                  onPriceRangeChange={handlePriceRangeChange}
+                  onClearFilters={clearAllFilters}
+                  activeFiltersCount={activeFiltersCount}
+                  isMobile={true}
+                  onClose={closeMobileFilters}
+                />
               </div>
             </div>
-          )}
+          </div>
 
           {/* Products Grid */}
           <div className="flex-1">
             {/* Sort and Results Count */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-8">
               <p className="text-gray-600">
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}{' '}
                 found
               </p>
-              <select
+              <SortDropdown
+                options={sortOptions}
                 value={filters.sortBy}
-                onChange={e => handleSortChange(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              >
-                {sortOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onValueChange={handleSortChange}
+              />
             </div>
 
             {/* Active Filters */}
             {activeFiltersCount > 0 && (
-              <div className="mb-6 p-4 bg-white rounded-lg border">
+              <div className="mb-8 p-4 bg-white rounded-lg border">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-medium">Active Filters</h3>
                   <button
@@ -256,9 +284,9 @@ const ProductsPage = () => {
               </div>
             )}
 
-            {/* Products Grid */}
+            {/* Products Grid - Larger cards, increased spacing */}
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {filteredProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -292,7 +320,6 @@ interface ProductFiltersProps {
   filters: FilterState;
   onCategoryToggle: (category: string) => void;
   onPriceRangeChange: (priceRange: { min: number; max: number } | null) => void;
-  onSortChange: (sortBy: string) => void;
   onClearFilters: () => void;
   activeFiltersCount: number;
   isMobile?: boolean;
@@ -303,7 +330,6 @@ const ProductFilters = ({
   filters,
   onCategoryToggle,
   onPriceRangeChange,
-  onSortChange,
   onClearFilters,
   activeFiltersCount,
   isMobile = false,
@@ -332,63 +358,88 @@ const ProductFilters = ({
       {/* Price Range Filter */}
       <div className="bg-white p-6 rounded-lg border">
         <h3 className="font-poppins font-semibold mb-4">Price Range</h3>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {priceRanges.map(range => (
-            <label key={range.label} className="flex items-center space-x-3 cursor-pointer">
+            <label key={range.label} className="flex items-center space-x-3 cursor-pointer group">
+              <div className="relative">
+                <input
+                  type="radio"
+                  name="priceRange"
+                  checked={
+                    filters.priceRange?.min === range.min && filters.priceRange?.max === range.max
+                  }
+                  onChange={() => onPriceRangeChange({ min: range.min, max: range.max })}
+                  className="sr-only"
+                />
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                    filters.priceRange?.min === range.min && filters.priceRange?.max === range.max
+                      ? 'border-blue-600 bg-blue-600'
+                      : 'border-gray-300 group-hover:border-blue-400'
+                  }`}
+                >
+                  {filters.priceRange?.min === range.min &&
+                    filters.priceRange?.max === range.max && (
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    )}
+                </div>
+              </div>
+              <span
+                className={`text-sm transition-colors duration-200 ${
+                  filters.priceRange?.min === range.min && filters.priceRange?.max === range.max
+                    ? 'text-blue-600 font-medium'
+                    : 'text-gray-700 group-hover:text-blue-600'
+                }`}
+              >
+                {range.label}
+              </span>
+            </label>
+          ))}
+          <label className="flex items-center space-x-3 cursor-pointer group">
+            <div className="relative">
               <input
                 type="radio"
                 name="priceRange"
-                checked={
-                  filters.priceRange?.min === range.min && filters.priceRange?.max === range.max
-                }
-                onChange={() => onPriceRangeChange({ min: range.min, max: range.max })}
-                className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900"
+                checked={filters.priceRange === null}
+                onChange={() => onPriceRangeChange(null)}
+                className="sr-only"
               />
-              <span className="text-gray-700">{range.label}</span>
-            </label>
-          ))}
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input
-              type="radio"
-              name="priceRange"
-              checked={filters.priceRange === null}
-              onChange={() => onPriceRangeChange(null)}
-              className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900"
-            />
-            <span className="text-gray-700">All Prices</span>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                  filters.priceRange === null
+                    ? 'border-blue-600 bg-blue-600'
+                    : 'border-gray-300 group-hover:border-blue-400'
+                }`}
+              >
+                {filters.priceRange === null && (
+                  <div className="w-2 h-2 rounded-full bg-white"></div>
+                )}
+              </div>
+            </div>
+            <span
+              className={`text-sm transition-colors duration-200 ${
+                filters.priceRange === null
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-700 group-hover:text-blue-600'
+              }`}
+            >
+              All Prices
+            </span>
           </label>
         </div>
       </div>
 
-      {/* Custom Price Range Input */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="font-poppins font-semibold mb-4">Custom Price Range</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Min Price</label>
-            <input
-              type="number"
-              placeholder="0"
-              min="0"
-              max="100000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Max Price</label>
-            <input
-              type="number"
-              placeholder="100000"
-              min="0"
-              max="100000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-          <button className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
-            Apply Range
+      {/* Clear Filters */}
+      {activeFiltersCount > 0 && (
+        <div className="bg-white p-6 rounded-lg border">
+          <button
+            onClick={onClearFilters}
+            className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Clear all filters ({activeFiltersCount})
           </button>
         </div>
-      </div>
+      )}
 
       {isMobile && (
         <div className="bg-white p-6 rounded-lg border">

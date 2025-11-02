@@ -5,13 +5,7 @@ import { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 const ProductHero = () => {
-  const images = [
-    '/photo.jpg',
-    '/photo.jpg',
-    '/photo.jpg',
-    '/photo.jpg',
-    '/photo.jpg',
-  ];
+  const images = ['/photo.jpg', '/photo.jpg', '/photo.jpg', '/photo.jpg', '/photo.jpg'];
 
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -28,13 +22,7 @@ const ProductHero = () => {
       {/* Main Image with Navigation */}
       <div className="relative rounded-lg overflow-hidden bg-gray-100">
         <div className="relative aspect-[3/4] w-full">
-          <Image
-            src={images[selectedImage]}
-            alt="Product"
-            fill
-            className="object-cover"
-            priority
-          />
+          <Image src={images[selectedImage]} alt="Product" fill className="object-cover" priority />
         </div>
 
         {/* Navigation Arrows */}
