@@ -34,7 +34,7 @@ const NavBar = () => {
   ];
 
   return (
-    <nav className="fixed font-serif top-0 left-0 right-0 z-50 bg-white shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg font-poppins">
       <div className="mx-auto px-4 sm:px-6 lg:px-34">
         <div className="flex justify-between items-center h-24">
           <div className="shrink-0 flex items-center">

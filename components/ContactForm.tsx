@@ -43,19 +43,18 @@ const ContactForm = () => {
 
               <div className="space-y-4 mb-6">
                 <p className="text-base md:text-lg leading-relaxed">
-                  47/35, Rohtak Rd, opposite Metro Pillar Number 147, West Punjabi Bagh, Punjabi
-                  Bagh, Delhi, 110026
+                  A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039
                 </p>
                 <p className="text-base md:text-lg">
-                  Mon - Sat, 11:00am - 7:00pm,
+                  Mon - Sat, 11:00am - 8:00pm,
                   <br />
                   Sunday- Closed
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-lg md:text-xl font-semibold">Phone: 9873473448/ 9810681504</p>
-                <p className="text-lg md:text-xl font-semibold">Gmail: urvashisaree@gmail.com</p>
+                <p className="text-lg md:text-xl font-semibold">Phone: 9977057045</p>
+                <p className="text-lg md:text-xl font-semibold">Gmail: divyafalthecreations@gmail.com</p>
               </div>
             </div>
           </div>
