@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus } from 'lucide-react';
+import type { Product } from '@/types';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -35,7 +36,11 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }: Collapsibl
   );
 };
 
-const ProductDetails = () => {
+interface ProductDetailsProps {
+  product: Product;
+}
+
+const ProductDetails = ({ product }: ProductDetailsProps) => {
   const sizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
   const [selectedSize, setSelectedSize] = useState('XS');
   const [quantity, setQuantity] = useState(1);
@@ -43,18 +48,20 @@ const ProductDetails = () => {
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
+  const formatPrice = (price: number) => {
+    return `₹${price.toLocaleString('en-IN')}`;
+  };
+
   return (
     <div className="space-y-6 lg:pt-0 font-poppins">
       {/* Product Title */}
       <div>
-        <h1 className="text-4xl md:text-5xl font-serif mb-2">
-          Regal Purple Banarasi Silk Saree with Zardosi Work
-        </h1>
+        <h1 className="text-4xl md:text-5xl font-serif mb-2">{product.name}</h1>
       </div>
 
       {/* Price */}
       <div>
-        <p className="text-xl md:text-2xl font-bold">Rs. 60,000.00</p>
+        <p className="text-xl md:text-2xl font-bold">{formatPrice(product.price)}</p>
       </div>
 
       {/* Size Chart */}
@@ -119,34 +126,23 @@ const ProductDetails = () => {
       </div>
 
       {/* Product Description */}
-      <div className="space-y-4 pt-4 border-t">
-        <p className="text-base font-poppins">Regal Purple Banarasi Silk Saree with Zardosi Work</p>
-        <p className="text-base font-poppins">No. of Pieces: 2 (Saree + Blouse)</p>
-        <p className="text-base font-poppins">Fabric Composition: Pure Banarasi Silk</p>
-        <p className="text-base font-poppins font-semibold">Weave & Work:</p>
-        <p className="text-base font-poppins">
-          Kadwa Zari Weaving: Intricately handwoven motifs in rich gold tone
-        </p>
-        <p className="text-base font-poppins">
-          Zardosi Embroidery: Handcrafted embellishments on the border and blouse for regal detail
-        </p>
-        <p className="text-base font-poppins">
-          <span className="font-semibold">Color:</span> Deep Purple with Antique Gold accents
-        </p>
-      </div>
+      {product.specifications && (
+        <div className="space-y-4 pt-4 border-t">
+          <div className="text-base font-poppins whitespace-pre-line">
+            {product.specifications}
+          </div>
+        </div>
+      )}
 
       {/* Description Section - Non-collapsible */}
-      <div className="pt-4 border-t">
-        <h2 className="text-xl font-serif mb-4">Description</h2>
-        <div className="space-y-2 text-base text-gray-700">
-          <p>Broad zari border with delicate lace edging</p>
-          <p>Coordinated blouse with matching embroidery for a complete festive look</p>
-          <p>
-            Style Tip: Elevate with heritage jewellery and a sleek bun to complete this timeless
-            ensemble
-          </p>
+      {product.specifications && (
+        <div className="pt-4 border-t">
+          <h2 className="text-xl font-serif mb-4">Description</h2>
+          <div className="space-y-2 text-base text-gray-700">
+            <p>{product.specifications}</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Collapsible Sections */}
       <div className="pt-4">

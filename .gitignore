@@ -42,3 +42,5 @@ next-env.d.ts
 .md
 .claude
 CLAUDE.md
+
+/lib/generated/prisma

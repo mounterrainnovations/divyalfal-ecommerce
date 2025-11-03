@@ -4,8 +4,14 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
-const ProductHero = () => {
-  const images = ['/photo.jpg', '/photo.jpg', '/photo.jpg', '/photo.jpg', '/photo.jpg'];
+interface ProductHeroProps {
+  photos: string[];
+  productName: string;
+}
+
+const ProductHero = ({ photos, productName }: ProductHeroProps) => {
+  const images =
+    photos.length > 0 ? photos : ['/mocks/mock_mostRecommended_common.jpg'];
 
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -22,7 +28,14 @@ const ProductHero = () => {
       {/* Main Image with Navigation */}
       <div className="relative rounded-lg overflow-hidden bg-gray-100">
         <div className="relative aspect-3/4 w-full">
-          <Image src={images[selectedImage]} alt="Product" fill className="object-cover" priority />
+          <Image
+            src={images[selectedImage]}
+            alt={productName}
+            fill
+            className="object-cover"
+            priority
+            unoptimized={images[selectedImage].startsWith('http')}
+          />
         </div>
 
         {/* Navigation Arrows */}
@@ -52,7 +65,13 @@ const ProductHero = () => {
               selectedImage === index ? 'border-black' : 'border-transparent'
             }`}
           >
-            <Image src={img} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
+            <Image
+              src={img}
+              alt={`${productName} thumbnail ${index + 1}`}
+              fill
+              className="object-cover"
+              unoptimized={img.startsWith('http')}
+            />
           </button>
         ))}
       </div>

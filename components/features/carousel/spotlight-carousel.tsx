@@ -12,8 +12,8 @@ const spotlightItems: SpotlightItem[] = [
   { id: 2, video: '/mocks/mock_hero_mobile.mp4' },
   { id: 3, video: '/mocks/mock_hero_mobile.mp4' },
   { id: 4, video: '/mocks/mock_hero_mobile.mp4' },
-  { id: 5, video: '/mocks/mock_hero_mobile.mp4' },
-  { id: 6, video: '/mocks/mock_hero_mobile.mp4' },
+  // { id: 5, video: '/mocks/mock_hero_mobile.mp4' },
+  // { id: 6, video: '/mocks/mock_hero_mobile.mp4' },
 ];
 
 const SpotlightCarousel = () => {

@@ -6,13 +6,22 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '@/components/features/products/product-card';
 import { SortDropdown } from '@/components/ui/sort-dropdown';
-import { mockProducts, categories, priceRanges, sortOptions } from '@/lib/data/mock-products';
+import { categories, priceRanges, sortOptions } from '@/lib/data/mock-products';
+import type { Product } from '@/types';
 
 interface FilterState {
   search: string;
   categories: string[];
   priceRange: { min: number; max: number } | null;
   sortBy: string;
+}
+
+interface ApiResponse {
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 const ProductsPage = () => {
@@ -25,6 +34,11 @@ const ProductsPage = () => {
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isMobileFiltersAnimating, setIsMobileFiltersAnimating] = useState(false);
+
+  // API data states
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Control Animation - Similar to navbar
   const closeMobileFilters = () => {
@@ -43,31 +57,55 @@ const ProductsPage = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  // Filter and sort products
+  // Fetch products from API
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams();
+
+      if (filters.search) params.append('search', filters.search);
+      if (filters.categories.length > 0) params.append('categories', filters.categories.join(','));
+      if (filters.priceRange) {
+        params.append('minPrice', filters.priceRange.min.toString());
+        params.append('maxPrice', filters.priceRange.max.toString());
+      }
+      if (filters.sortBy !== 'default') params.append('sortBy', filters.sortBy);
+      params.append('limit', '50'); // Load more products initially
+
+      const response = await fetch(`/api/products?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.statusText}`);
+      }
+
+      const data: ApiResponse = await response.json();
+      setProducts(data.products);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch products');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  // Fetch products when filters change
+  useEffect(() => {
+    const debounceTimeout = setTimeout(() => {
+      fetchProducts();
+    }, 300); // Debounce API calls
+
+    return () => clearTimeout(debounceTimeout);
+  }, [fetchProducts]);
+
+  // Filter and sort products locally if needed
   const filteredProducts = useMemo(() => {
-    let result = [...mockProducts];
+    if (loading || error) return [];
 
-    // Apply search filter
-    if (filters.search) {
-      result = result.filter(product =>
-        product.name.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
+    const result = [...products];
 
-    // Apply category filter (AND logic - must match all selected categories)
-    if (filters.categories.length > 0) {
-      result = result.filter(product => filters.categories.includes(product.category));
-    }
-
-    // Apply price range filter
-    if (filters.priceRange) {
-      result = result.filter(
-        product =>
-          product.price >= filters.priceRange!.min && product.price <= filters.priceRange!.max
-      );
-    }
-
-    // Apply sorting
+    // Apply client-side sorting as fallback
     switch (filters.sortBy) {
       case 'price-low':
         result.sort((a, b) => a.price - b.price);
@@ -76,15 +114,15 @@ const ProductsPage = () => {
         result.sort((a, b) => b.price - a.price);
         break;
       case 'newest':
-        result.sort((a, b) => b.id - a.id); // Assuming higher ID = newer
+        // Sort by created date (this will be handled by API mostly)
         break;
       default:
-        // Default order
+        // Default order from API
         break;
     }
 
     return result;
-  }, [filters]);
+  }, [products, filters.sortBy, loading, error]);
 
   // Filter handlers
   const handleSearchChange = useCallback((value: string) => {
@@ -284,14 +322,38 @@ const ProductsPage = () => {
               </div>
             )}
 
-            {/* Products Grid - Larger cards, increased spacing */}
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+            {/* Loading State */}
+            {loading && (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 mx-auto mb-6 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+                <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-2">
+                  Loading Products...
+                </h3>
+                <p className="text-gray-600">Please wait while we fetch the latest collection.</p>
               </div>
-            ) : (
+            )}
+
+            {/* Error State */}
+            {error && !loading && (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+                  <Filter className="w-12 h-12 text-red-400" />
+                </div>
+                <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-2">
+                  Something went wrong
+                </h3>
+                <p className="text-gray-600 mb-6">{error}</p>
+                <button
+                  onClick={fetchProducts}
+                  className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            {/* No Results State */}
+            {!loading && !error && filteredProducts.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                   <Filter className="w-12 h-12 text-gray-400" />
@@ -306,6 +368,15 @@ const ProductsPage = () => {
                 >
                   Clear Filters
                 </button>
+              </div>
+            ) : null}
+
+            {/* Products Grid */}
+            {!loading && !error && filteredProducts.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {filteredProducts.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             )}
           </div>

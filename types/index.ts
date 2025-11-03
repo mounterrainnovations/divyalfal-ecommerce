@@ -1,16 +1,49 @@
 // Centralized type definitions for the application
 
+// Database Product type (matches Prisma schema)
+export interface DbProduct {
+  id: string;
+  name: string;
+  photos: string[];
+  price: number;
+  specifications: string;
+  category: ProductType;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Frontend Product type (transformed for UI)
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
   category: string;
+  specifications?: string;
 }
 
+export type ProductType =
+  | 'SAREE'
+  | 'INDO_WESTERN'
+  | 'LEHENGA'
+  | 'SUIT'
+  | 'KURTA_PANT'
+  | 'WESTERN'
+  | 'OTHER';
+
+export type ProductCategory =
+  | 'Sarees'
+  | 'Indo-Western'
+  | 'Lehengas'
+  | 'Suits'
+  | 'Kurta Pant'
+  | 'Western';
+
+// Filter state for frontend
 export interface FilterState {
+  search: string;
   categories: string[];
-  priceRange: [number, number];
+  priceRange: { min: number; max: number } | null;
   sortBy: string;
 }
 
@@ -25,13 +58,25 @@ export interface SortOption {
   label: string;
 }
 
-export type ProductCategory =
-  | 'Sarees'
-  | 'Indo-Western'
-  | 'Lehengas'
-  | 'Suits'
-  | 'Kurta Pant'
-  | 'Western';
+// API Response types
+export interface ProductsResponse {
+  products: DbProduct[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ProductFilters {
+  search?: string;
+  categories?: ProductType[];
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
 
 // Navigation link interface
 export interface NavLink {
