@@ -8,12 +8,10 @@ interface SpotlightItem {
 }
 
 const spotlightItems: SpotlightItem[] = [
-  { id: 1, video: '/mocks/mock_hero_mobile.mp4' },
-  { id: 2, video: '/mocks/mock_hero_mobile.mp4' },
-  { id: 3, video: '/mocks/mock_hero_mobile.mp4' },
-  { id: 4, video: '/mocks/mock_hero_mobile.mp4' },
-  // { id: 5, video: '/mocks/mock_hero_mobile.mp4' },
-  // { id: 6, video: '/mocks/mock_hero_mobile.mp4' },
+  { id: 1, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
+  { id: 2, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
+  { id: 3, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
+  { id: 4, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
 ];
 
 const SpotlightCarousel = () => {

@@ -15,7 +15,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     console.error('Error fetching product:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to fetch product', message: errorMessage },
+      { 
+        error: 'Failed to fetch product',
+        ...(process.env.NODE_ENV === 'development' && { message: errorMessage }),
+      },
       { status: 500 }
     );
   }
@@ -36,7 +39,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     
     return NextResponse.json(
-      { error: 'Failed to update product', message: errorMessage },
+      { 
+        error: 'Failed to update product',
+        ...(process.env.NODE_ENV === 'development' && { message: errorMessage }),
+      },
       { status: 500 }
     );
   }
@@ -56,7 +62,10 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     }
     
     return NextResponse.json(
-      { error: 'Failed to delete product', message: errorMessage },
+      { 
+        error: 'Failed to delete product',
+        ...(process.env.NODE_ENV === 'development' && { message: errorMessage }),
+      },
       { status: 500 }
     );
   }

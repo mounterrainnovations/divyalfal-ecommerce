@@ -7,6 +7,7 @@ import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '@/components/features/products/product-card';
 import { SortDropdown } from '@/components/ui/sort-dropdown';
 import { categories, priceRanges, sortOptions } from '@/lib/data/mock-products';
+import { useImagePreloader } from '@/lib/hooks/useImagePreloader';
 import type { Product } from '@/types';
 
 interface FilterState {
@@ -98,6 +99,13 @@ const ProductsPage = () => {
 
     return () => clearTimeout(debounceTimeout);
   }, [fetchProducts]);
+
+  // Preload images for better UX (preload first 12 images)
+  const imageUrls = useMemo(() => {
+    return products.slice(0, 12).map(p => p.image).filter(Boolean) as string[];
+  }, [products]);
+
+  useImagePreloader({ urls: imageUrls, maxConcurrent: 4 });
 
   // Filter and sort products locally if needed
   const filteredProducts = useMemo(() => {
@@ -374,8 +382,12 @@ const ProductsPage = () => {
             {/* Products Grid */}
             {!loading && !error && filteredProducts.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredProducts.map((product, index) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    priority={index < 8}
+                  />
                 ))}
               </div>
             )}

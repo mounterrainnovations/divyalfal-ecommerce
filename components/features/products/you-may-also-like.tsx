@@ -63,8 +63,10 @@ const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
                     src={product.image || '/mocks/mock_mostRecommended_common.jpg'}
                     alt={product.name}
                     fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    quality={80}
+                    loading="lazy"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    unoptimized={product.image?.startsWith('http')}
                   />
                 </div>
                 <div className="p-4">

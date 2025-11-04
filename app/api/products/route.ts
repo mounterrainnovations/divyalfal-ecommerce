@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         .map(getDbCategory)
         .filter(Boolean) as ProductType[];
       if (dbCategories.length > 0) {
-        (where as any).category = { in: dbCategories };
+        where.category = { in: dbCategories };
       }
     }
 
@@ -105,17 +105,14 @@ export async function GET(request: Request) {
     console.error('Error fetching products:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    const errorCode = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
     
-    console.error('Error details:', { errorMessage, errorStack, errorCode });
-    
-    // Return error details for debugging (including in production temporarily)
     return NextResponse.json(
       { 
         error: 'Failed to fetch products',
-        message: errorMessage,
-        code: errorCode,
-        ...(process.env.NODE_ENV === 'development' && { stack: errorStack }),
+        ...(process.env.NODE_ENV === 'development' && { 
+          message: errorMessage,
+          stack: errorStack 
+        }),
       },
       { status: 500 }
     );

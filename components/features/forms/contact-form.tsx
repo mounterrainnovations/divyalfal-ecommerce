@@ -20,8 +20,8 @@ const ContactForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
+    // TODO: Implement form submission logic (e.g., API call)
+    // For now, form data is captured in formData state
   };
 
   return (

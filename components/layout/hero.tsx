@@ -26,8 +26,7 @@ const Hero = () => {
       {/* Mobile: portrait video */}
       {isMobile && (
         <video
-          // src="/mocks/mock_hero_mobile.mp4"
-          src="https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/DivyaFalxApekshaDabral.mp4"
+          src="https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm"
           autoPlay
           muted
           loop
