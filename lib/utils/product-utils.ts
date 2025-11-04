@@ -41,7 +41,7 @@ export const transformDbProductToProduct = (dbProduct: DbProduct): Product => {
     price: Number(dbProduct.price),
     image:
       dbProduct.photos.length > 0 ? dbProduct.photos[0] : '/mocks/mock_mostRecommended_common.jpg',
-    category: CATEGORY_MAPPING_REVERSE[dbProduct.category],
+    category: CATEGORY_MAPPING_REVERSE[dbProduct.category] || 'Western',
     specifications: dbProduct.specifications,
   };
 };

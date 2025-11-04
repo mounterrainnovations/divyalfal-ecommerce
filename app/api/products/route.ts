@@ -10,6 +10,15 @@ import type { ProductCategory, ProductType } from '@/types';
 
 export async function GET(request: Request) {
   try {
+    // Check database connection
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL is not set');
+      return NextResponse.json(
+        { error: 'Database configuration error' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -40,9 +49,9 @@ export async function GET(request: Request) {
       const dbCategories: ProductType[] = categories
         .map(cat => cat as ProductCategory)
         .map(getDbCategory)
-        .filter(Boolean);
+        .filter(Boolean) as ProductType[];
       if (dbCategories.length > 0) {
-        where.category = { in: dbCategories };
+        (where as any).category = { in: dbCategories };
       }
     }
 
@@ -94,7 +103,22 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const errorCode = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
+    
+    console.error('Error details:', { errorMessage, errorStack, errorCode });
+    
+    // Return error details for debugging (including in production temporarily)
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch products',
+        message: errorMessage,
+        code: errorCode,
+        ...(process.env.NODE_ENV === 'development' && { stack: errorStack }),
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -109,6 +133,7 @@ export async function POST(req: Request) {
 
     // Transform data to match Prisma schema
     const productData = {
+      id: data.id || crypto.randomUUID(),
       name: data.name,
       price: new Prisma.Decimal(data.price),
       specifications: data.specifications || '',

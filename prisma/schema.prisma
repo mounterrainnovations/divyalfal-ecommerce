@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -14,9 +15,11 @@ model Product {
   photos         String[]
   price          Decimal     @db.Decimal(10, 2)
   specifications String
-  category       ProductType @default(OTHER)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  category       ProductType @default(OTHER) @map("type")
+  createdAt      DateTime    @default(now()) @map("createdAt")
+  updatedAt      DateTime    @updatedAt @map("updatedAt")
+
+  @@map("Product")
 }
 
 enum ProductType {
