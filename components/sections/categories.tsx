@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface Category {
   name: string;
@@ -10,7 +11,7 @@ interface Category {
 const categories: Category[] = [
   { name: 'Sarees', image: '/categories/saree.jpg' },
   { name: 'Indo-Western', image: '/categories/indo_western.jpg' },
-  { name: 'Lehengas', image: '/categories/lehenga.png' },
+  { name: 'Lehengas', image: '/categories/lehenge.webp' },
   { name: 'Suits', image: '/categories/suits.jpg' },
   { name: 'Kurta Pant', image: '/categories/kurta.jpg' },
   { name: 'Western', image: '/categories/western.png' },
@@ -28,9 +29,10 @@ const Categories = () => {
                       overflow-x-auto px-2 scrollbar-hide`}
         >
           {categories.map(cat => (
-            <div
+            <Link
               key={cat.name}
-              className="shrink-0 snap-center flex flex-col items-center text-center"
+              href={`/products?categories=${encodeURIComponent(cat.name)}`}
+              className="shrink-0 snap-center flex flex-col items-center text-center hover:opacity-80 transition-opacity"
             >
               <div className="w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden">
                 <Image
@@ -42,7 +44,7 @@ const Categories = () => {
                 />
               </div>
               <p className="mt-2 text-gray-700 font-medium text-sm">{cat.name}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

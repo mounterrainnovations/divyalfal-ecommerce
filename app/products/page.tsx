@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '@/components/features/products/product-card';
 import { SortDropdown } from '@/components/ui/sort-dropdown';
@@ -26,6 +27,8 @@ interface ApiResponse {
 }
 
 const ProductsPage = () => {
+  const searchParams = useSearchParams();
+
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     categories: [],
@@ -40,6 +43,18 @@ const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize filters from URL params
+  useEffect(() => {
+    const categoriesParam = searchParams.get('categories');
+    if (categoriesParam) {
+      const categoryList = categoriesParam.split(',').map(cat => decodeURIComponent(cat.trim()));
+      setFilters(prev => ({
+        ...prev,
+        categories: categoryList,
+      }));
+    }
+  }, [searchParams]);
 
   // Control Animation - Similar to navbar
   const closeMobileFilters = () => {
@@ -102,7 +117,10 @@ const ProductsPage = () => {
 
   // Preload images for better UX (preload first 12 images)
   const imageUrls = useMemo(() => {
-    return products.slice(0, 12).map(p => p.image).filter(Boolean) as string[];
+    return products
+      .slice(0, 12)
+      .map(p => p.image)
+      .filter(Boolean) as string[];
   }, [products]);
 
   useImagePreloader({ urls: imageUrls, maxConcurrent: 4 });
@@ -383,11 +401,7 @@ const ProductsPage = () => {
             {!loading && !error && filteredProducts.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {filteredProducts.map((product, index) => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product} 
-                    priority={index < 8}
-                  />
+                  <ProductCard key={product.id} product={product} priority={index < 8} />
                 ))}
               </div>
             )}
