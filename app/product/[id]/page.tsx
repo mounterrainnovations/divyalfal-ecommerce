@@ -10,6 +10,10 @@ import { transformDbProductToProduct } from '@/lib/utils/product-utils';
 import type { Product } from '@/types';
 import type { DbProduct } from '@/lib/utils/product-utils';
 
+// Configure dynamic rendering behavior
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 async function getProduct(id: string): Promise<{ product: Product; dbProduct: DbProduct } | null> {
   try {
     const dbProduct = await prisma.product.findUnique({ where: { id } });
@@ -20,6 +24,42 @@ async function getProduct(id: string): Promise<{ product: Product; dbProduct: Db
     console.error('Error fetching product:', error);
     return null;
   }
+}
+
+// Generate static params for existing products at build time
+export async function generateStaticParams() {
+  try {
+    const products = await prisma.product.findMany({
+      select: { id: true },
+      take: 100, // Limit to avoid long build times
+    });
+    
+    return products.map((product) => ({
+      id: product.id,
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
+}
+
+// Generate metadata for SEO
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const productData = await getProduct(id);
+
+  if (!productData) {
+    return {
+      title: 'Product Not Found',
+    };
+  }
+
+  const { product } = productData;
+
+  return {
+    title: `${product.name} - Divyafal`,
+    description: product.specifications || `Buy ${product.name} at the best price. Explore our collection of ${product.category}.`,
+  };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
