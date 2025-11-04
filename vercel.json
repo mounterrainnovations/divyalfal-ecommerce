@@ -4,6 +4,9 @@
   "functions": {
     "app/api/**/*.ts": {
       "includeFiles": "node_modules/.prisma/client/**"
+    },
+    "app/product/**/*.tsx": {
+      "includeFiles": "node_modules/.prisma/client/**"
     }
   }
 }

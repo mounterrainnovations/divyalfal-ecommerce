@@ -10,9 +10,10 @@ import { transformDbProductToProduct } from '@/lib/utils/product-utils';
 import type { Product } from '@/types';
 import type { DbProduct } from '@/lib/utils/product-utils';
 
-// Configure dynamic rendering behavior
+// Configure dynamic rendering behavior for proper production routing
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
+export const revalidate = 0;
 
 async function getProduct(id: string): Promise<{ product: Product; dbProduct: DbProduct } | null> {
   try {
@@ -23,23 +24,6 @@ async function getProduct(id: string): Promise<{ product: Product; dbProduct: Db
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
-  }
-}
-
-// Generate static params for existing products at build time
-export async function generateStaticParams() {
-  try {
-    const products = await prisma.product.findMany({
-      select: { id: true },
-      take: 100, // Limit to avoid long build times
-    });
-    
-    return products.map((product) => ({
-      id: product.id,
-    }));
-  } catch (error) {
-    console.error('Error generating static params:', error);
-    return [];
   }
 }
 
