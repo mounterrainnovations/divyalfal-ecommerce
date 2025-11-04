@@ -8,10 +8,26 @@ interface SpotlightItem {
 }
 
 const spotlightItems: SpotlightItem[] = [
-  { id: 1, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
-  { id: 2, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
-  { id: 3, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
-  { id: 4, video: 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm' },
+  {
+    id: 1,
+    video:
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+  },
+  {
+    id: 2,
+    video:
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+  },
+  {
+    id: 3,
+    video:
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+  },
+  {
+    id: 4,
+    video:
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+  },
 ];
 
 const SpotlightCarousel = () => {
@@ -46,6 +62,16 @@ const SpotlightCarousel = () => {
                 playsInline
                 className="w-full aspect-9/16 object-cover"
                 preload="none"
+                onLoadedData={e => {
+                  const video = e.currentTarget;
+                  video.currentTime = 0;
+                  video.play();
+                }}
+                onEnded={e => {
+                  const video = e.currentTarget;
+                  video.currentTime = 0;
+                  video.play();
+                }}
               />
             </div>
           ))}

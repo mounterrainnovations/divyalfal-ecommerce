@@ -10,7 +10,7 @@ const About = () => {
         <div className="w-full md:w-1/2 relative px-6 md:px-0 mb-12 md:mb-0">
           <div className="rounded-3xl overflow-hidden shadow-sm transform md:scale-95 origin-center">
             <Image
-              src="/mocks/mock_mostRecommended_common.jpg"
+              src="/About.jpeg"
               alt="Divyafal Boutique"
               width={500}
               height={600}

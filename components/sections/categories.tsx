@@ -8,12 +8,12 @@ interface Category {
 }
 
 const categories: Category[] = [
-  { name: 'Sarees', image: '/mocks/mock_categories_common.jpg' },
-  { name: 'Indo-Western', image: '/mocks/mock_categories_common.jpg' },
-  { name: 'Lehengas', image: '/mocks/mock_categories_common.jpg' },
-  { name: 'Suits', image: '/mocks/mock_categories_common.jpg' },
-  { name: 'Kurta Pant', image: '/mocks/mock_categories_common.jpg' },
-  { name: 'Western', image: '/mocks/mock_categories_common.jpg' },
+  { name: 'Sarees', image: '/categories/saree.jpg' },
+  { name: 'Indo-Western', image: '/categories/indo_western.jpg' },
+  { name: 'Lehengas', image: '/categories/lehenga.png' },
+  { name: 'Suits', image: '/categories/suits.jpg' },
+  { name: 'Kurta Pant', image: '/categories/kurta.jpg' },
+  { name: 'Western', image: '/categories/western.png' },
 ];
 
 const Categories = () => {
@@ -32,12 +32,12 @@ const Categories = () => {
               key={cat.name}
               className="shrink-0 snap-center flex flex-col items-center text-center"
             >
-              <div className="w-24 h-24 md:w-44 md:h-44 rounded-full overflow-hidden">
+              <div className="w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden">
                 <Image
                   src={cat.image}
                   alt={cat.name}
-                  width={96}
-                  height={96}
+                  width={80}
+                  height={80}
                   className="object-cover w-full h-full"
                 />
               </div>
