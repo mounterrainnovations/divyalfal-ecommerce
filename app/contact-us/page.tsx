@@ -8,8 +8,8 @@ export default function ContactUsPage() {
   return (
     <>
       <ContactUsHero />
-      <OurStory />
-      <OurValues />
+     {/* <OurStory /> */}
+      {/* <OurValues /> */}
       <ContactForm />
       <Footer />
     </>

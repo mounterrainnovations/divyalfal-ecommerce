@@ -16,17 +16,17 @@ const spotlightItems: SpotlightItem[] = [
   {
     id: 2,
     video:
-      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/sp01.webm',
   },
   {
     id: 3,
     video:
-      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/sp02.webm',
   },
   {
     id: 4,
     video:
-      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/sp03.webm',
   },
 ];
 
@@ -36,7 +36,7 @@ const SpotlightCarousel = () => {
   return (
     <section className="py-6 bg-white">
       <div className="px-4 md:px-8 xl:px-20">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Our Spotlight</h2>
+        <h2 className="text-3xl font-semibold mb-6 text-center font-serif font-light">Our Spotlight</h2>
 
         <div
           ref={scrollRef}

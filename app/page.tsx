@@ -5,6 +5,9 @@ import MostRecommended from '@/components/sections/most-recommended';
 import Explore from '@/components/sections/explore';
 import About from '@/components/sections/about';
 import Testimonials from '@/components/sections/testimonials';
+import ShopByStyle from '@/components/sections/shop-by-style';
+import OurValues from '@/components/sections/our-values';
+import CTABanner from '@/components/sections/cta-banner';
 import Footer from '@/components/layout/footer';
 
 export default function Home() {
@@ -16,8 +19,11 @@ export default function Home() {
         <SpotlightCarousel />
         <MostRecommended />
         <Explore />
-        <About />
+        <ShopByStyle />
         <Testimonials />
+        <About />
+        <CTABanner />
+        <OurValues />
         <Footer />
       </main>
     </>

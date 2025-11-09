@@ -30,13 +30,16 @@ const NavBar = () => {
   const navLinks: NavLink[] = [
     { name: 'Home', href: '/' },
     { name: 'All Products', href: '/products' },
+    { name: 'Sale', href: '/' },
+    { name: 'Visit Store', href: '/' },
     { name: 'Contact', href: '/contact-us' },
   ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg font-poppins">
       <div className="mx-auto px-4 sm:px-6 lg:px-34">
-        <div className="flex justify-between items-center h-24">
+        {/* Desktop Layout */}
+        <div className="hidden md:flex justify-between items-center h-24">
           <div className="shrink-0 flex items-center">
             <Link key="Home" href="/">
               <Image
@@ -50,7 +53,7 @@ const NavBar = () => {
             </Link>
           </div>
 
-          <div className="hidden text-xl font-semibold md:flex space-x-8">
+          <div className="text-xl font-semibold flex space-x-8">
             {navLinks.map(link => (
               <Link
                 key={link.name}
@@ -78,15 +81,38 @@ const NavBar = () => {
             {/* <button aria-label="Cart" className="p-2 rounded hover:bg-gray-100 transition">
               <ShoppingCart size={24} />
             </button> */}
-
-            <button
-              aria-label="Open menu"
-              className="md:hidden p-2 rounded hover:bg-gray-100 transition"
-              onClick={() => setIsMobileMenuOpen(true)}
-            >
-              <Menu size={24} />
-            </button>
           </div>
+        </div>
+
+        {/* Mobile Layout - Search Left, Logo Center, Menu Right */}
+        <div className="md:hidden flex items-center justify-between h-24">
+          {/* Left: Search Icon */}
+          <button aria-label="Search" className="p-2 rounded hover:bg-gray-100 transition">
+            <Search size={24} />
+          </button>
+
+          {/* Center: Logo */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <Link key="Home" href="/">
+              <Image
+                src="/DivyafalLogo.png"
+                alt="DivyaFal Logo"
+                width={140}
+                height={60}
+                className="h-12 w-auto object-contain"
+                priority
+              />
+            </Link>
+          </div>
+
+          {/* Right: Menu Icon */}
+          <button
+            aria-label="Open menu"
+            className="p-2 rounded hover:bg-gray-100 transition"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </div>
 

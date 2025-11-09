@@ -41,27 +41,31 @@ const values = [
 
 const OurValues = () => {
   return (
-    <section className="py-16 md:py-24 lg:py-32 bg-muted/30">
+    <section className="py-12 md:py-24 lg:py-32 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Heading */}
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-center mb-12 md:mb-16">
+        <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-center mb-8 md:mb-16">
           Our Values
         </h2>
 
-        {/* Values Grid - 3x2 on desktop, 2x3 on tablet, 1 column on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
+        {/* Values Grid - 2x3 on mobile, 2x3 on tablet, 3x2 on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10 lg:gap-12">
           {values.map((value, index) => {
             const Icon = value.icon;
             return (
               <div
                 key={index}
-                className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg hover:bg-background transition-colors"
+                className="flex flex-col items-center text-center space-y-2 md:space-y-4 p-3 md:p-6 rounded-lg hover:bg-background transition-colors"
               >
-                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-primary/10">
-                  <Icon className="w-8 h-8 text-primary" />
+                <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full bg-primary/10">
+                  <Icon className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                 </div>
-                <h3 className="text-xl md:text-2xl font-serif">{value.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{value.description}</p>
+                <h3 className="text-sm md:text-xl lg:text-2xl font-serif font-medium">
+                  {value.title}
+                </h3>
+                <p className="text-xs md:text-base text-muted-foreground leading-relaxed">
+                  {value.description}
+                </p>
               </div>
             );
           })}

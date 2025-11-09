@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '@/components/features/products/product-card';
@@ -552,4 +552,20 @@ const ProductFilters = ({
   );
 };
 
-export default ProductsPage;
+// Wrapper component with Suspense boundary
+export default function ProductsPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-24 h-24 mx-auto mb-6 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+            <p className="text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      }
+    >
+      <ProductsPage />
+    </Suspense>
+  );
+}
