@@ -19,9 +19,9 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
     return `₹${price.toLocaleString('en-IN')}`;
   };
 
-  const imageUrl = imageError 
+  const imageUrl = imageError
     ? '/mocks/mock_mostRecommended_common.jpg'
-    : (product.image || '/mocks/mock_mostRecommended_common.jpg');
+    : product.image || '/mocks/mock_mostRecommended_common.jpg';
 
   return (
     <Link
@@ -31,9 +31,9 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
       <div className="relative aspect-3/4 overflow-hidden bg-gray-100">
         {/* Loading Skeleton */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%]" />
+          <div className="absolute inset-0 bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-size-[200%_100%]" />
         )}
-        
+
         <Image
           src={imageUrl}
           alt={product.name}
