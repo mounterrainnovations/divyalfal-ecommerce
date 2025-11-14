@@ -8,20 +8,17 @@ import type { NavLink } from '@/types';
 
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   // Control Animation
   const closeMenu = () => {
-    setIsAnimating(true);
-    setTimeout(() => {
-      setIsMobileMenuOpen(false);
-      setIsAnimating(false);
-    }, 600);
+    setIsMobileMenuOpen(false);
   };
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
@@ -124,14 +121,9 @@ const NavBar = () => {
       >
         {/* Panel */}
         <div
-          className={`bg-white w-full h-full shadow-lg transform transition-transform duration-600 ease-in-out 
-            ${
-              isAnimating
-                ? 'translate-x-full'
-                : isMobileMenuOpen
-                  ? 'translate-x-0'
-                  : 'translate-x-full'
-            }`}
+          className={`bg-white w-full h-full shadow-lg transition-transform duration-600 ease-in-out transform ${
+            isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
         >
           <div className="flex justify-end px-6 h-24">
             <button aria-label="Close menu" onClick={closeMenu}>

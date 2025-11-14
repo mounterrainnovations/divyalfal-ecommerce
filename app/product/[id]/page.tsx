@@ -7,8 +7,7 @@ import YouMayAlsoLike from '@/components/features/products/you-may-also-like';
 import Footer from '@/components/layout/footer';
 import { prisma } from '@/lib/db';
 import { transformDbProductToProduct } from '@/lib/utils/product-utils';
-import type { Product } from '@/types';
-import type { DbProduct } from '@/lib/utils/product-utils';
+import type { Product, DbProduct } from '@/types';
 
 // Configure dynamic rendering behavior for proper production routing
 export const dynamic = 'force-dynamic';
@@ -42,7 +41,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   return {
     title: `${product.name} - Divyafal`,
-    description: product.specifications || `Buy ${product.name} at the best price. Explore our collection of ${product.category}.`,
+    description:
+      product.specifications ||
+      `Buy ${product.name} at the best price. Explore our collection of ${product.category}.`,
   };
 }
 
@@ -92,4 +93,3 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     </>
   );
 }
-

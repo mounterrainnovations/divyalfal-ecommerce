@@ -15,11 +15,10 @@ export default function ProductNotFound() {
         </div>
 
         {/* Message */}
-        <h2 className="text-3xl md:text-4xl font-serif text-gray-900 mb-4">
-          Product Not Found
-        </h2>
+        <h2 className="text-3xl md:text-4xl font-serif text-gray-900 mb-4">Product Not Found</h2>
         <p className="text-lg text-gray-600 mb-8">
-          Sorry, the product you're looking for doesn't exist or has been removed from our collection.
+          Sorry, the product you&apos;re looking for doesn&apos;t exist or has been removed from our
+          collection.
         </p>
 
         {/* Action Buttons */}
@@ -43,4 +42,3 @@ export default function ProductNotFound() {
     </div>
   );
 }
-

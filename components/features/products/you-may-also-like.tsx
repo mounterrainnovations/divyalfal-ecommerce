@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Product } from '@/types';
+import { formatPrice } from '@/lib/common/product-interfaces';
 
 interface YouMayAlsoLikeProps {
   currentProductId: string;
@@ -34,10 +35,6 @@ const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
 
     fetchRelatedProducts();
   }, [currentProductId]);
-
-  const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString('en-IN')}`;
-  };
 
   if (loading || products.length === 0) {
     return null;

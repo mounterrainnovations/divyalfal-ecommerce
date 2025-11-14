@@ -8,16 +8,55 @@ import {
 } from '@/lib/utils/product-utils';
 import type { ProductCategory, ProductType } from '@/types';
 
+/**
+ * Retry database operations with exponential backoff
+ * Handles connection issues in serverless environments
+ */
+async function retryDatabaseOperation<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error as Error;
+
+      // Check if it's a connection-related error that we should retry
+      const isRetryableError =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        (error.code === 'P1001' || // Can't reach database server
+          error.code === 'P1017' || // Server has closed the connection
+          error.code === 'P2028'); // Transaction API error
+
+      if (!isRetryableError || attempt === maxRetries) {
+        throw error;
+      }
+
+      const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+      console.log(
+        `[API] Database operation failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms:`,
+        error.message
+      );
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError!;
+}
+
 export async function GET(request: Request) {
+  console.log('[API] GET /api/products - Request started');
   try {
     // Check database connection
     if (!process.env.DATABASE_URL) {
-      console.error('DATABASE_URL is not set');
-      return NextResponse.json(
-        { error: 'Database configuration error' },
-        { status: 500 }
-      );
+      console.error('[API] DATABASE_URL is not set');
+      return NextResponse.json({ error: 'Database configuration error' }, { status: 500 });
     }
+    console.log('[API] Database URL check passed');
 
     const { searchParams } = new URL(request.url);
 
@@ -79,21 +118,24 @@ export async function GET(request: Request) {
         break;
     }
 
-    // Execute query with pagination
+    // Execute query with pagination and retry mechanism
     const skip = (page - 1) * limit;
-    const [total, dbProducts] = await Promise.all([
-      prisma.product.count({ where }),
-      prisma.product.findMany({
-        where,
-        orderBy,
-        skip,
-        take: limit,
-      }),
-    ]);
+    const [total, dbProducts] = await retryDatabaseOperation(async () =>
+      Promise.all([
+        prisma.product.count({ where }),
+        prisma.product.findMany({
+          where,
+          orderBy,
+          skip,
+          take: limit,
+        }),
+      ])
+    );
 
     const products = transformDbProductsToProducts(dbProducts);
     const totalPages = Math.ceil(total / limit);
 
+    console.log(`[API] Successfully fetched ${products.length} products, total: ${total}`);
     return NextResponse.json({
       products,
       total,
@@ -102,16 +144,16 @@ export async function GET(request: Request) {
       totalPages,
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('[API] Error fetching products:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch products',
-        ...(process.env.NODE_ENV === 'development' && { 
+        ...(process.env.NODE_ENV === 'development' && {
           message: errorMessage,
-          stack: errorStack 
+          stack: errorStack,
         }),
       },
       { status: 500 }
@@ -138,7 +180,9 @@ export async function POST(req: Request) {
       photos: data.photos || [],
     };
 
-    const product = await prisma.product.create({ data: productData });
+    const product = await retryDatabaseOperation(async () =>
+      prisma.product.create({ data: productData })
+    );
 
     return NextResponse.json(transformDbProductToProduct(product), { status: 201 });
   } catch (error) {

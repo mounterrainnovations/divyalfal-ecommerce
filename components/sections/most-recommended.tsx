@@ -3,22 +3,19 @@
 import { ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
+import { BaseProduct, formatDisplayPrice } from '@/lib/common/product-interfaces';
 
-interface MostRecommendedProduct {
-  id: number;
-  name: string;
-  price: string;
-  image: string;
+interface MostRecommendedProduct extends BaseProduct {
   thumbnail: string;
   bgColor: string;
 }
 
-// Product Data
+// Product Data - Consolidated into cleaner structure
 const bestSellers: MostRecommendedProduct[] = [
   {
     id: 1,
     name: 'Red Velvet Saree Border with...',
-    price: 'Rs. 10,999.00',
+    price: 10999,
     image: '/mostrec/1.png',
     thumbnail: '/mostrec/1.png',
     bgColor: 'bg-amber-100',
@@ -26,7 +23,7 @@ const bestSellers: MostRecommendedProduct[] = [
   {
     id: 2,
     name: 'Midnight Brown Indo Lehenga Set...',
-    price: 'Rs. 21,999.00',
+    price: 21999,
     image: '/mostrec/2.png',
     thumbnail: '/mostrec/2.png',
     bgColor: 'bg-yellow-100',
@@ -34,7 +31,7 @@ const bestSellers: MostRecommendedProduct[] = [
   {
     id: 3,
     name: 'White Silk Kurti with Long...',
-    price: 'Rs. 60,000.00',
+    price: 60000,
     image: '/mostrec/3.png',
     thumbnail: '/mostrec/3.png',
     bgColor: 'bg-purple-100',
@@ -42,7 +39,7 @@ const bestSellers: MostRecommendedProduct[] = [
   {
     id: 4,
     name: 'Indo Western Lehenga Set...',
-    price: 'Rs. 12,000.00',
+    price: 12000,
     image: '/mostrec/4.png',
     thumbnail: '/mostrec/4.png',
     bgColor: 'bg-yellow-50',
@@ -53,7 +50,7 @@ const freshArrivals: MostRecommendedProduct[] = [
   {
     id: 5,
     name: 'Emerald Green Silk Saree...',
-    price: 'Rs. 45,999.00',
+    price: 45999,
     image: '/mocks/mock_hero_desktop.jpg',
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-green-100',
@@ -61,7 +58,7 @@ const freshArrivals: MostRecommendedProduct[] = [
   {
     id: 6,
     name: 'Rose Gold Lehenga Choli...',
-    price: 'Rs. 85,000.00',
+    price: 85000,
     image: '/mocks/mock_mostRecommended_common.jpg',
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-pink-100',
@@ -69,7 +66,7 @@ const freshArrivals: MostRecommendedProduct[] = [
   {
     id: 7,
     name: 'Coral Silk Anarkali...',
-    price: 'Rs. 55,000.00',
+    price: 55000,
     image: '/mocks/mock_mostRecommended_common.jpg',
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-orange-100',
@@ -77,7 +74,7 @@ const freshArrivals: MostRecommendedProduct[] = [
   {
     id: 8,
     name: 'Navy Blue Banarasi Saree...',
-    price: 'Rs. 72,000.00',
+    price: 72000,
     image: '/mocks/mock_mostRecommended_common.jpg',
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-blue-100',
@@ -110,7 +107,9 @@ const ProductCard = ({ product }: { product: MostRecommendedProduct }) => (
       />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-        <p className="text-base font-bold text-gray-900 mt-1">From {product.price}</p>
+        <p className="text-base font-bold text-gray-900 mt-1">
+          From {formatDisplayPrice(product.price)}
+        </p>
       </div>
       <button
         aria-label="Add to Cart"

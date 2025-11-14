@@ -73,38 +73,68 @@ const ProductsPage = () => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  // Fetch products from API
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Fetch products from API with retry logic
+  const fetchProducts = useCallback(
+    async (retryCount = 0) => {
+      console.log('[CLIENT] Starting fetchProducts, attempt:', retryCount + 1);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const params = new URLSearchParams();
+      try {
+        const params = new URLSearchParams();
 
-      if (filters.search) params.append('search', filters.search);
-      if (filters.categories.length > 0) params.append('categories', filters.categories.join(','));
-      if (filters.priceRange) {
-        params.append('minPrice', filters.priceRange.min.toString());
-        params.append('maxPrice', filters.priceRange.max.toString());
+        if (filters.search) params.append('search', filters.search);
+        if (filters.categories.length > 0)
+          params.append('categories', filters.categories.join(','));
+        if (filters.priceRange) {
+          params.append('minPrice', filters.priceRange.min.toString());
+          params.append('maxPrice', filters.priceRange.max.toString());
+        }
+        if (filters.sortBy !== 'default') params.append('sortBy', filters.sortBy);
+        params.append('limit', '50'); // Load more products initially
+
+        console.log('[CLIENT] Fetching:', `/api/products?${params.toString()}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(`/api/products?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          console.error(
+            `[CLIENT] Fetch failed with status: ${response.status} ${response.statusText}`
+          );
+          // Retry on 500 errors up to 2 times
+          if (response.status === 500 && retryCount < 2) {
+            console.log(`[CLIENT] Retrying in 1 second...`);
+            setTimeout(() => fetchProducts(retryCount + 1), 1000);
+            return;
+          }
+          throw new Error(`Failed to fetch products: ${response.statusText}`);
+        }
+
+        const data: ApiResponse = await response.json();
+        console.log(`[CLIENT] Successfully fetched ${data.products.length} products`);
+        setProducts(data.products);
+      } catch (err) {
+        console.error('[CLIENT] Fetch error:', err);
+        // Retry on network errors up to 2 times
+        if (err instanceof Error && err.name === 'TypeError' && retryCount < 2) {
+          console.log(`[CLIENT] Network error, retrying in 1 second...`);
+          setTimeout(() => fetchProducts(retryCount + 1), 1000);
+          return;
+        }
+        setError(err instanceof Error ? err.message : 'Failed to fetch products');
+        setProducts([]);
+      } finally {
+        console.log('[CLIENT] Fetch completed');
+        setLoading(false);
       }
-      if (filters.sortBy !== 'default') params.append('sortBy', filters.sortBy);
-      params.append('limit', '50'); // Load more products initially
-
-      const response = await fetch(`/api/products?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.statusText}`);
-      }
-
-      const data: ApiResponse = await response.json();
-      setProducts(data.products);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch products');
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+    },
+    [filters]
+  );
 
   // Fetch products when filters change
   useEffect(() => {
@@ -370,7 +400,7 @@ const ProductsPage = () => {
                 </h3>
                 <p className="text-gray-600 mb-6">{error}</p>
                 <button
-                  onClick={fetchProducts}
+                  onClick={() => fetchProducts()}
                   className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Try Again

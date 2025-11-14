@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus } from 'lucide-react';
 import type { Product } from '@/types';
+import { formatPrice } from '@/lib/common/product-interfaces';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -47,10 +48,6 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
-
-  const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString('en-IN')}`;
-  };
 
   return (
     <div className="space-y-6 lg:pt-0 font-poppins">
@@ -125,22 +122,11 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
         </Link>
       </div>
 
-      {/* Product Description */}
-      {product.specifications && (
-        <div className="space-y-4 pt-4 border-t">
-          <div className="text-base font-poppins whitespace-pre-line">
-            {product.specifications}
-          </div>
-        </div>
-      )}
-
-      {/* Description Section - Non-collapsible */}
+      {/* Product Specifications */}
       {product.specifications && (
         <div className="pt-4 border-t">
           <h2 className="text-xl font-serif mb-4">Description</h2>
-          <div className="space-y-2 text-base text-gray-700">
-            <p>{product.specifications}</p>
-          </div>
+          <div className="text-base font-poppins whitespace-pre-line">{product.specifications}</div>
         </div>
       )}
 

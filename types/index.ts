@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 // Centralized type definitions for the application
 
 // Database Product type (matches Prisma schema)
@@ -5,7 +7,7 @@ export interface DbProduct {
   id: string;
   name: string;
   photos: string[];
-  price: number;
+  price: Prisma.Decimal | string | number; // Prisma.Decimal type - handled by transform functions
   specifications: string;
   category: ProductType;
   createdAt: Date;

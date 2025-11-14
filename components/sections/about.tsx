@@ -46,9 +46,14 @@ const About = () => {
           </h2>
 
           <p className="text-gray-700 leading-relaxed mb-10 text-base md:text-lg">
-            In 2010, our founder embarked on an extraordinary journey with nothing but a dream and 16 carefully curated sarees. What started as a small venture has blossomed into a luxury fashion design studio that celebrates the art of personalized elegance.
-Today, Divyafal stands as a testament to the power of vision, creativity, and unwavering commitment to excellence. Our fashion show represents the culmination of years of artistic exploration and the celebration of individual style.
-This year's showcase promises to be our most spectacular yet, featuring cutting-edge designs, world-class models, and an unforgettable experience that defines luxury fashion.
+            In 2010, our founder embarked on an extraordinary journey with nothing but a dream and
+            16 carefully curated sarees. What started as a small venture has blossomed into a luxury
+            fashion design studio that celebrates the art of personalized elegance. Today, Divyafal
+            stands as a testament to the power of vision, creativity, and unwavering commitment to
+            excellence. Our fashion show represents the culmination of years of artistic exploration
+            and the celebration of individual style. This year&apos;s showcase promises to be our
+            most spectacular yet, featuring cutting-edge designs, world-class models, and an
+            unforgettable experience that defines luxury fashion.
           </p>
 
           {/* Stats */}

@@ -1,17 +1,4 @@
-import type { Product, ProductType, ProductCategory } from '@/types';
-import { Prisma } from '@prisma/client';
-
-// Database Product type (matches actual Prisma response)
-export type DbProduct = {
-  id: string;
-  name: string;
-  photos: string[];
-  price: Prisma.Decimal;
-  specifications: string;
-  category: ProductType;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import type { DbProduct, Product, ProductType, ProductCategory } from '@/types';
 
 // Category mapping between database and frontend
 export const CATEGORY_MAPPING: Record<ProductCategory, ProductType> = {
@@ -38,7 +25,7 @@ export const transformDbProductToProduct = (dbProduct: DbProduct): Product => {
   return {
     id: dbProduct.id,
     name: dbProduct.name,
-    price: Number(dbProduct.price),
+    price: typeof dbProduct.price === 'string' ? Number(dbProduct.price) : Number(dbProduct.price),
     image:
       dbProduct.photos.length > 0 ? dbProduct.photos[0] : '/mocks/mock_mostRecommended_common.jpg',
     category: CATEGORY_MAPPING_REVERSE[dbProduct.category] || 'Western',
