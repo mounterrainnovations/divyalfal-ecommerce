@@ -46,6 +46,8 @@ export default function DashboardClient() {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    sale: false,
+    salePrice: '',
     specifications: '',
     category: 'OTHER' as ProductType,
     photos: [''],
@@ -157,6 +159,10 @@ export default function DashboardClient() {
       if (!formData.name.trim()) errors.name = 'Name is required';
       if (!formData.price || isNaN(Number(formData.price)))
         errors.price = 'Valid price is required';
+      if (formData.sale && (!formData.salePrice || isNaN(Number(formData.salePrice))))
+        errors.salePrice = 'Valid sale price is required when sale is enabled';
+      if (formData.sale && Number(formData.salePrice) >= Number(formData.price))
+        errors.salePrice = 'Sale price must be less than original price';
       if (!formData.photos[0].trim()) errors.photos = 'At least one photo URL is required';
 
       if (Object.keys(errors).length > 0) {
@@ -172,6 +178,8 @@ export default function DashboardClient() {
           body: JSON.stringify({
             ...formData,
             price: Number(formData.price),
+            sale: formData.sale,
+            salePrice: formData.sale && formData.salePrice ? Number(formData.salePrice) : null,
             photos: formData.photos.filter(url => url.trim()),
           }),
         });
@@ -207,6 +215,10 @@ export default function DashboardClient() {
       if (!formData.name.trim()) errors.name = 'Name is required';
       if (!formData.price || isNaN(Number(formData.price)))
         errors.price = 'Valid price is required';
+      if (formData.sale && (!formData.salePrice || isNaN(Number(formData.salePrice))))
+        errors.salePrice = 'Valid sale price is required when sale is enabled';
+      if (formData.sale && Number(formData.salePrice) >= Number(formData.price))
+        errors.salePrice = 'Sale price must be less than original price';
       if (!formData.photos[0].trim()) errors.photos = 'At least one photo URL is required';
 
       if (Object.keys(errors).length > 0) {
@@ -222,6 +234,9 @@ export default function DashboardClient() {
           body: JSON.stringify({
             ...formData,
             price: new Prisma.Decimal(formData.price),
+            sale: formData.sale,
+            salePrice:
+              formData.sale && formData.salePrice ? new Prisma.Decimal(formData.salePrice) : null,
             photos: formData.photos.filter(url => url.trim()),
           }),
         });
@@ -271,6 +286,8 @@ export default function DashboardClient() {
     setFormData({
       name: '',
       price: '',
+      sale: false,
+      salePrice: '',
       specifications: '',
       category: 'OTHER',
       photos: [''],
@@ -283,6 +300,8 @@ export default function DashboardClient() {
     setFormData({
       name: product.name,
       price: product.price.toString(),
+      sale: product.sale || false,
+      salePrice: product.salePrice ? product.salePrice.toString() : '',
       specifications: product.specifications || '',
       category: getDbCategory(product.category as ProductCategory),
       photos: product.photos && product.photos.length > 0 ? product.photos : [''],
@@ -789,6 +808,52 @@ export default function DashboardClient() {
                 </select>
               </div>
 
+              {/* Sale Toggle */}
+              <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <input
+                  type="checkbox"
+                  id="sale-toggle-add"
+                  checked={formData.sale}
+                  onChange={e => {
+                    setFormData(prev => ({
+                      ...prev,
+                      sale: e.target.checked,
+                      salePrice: e.target.checked ? prev.salePrice : '',
+                    }));
+                  }}
+                  className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-2 focus:ring-amber-500"
+                />
+                <label
+                  htmlFor="sale-toggle-add"
+                  className="text-sm font-medium text-gray-700 cursor-pointer font-poppins"
+                >
+                  🏷️ Mark this product as on sale
+                </label>
+              </div>
+
+              {/* Sale Price (conditional) */}
+              {formData.sale && (
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
+                    Sale Price (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.salePrice}
+                    onChange={e => setFormData(prev => ({ ...prev, salePrice: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-poppins"
+                    placeholder="0.00"
+                  />
+                  {formErrors.salePrice && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.salePrice}</p>
+                  )}
+                  <p className="text-xs text-gray-600 mt-2">
+                    💡 Sale price must be less than the original price
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
                   Specifications
@@ -981,6 +1046,52 @@ export default function DashboardClient() {
                   <option value="OTHER">Other</option>
                 </select>
               </div>
+
+              {/* Sale Toggle */}
+              <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <input
+                  type="checkbox"
+                  id="sale-toggle-edit"
+                  checked={formData.sale}
+                  onChange={e => {
+                    setFormData(prev => ({
+                      ...prev,
+                      sale: e.target.checked,
+                      salePrice: e.target.checked ? prev.salePrice : '',
+                    }));
+                  }}
+                  className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-2 focus:ring-amber-500"
+                />
+                <label
+                  htmlFor="sale-toggle-edit"
+                  className="text-sm font-medium text-gray-700 cursor-pointer font-poppins"
+                >
+                  🏷️ Mark this product as on sale
+                </label>
+              </div>
+
+              {/* Sale Price (conditional) */}
+              {formData.sale && (
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
+                    Sale Price (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.salePrice}
+                    onChange={e => setFormData(prev => ({ ...prev, salePrice: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-poppins"
+                    placeholder="0.00"
+                  />
+                  {formErrors.salePrice && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.salePrice}</p>
+                  )}
+                  <p className="text-xs text-gray-600 mt-2">
+                    💡 Sale price must be less than the original price
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">

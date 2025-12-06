@@ -26,6 +26,12 @@ export const transformDbProductToProduct = (dbProduct: DbProduct): Product => {
     id: dbProduct.id,
     name: dbProduct.name,
     price: typeof dbProduct.price === 'string' ? Number(dbProduct.price) : Number(dbProduct.price),
+    sale: dbProduct.sale ?? undefined,
+    salePrice: dbProduct.salePrice
+      ? typeof dbProduct.salePrice === 'string'
+        ? Number(dbProduct.salePrice)
+        : Number(dbProduct.salePrice)
+      : undefined,
     image:
       dbProduct.photos.length > 0 ? dbProduct.photos[0] : '/mocks/mock_mostRecommended_common.jpg',
     photos: dbProduct.photos, // Include all photos
