@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import Footer from '@/components/layout/footer';
-import { Lock, Mail, User, LogOut } from 'lucide-react';
 import DashboardClient from './dashboard-client';
 
 export default function DashboardPage() {

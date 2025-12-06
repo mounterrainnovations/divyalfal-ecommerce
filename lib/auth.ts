@@ -24,9 +24,7 @@ export interface JWTPayload {
 
 // Get JWT secret from environment or use development fallback
 function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET || 'divyafal-development-secret-2024';
-  console.log('Using JWT secret:', secret ? '***hidden***' : 'empty');
-  return secret;
+  return process.env.JWT_SECRET || 'divyafal-development-secret-2024';
 }
 
 // Generate JWT token for admin
@@ -45,7 +43,7 @@ export function generateToken(email: string): string {
 export function verifyToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, getJWTSecret()) as JWTPayload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
