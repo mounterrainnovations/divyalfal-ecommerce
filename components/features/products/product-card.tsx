@@ -11,13 +11,18 @@ interface ProductCardProps {
   priority?: boolean;
 }
 
+/**
+ * Formats a price value to Indian Rupee format
+ * @param price - The price to format
+ * @returns Formatted price string with ₹ symbol
+ */
+const formatPrice = (price: number): string => {
+  return `₹${price.toLocaleString('en-IN')}`;
+};
+
 const ProductCard = ({ product, className = '', priority = false }: ProductCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-
-  const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString('en-IN')}`;
-  };
 
   const imageUrl = imageError
     ? '/mocks/mock_mostRecommended_common.jpg'
