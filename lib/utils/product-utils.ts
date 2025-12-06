@@ -28,6 +28,7 @@ export const transformDbProductToProduct = (dbProduct: DbProduct): Product => {
     price: typeof dbProduct.price === 'string' ? Number(dbProduct.price) : Number(dbProduct.price),
     image:
       dbProduct.photos.length > 0 ? dbProduct.photos[0] : '/mocks/mock_mostRecommended_common.jpg',
+    photos: dbProduct.photos, // Include all photos
     category: CATEGORY_MAPPING_REVERSE[dbProduct.category] || 'Western',
     specifications: dbProduct.specifications,
   };
