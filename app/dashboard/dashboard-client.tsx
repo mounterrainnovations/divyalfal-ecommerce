@@ -52,6 +52,7 @@ export default function DashboardClient() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   // Check if user is already authenticated on page load
   useEffect(() => {
@@ -284,7 +285,7 @@ export default function DashboardClient() {
       price: product.price.toString(),
       specifications: product.specifications || '',
       category: getDbCategory(product.category as ProductCategory),
-      photos: [product.image], // Start with the single image, user can add more
+      photos: product.photos && product.photos.length > 0 ? product.photos : [''],
     });
     setShowEditModal(true);
   }, []);
@@ -306,6 +307,35 @@ export default function DashboardClient() {
       photos: prev.photos.map((photo, i) => (i === index ? value : photo)),
     }));
   }, []);
+
+  const handleFileUpload = useCallback(
+    async (file: File, index: number) => {
+      setUploadingIndex(index);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const { url } = await response.json();
+          updatePhotoField(index, url);
+        } else {
+          const { error } = await response.json();
+          alert(`Upload failed: ${error}`);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Upload failed. Please try again.');
+      } finally {
+        setUploadingIndex(null);
+      }
+    },
+    [updatePhotoField]
+  );
 
   // Fetch products on login
   useEffect(() => {
@@ -774,28 +804,68 @@ export default function DashboardClient() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
-                  Photo URLs *
+                  Photos *
                 </label>
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
+                  <div key={index} className="mb-4">
+                    {photo && (
+                      <div className="mb-2">
+                        <Image
+                          src={photo}
+                          alt={`Photo ${index + 1}`}
+                          width={120}
+                          height={120}
+                          className="w-30 h-30 object-cover rounded-lg border-2 border-gray-200"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-2 mb-2">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, index);
+                          }}
+                          disabled={uploadingIndex === index}
+                        />
+                        <div className="px-4 py-3 border-2 border-dashed border-amber-300 rounded-lg text-center hover:bg-amber-50 transition-colors">
+                          {uploadingIndex === index ? (
+                            <span className="text-sm text-gray-600">⏳ Uploading...</span>
+                          ) : (
+                            <span className="text-sm text-amber-600 font-medium">
+                              📤 Upload Image
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      {formData.photos.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removePhotoField(index)}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center mb-2">or paste URL</div>
                     <input
                       type="url"
                       value={photo}
                       onChange={e => updatePhotoField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins text-sm"
                       placeholder="https://example.com/image.jpg"
+                      disabled={uploadingIndex === index}
                     />
-                    {formData.photos.length > 1 && (
-                      <Button
-                        type="button"
-                        onClick={() => removePhotoField(index)}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
                 ))}
                 <Button
@@ -927,28 +997,68 @@ export default function DashboardClient() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
-                  Photo URLs *
+                  Photos *
                 </label>
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
+                  <div key={index} className="mb-4">
+                    {photo && (
+                      <div className="mb-2">
+                        <Image
+                          src={photo}
+                          alt={`Photo ${index + 1}`}
+                          width={120}
+                          height={120}
+                          className="w-30 h-30 object-cover rounded-lg border-2 border-gray-200"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-2 mb-2">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, index);
+                          }}
+                          disabled={uploadingIndex === index}
+                        />
+                        <div className="px-4 py-3 border-2 border-dashed border-amber-300 rounded-lg text-center hover:bg-amber-50 transition-colors">
+                          {uploadingIndex === index ? (
+                            <span className="text-sm text-gray-600">⏳ Uploading...</span>
+                          ) : (
+                            <span className="text-sm text-amber-600 font-medium">
+                              📤 Upload Image
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      {formData.photos.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removePhotoField(index)}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center mb-2">or paste URL</div>
                     <input
                       type="url"
                       value={photo}
                       onChange={e => updatePhotoField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins text-sm"
                       placeholder="https://example.com/image.jpg"
+                      disabled={uploadingIndex === index}
                     />
-                    {formData.photos.length > 1 && (
-                      <Button
-                        type="button"
-                        onClick={() => removePhotoField(index)}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
                 ))}
                 <Button
