@@ -24,7 +24,7 @@ const CTABanner = () => {
               </p>
 
               <Link
-                href="/contact-us"
+                href="/contact-us#contact-section"
                 className="inline-block px-8 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
               >
                 Book an Appointment
@@ -51,7 +51,7 @@ const CTABanner = () => {
               </p>
 
               <Link
-                href="#"
+                href="/contact-us#map-section"
                 className="inline-block px-8 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
               >
                 Visit Store

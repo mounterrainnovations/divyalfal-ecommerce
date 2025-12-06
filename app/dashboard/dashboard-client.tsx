@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Lock,
@@ -51,6 +52,7 @@ export default function DashboardClient() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   // Check if user is already authenticated on page load
   useEffect(() => {
@@ -70,34 +72,37 @@ export default function DashboardClient() {
     checkAuthStatus();
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setLoginError('');
+  const handleLogin = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsLoading(true);
+      setLoginError('');
 
-    try {
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
+      try {
+        const response = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(credentials),
+        });
 
-      if (response.ok) {
-        setIsLoggedIn(true);
-      } else {
-        const data = await response.json();
-        setLoginError(data.error || 'Login failed');
+        if (response.ok) {
+          setIsLoggedIn(true);
+        } else {
+          const data = await response.json();
+          setLoginError(data.error || 'Login failed');
+        }
+      } catch {
+        setLoginError('Network error occurred');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      setLoginError('Network error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [credentials]
+  );
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       // Call logout API if needed (optional, since we're just clearing the cookie)
       await fetch('/api/admin/logout', {
@@ -106,7 +111,7 @@ export default function DashboardClient() {
           'Content-Type': 'application/json',
         },
       });
-    } catch (error) {
+    } catch {
       // Ignore logout API errors, just clear the cookie
       console.log('Logout API call failed, clearing cookie anyway');
     } finally {
@@ -115,10 +120,10 @@ export default function DashboardClient() {
       setIsLoggedIn(false);
       setCredentials({ email: '', password: '' });
     }
-  };
+  }, []);
 
   // Product management functions
-  const fetchProducts = async (page = 1, search = '') => {
+  const fetchProducts = useCallback(async (page = 1, search = '') => {
     setLoadingProducts(true);
     try {
       const params = new URLSearchParams({
@@ -134,121 +139,135 @@ export default function DashboardClient() {
         setTotalProducts(data.total);
         setCurrentPage(data.page);
       }
-    } catch (error) {
-      console.error('Error fetching products:', error);
+    } catch (err) {
+      console.error('Error fetching products:', err);
     } finally {
       setLoadingProducts(false);
     }
-  };
+  }, []);
 
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormErrors({});
-    setSubmitting(true);
+  const handleAddProduct = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setFormErrors({});
+      setSubmitting(true);
 
-    // Validation
-    const errors: Record<string, string> = {};
-    if (!formData.name.trim()) errors.name = 'Name is required';
-    if (!formData.price || isNaN(Number(formData.price))) errors.price = 'Valid price is required';
-    if (!formData.photos[0].trim()) errors.photos = 'At least one photo URL is required';
+      // Validation
+      const errors: Record<string, string> = {};
+      if (!formData.name.trim()) errors.name = 'Name is required';
+      if (!formData.price || isNaN(Number(formData.price)))
+        errors.price = 'Valid price is required';
+      if (!formData.photos[0].trim()) errors.photos = 'At least one photo URL is required';
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      setSubmitting(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          price: Number(formData.price),
-          photos: formData.photos.filter(url => url.trim()),
-        }),
-      });
-
-      if (response.ok) {
-        setShowAddModal(false);
-        resetForm();
-        fetchProducts(currentPage, searchTerm);
-      } else {
-        const data = await response.json();
-        setFormErrors({ general: data.error || 'Failed to add product' });
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        setSubmitting(false);
+        return;
       }
-    } catch (error) {
-      setFormErrors({ general: 'Network error occurred' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
-  const handleEditProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingProduct) return;
+      try {
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            price: Number(formData.price),
+            photos: formData.photos.filter(url => url.trim()),
+          }),
+        });
 
-    setFormErrors({});
-    setSubmitting(true);
-
-    // Validation
-    const errors: Record<string, string> = {};
-    if (!formData.name.trim()) errors.name = 'Name is required';
-    if (!formData.price || isNaN(Number(formData.price))) errors.price = 'Valid price is required';
-    if (!formData.photos[0].trim()) errors.photos = 'At least one photo URL is required';
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      setSubmitting(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/products/${editingProduct.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          price: new Prisma.Decimal(formData.price),
-          photos: formData.photos.filter(url => url.trim()),
-        }),
-      });
-
-      if (response.ok) {
-        setShowEditModal(false);
-        setEditingProduct(null);
-        resetForm();
-        fetchProducts(currentPage, searchTerm);
-      } else {
-        const data = await response.json();
-        setFormErrors({ general: data.error || 'Failed to update product' });
+        if (response.ok) {
+          setShowAddModal(false);
+          resetForm();
+          fetchProducts(currentPage, searchTerm);
+        } else {
+          const data = await response.json();
+          setFormErrors({ general: data.error || 'Failed to add product' });
+        }
+      } catch {
+        setFormErrors({ general: 'Network error occurred' });
+      } finally {
+        setSubmitting(false);
       }
-    } catch (error) {
-      setFormErrors({ general: 'Network error occurred' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentPage, formData, searchTerm]
+  );
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const handleEditProduct = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editingProduct) return;
 
-    try {
-      const response = await fetch(`/api/products/${productId}`, {
-        method: 'DELETE',
-      });
+      setFormErrors({});
+      setSubmitting(true);
 
-      if (response.ok) {
-        fetchProducts(currentPage, searchTerm);
-      } else {
-        alert('Failed to delete product');
+      // Validation
+      const errors: Record<string, string> = {};
+      if (!formData.name.trim()) errors.name = 'Name is required';
+      if (!formData.price || isNaN(Number(formData.price)))
+        errors.price = 'Valid price is required';
+      if (!formData.photos[0].trim()) errors.photos = 'At least one photo URL is required';
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        setSubmitting(false);
+        return;
       }
-    } catch (error) {
-      alert('Network error occurred');
-    }
-  };
 
-  const resetForm = () => {
+      try {
+        const response = await fetch(`/api/products/${editingProduct.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            price: new Prisma.Decimal(formData.price),
+            photos: formData.photos.filter(url => url.trim()),
+          }),
+        });
+
+        if (response.ok) {
+          setShowEditModal(false);
+          setEditingProduct(null);
+          resetForm();
+          fetchProducts(currentPage, searchTerm);
+        } else {
+          const data = await response.json();
+          setFormErrors({ general: data.error || 'Failed to update product' });
+        }
+      } catch {
+        setFormErrors({ general: 'Network error occurred' });
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentPage, editingProduct, formData, searchTerm]
+  );
+
+  const handleDeleteProduct = useCallback(
+    async (productId: string) => {
+      if (!confirm('Are you sure you want to delete this product?')) return;
+
+      try {
+        const response = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          fetchProducts(currentPage, searchTerm);
+        } else {
+          alert('Failed to delete product');
+        }
+      } catch {
+        alert('Network error occurred');
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentPage, searchTerm]
+  );
+
+  const resetForm = useCallback(() => {
     setFormData({
       name: '',
       price: '',
@@ -257,43 +276,73 @@ export default function DashboardClient() {
       photos: [''],
     });
     setFormErrors({});
-  };
+  }, []);
 
-  const openEditModal = (product: Product) => {
+  const openEditModal = useCallback((product: Product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
       price: product.price.toString(),
       specifications: product.specifications || '',
       category: getDbCategory(product.category as ProductCategory),
-      photos: [product.image], // Start with the single image, user can add more
+      photos: product.photos && product.photos.length > 0 ? product.photos : [''],
     });
     setShowEditModal(true);
-  };
+  }, []);
 
-  const addPhotoField = () => {
+  const addPhotoField = useCallback(() => {
     setFormData(prev => ({ ...prev, photos: [...prev.photos, ''] }));
-  };
+  }, []);
 
-  const removePhotoField = (index: number) => {
+  const removePhotoField = useCallback((index: number) => {
     setFormData(prev => ({
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
 
-  const updatePhotoField = (index: number, value: string) => {
+  const updatePhotoField = useCallback((index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
       photos: prev.photos.map((photo, i) => (i === index ? value : photo)),
     }));
-  };
+  }, []);
+
+  const handleFileUpload = useCallback(
+    async (file: File, index: number) => {
+      setUploadingIndex(index);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const { url } = await response.json();
+          updatePhotoField(index, url);
+        } else {
+          const { error } = await response.json();
+          alert(`Upload failed: ${error}`);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Upload failed. Please try again.');
+      } finally {
+        setUploadingIndex(null);
+      }
+    },
+    [updatePhotoField]
+  );
 
   // Fetch products on login
   useEffect(() => {
     if (isLoggedIn) {
       fetchProducts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   // Show loading spinner while checking authentication
@@ -538,9 +587,11 @@ export default function DashboardClient() {
                       {products.map(product => (
                         <tr key={product.id} className="hover:bg-gray-50">
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <img
+                            <Image
                               src={product.image}
                               alt={product.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 object-cover rounded-lg"
                             />
                           </td>
@@ -588,9 +639,11 @@ export default function DashboardClient() {
                   {products.map(product => (
                     <div key={product.id} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex gap-4">
-                        <img
+                        <Image
                           src={product.image}
                           alt={product.name}
+                          width={64}
+                          height={64}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
                         <div className="flex-1">
@@ -751,28 +804,68 @@ export default function DashboardClient() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
-                  Photo URLs *
+                  Photos *
                 </label>
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
+                  <div key={index} className="mb-4">
+                    {photo && (
+                      <div className="mb-2">
+                        <Image
+                          src={photo}
+                          alt={`Photo ${index + 1}`}
+                          width={120}
+                          height={120}
+                          className="w-30 h-30 object-cover rounded-lg border-2 border-gray-200"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-2 mb-2">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, index);
+                          }}
+                          disabled={uploadingIndex === index}
+                        />
+                        <div className="px-4 py-3 border-2 border-dashed border-amber-300 rounded-lg text-center hover:bg-amber-50 transition-colors">
+                          {uploadingIndex === index ? (
+                            <span className="text-sm text-gray-600">⏳ Uploading...</span>
+                          ) : (
+                            <span className="text-sm text-amber-600 font-medium">
+                              📤 Upload Image
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      {formData.photos.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removePhotoField(index)}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center mb-2">or paste URL</div>
                     <input
                       type="url"
                       value={photo}
                       onChange={e => updatePhotoField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins text-sm"
                       placeholder="https://example.com/image.jpg"
+                      disabled={uploadingIndex === index}
                     />
-                    {formData.photos.length > 1 && (
-                      <Button
-                        type="button"
-                        onClick={() => removePhotoField(index)}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
                 ))}
                 <Button
@@ -904,28 +997,68 @@ export default function DashboardClient() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
-                  Photo URLs *
+                  Photos *
                 </label>
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
+                  <div key={index} className="mb-4">
+                    {photo && (
+                      <div className="mb-2">
+                        <Image
+                          src={photo}
+                          alt={`Photo ${index + 1}`}
+                          width={120}
+                          height={120}
+                          className="w-30 h-30 object-cover rounded-lg border-2 border-gray-200"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-2 mb-2">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, index);
+                          }}
+                          disabled={uploadingIndex === index}
+                        />
+                        <div className="px-4 py-3 border-2 border-dashed border-amber-300 rounded-lg text-center hover:bg-amber-50 transition-colors">
+                          {uploadingIndex === index ? (
+                            <span className="text-sm text-gray-600">⏳ Uploading...</span>
+                          ) : (
+                            <span className="text-sm text-amber-600 font-medium">
+                              📤 Upload Image
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      {formData.photos.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removePhotoField(index)}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center mb-2">or paste URL</div>
                     <input
                       type="url"
                       value={photo}
                       onChange={e => updatePhotoField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins text-sm"
                       placeholder="https://example.com/image.jpg"
+                      disabled={uploadingIndex === index}
                     />
-                    {formData.photos.length > 1 && (
-                      <Button
-                        type="button"
-                        onClick={() => removePhotoField(index)}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
                 ))}
                 <Button
