@@ -2,7 +2,47 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { HomepageProduct } from '@/lib/common/product-interfaces';
+
+// Mock fallback data
+const mockProducts: HomepageProduct[] = [
+  {
+    id: 'mock-1',
+    name: 'Haldi & Kumkum Dress',
+    price: 'Auspicious elegance in every thread. Draped in the sacred hues of Haldi and Kumkum',
+    image: '/collection/1.png',
+    backImage: '/collection/1b.png',
+    isMock: true,
+  },
+  {
+    id: 'mock-2',
+    name: 'The Rajwadi Brocade',
+    price: 'Rajwadi also means Royal and Brocade highlights the magnificent woven fabric',
+    image: '/collection/2.png',
+    backImage: '/collection/2b.png',
+    isMock: true,
+  },
+  {
+    id: 'mock-3',
+    name: 'Neelam Frill Lehenga',
+    price: 'Neelam for the rich sapphire blue top, paired with Frill for the modern, layered skirt',
+    image: '/collection/3.png',
+    backImage: '/collection/3b.png',
+    isMock: true,
+  },
+  {
+    id: 'mock-4',
+    name: 'The Royal Cascade Lehenga',
+    price:
+      'Royal for that rich sapphire-blue choli, and Cascade to describe the beautiful, waterfall-like drape of the skirt.',
+    image: '/collection/4.png',
+    backImage: '/collection/4b.png',
+    isMock: true,
+  },
+];
 import { useState, useEffect } from 'react';
 import { HomepageProduct } from '@/lib/common/product-interfaces';
 
@@ -44,8 +84,10 @@ const mockProducts: HomepageProduct[] = [
 ];
 
 const ProductCard = ({ product }: { product: HomepageProduct }) => {
+const ProductCard = ({ product }: { product: HomepageProduct }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  const cardContent = (
   const cardContent = (
     <div
       className={`shrink-0 w-[280px] sm:w-64 md:w-72 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 snap-start ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
@@ -106,6 +148,46 @@ const SkeletonCard = () => (
 );
 
 const Explore = () => {
+  const [products, setProducts] = useState<HomepageProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/homepage-sections');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch homepage sections');
+        }
+
+        const data = await response.json();
+
+        // Transform database products and add backImage
+        const dbProducts = (data.exploreCollection || []).map((p: any) => ({
+          ...p,
+          backImage: p.photos?.[1] || p.image, // Use second photo as back image if available
+          isMock: false,
+        }));
+
+        // Fill with mock data if we have fewer than 4 items
+        const remaining = 4 - dbProducts.length;
+        if (remaining > 0) {
+          setProducts([...dbProducts, ...mockProducts.slice(0, remaining)]);
+        } else {
+          setProducts(dbProducts.slice(0, 4));
+        }
+      } catch (error) {
+        console.error('Error fetching explore collection:', error);
+        // Use all mock data on error
+        setProducts(mockProducts);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   const [products, setProducts] = useState<HomepageProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

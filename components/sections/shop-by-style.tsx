@@ -3,12 +3,19 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HomepageProduct } from '@/lib/common/product-interfaces';
 
 // Mock fallback data
 const mockStyleProducts: HomepageProduct[] = [
+import { HomepageProduct } from '@/lib/common/product-interfaces';
+
+// Mock fallback data
+const mockStyleProducts: HomepageProduct[] = [
   {
+    id: 'mock-1',
     id: 'mock-1',
     name: 'Raw Silk Off White Printed with Sequence Detailing',
     frontImage: '/shop by style/f1.png',
@@ -16,8 +23,13 @@ const mockStyleProducts: HomepageProduct[] = [
     image: '/shop by style/f1.png',
     price: 0,
     isMock: true,
+    image: '/shop by style/f1.png',
+    price: 0,
+    isMock: true,
   },
   {
+    id: 'mock-2',
+    name: 'Pure Cotton Block Print Ajragh Bagh',
     id: 'mock-2',
     name: 'Pure Cotton Block Print Ajragh Bagh',
     frontImage: '/shop by style/f2.png',
@@ -25,8 +37,12 @@ const mockStyleProducts: HomepageProduct[] = [
     image: '/shop by style/f2.png',
     price: 0,
     isMock: true,
+    image: '/shop by style/f2.png',
+    price: 0,
+    isMock: true,
   },
   {
+    id: 'mock-3',
     id: 'mock-3',
     name: 'Banarasi Anarkali Suit',
     frontImage: '/shop by style/f3.png',
@@ -34,8 +50,12 @@ const mockStyleProducts: HomepageProduct[] = [
     image: '/shop by style/f3.png',
     price: 0,
     isMock: true,
+    image: '/shop by style/f3.png',
+    price: 0,
+    isMock: true,
   },
   {
+    id: 'mock-4',
     id: 'mock-4',
     name: 'Peach and off white Banarasi Angrakha Anarkarli',
     frontImage: '/shop by style/f4.png',
@@ -43,12 +63,17 @@ const mockStyleProducts: HomepageProduct[] = [
     image: '/shop by style/f4.png',
     price: 0,
     isMock: true,
+    image: '/shop by style/f4.png',
+    price: 0,
+    isMock: true,
   },
 ];
 
 const StyleCard = ({ product }: { product: HomepageProduct }) => {
+const StyleCard = ({ product }: { product: HomepageProduct }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  const cardContent = (
   const cardContent = (
     <div
       className={`relative shrink-0 w-64 sm:w-72 xl:w-96 group ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
@@ -58,6 +83,7 @@ const StyleCard = ({ product }: { product: HomepageProduct }) => {
       <div className="rounded-2xl overflow-hidden bg-gray-100 h-96 xl:h-146 relative">
         {/* Front Image */}
         <Image
+          src={product.frontImage || product.image}
           src={product.frontImage || product.image}
           alt={product.name}
           fill
@@ -104,6 +130,47 @@ const SkeletonCard = () => (
 
 export default function ShopByStyle() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [products, setProducts] = useState<HomepageProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/homepage-sections');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch homepage sections');
+        }
+
+        const data = await response.json();
+
+        // Transform database products and add frontImage/backImage
+        const dbProducts = (data.shopByStyle || []).map((p: any) => ({
+          ...p,
+          frontImage: p.image,
+          backImage: p.photos?.[1] || p.image, // Use second photo as back image if available
+          isMock: false,
+        }));
+
+        // Fill with mock data if we have fewer than 4 items
+        const remaining = 4 - dbProducts.length;
+        if (remaining > 0) {
+          setProducts([...dbProducts, ...mockStyleProducts.slice(0, remaining)]);
+        } else {
+          setProducts(dbProducts.slice(0, 6)); // Show up to 6 items (one per category)
+        }
+      } catch (error) {
+        console.error('Error fetching shop by style:', error);
+        // Use all mock data on error
+        setProducts(mockStyleProducts);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   const [products, setProducts] = useState<HomepageProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
