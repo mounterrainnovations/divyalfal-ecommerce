@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import RichTextEditor from '@/components/ui/rich-text-editor';
 import {
   Lock,
   Mail,
@@ -856,15 +857,16 @@ export default function DashboardClient() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
-                  Specifications
+                  Product Description
                 </label>
-                <textarea
+                <RichTextEditor
                   value={formData.specifications}
-                  onChange={e => setFormData(prev => ({ ...prev, specifications: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins"
-                  placeholder="Product specifications..."
+                  onChange={value => setFormData(prev => ({ ...prev, specifications: value }))}
+                  placeholder="Enter product description with formatting..."
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Use the toolbar to format your description with headings, bold, lists, etc.
+                </p>
               </div>
 
               <div>
@@ -1095,15 +1097,16 @@ export default function DashboardClient() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">
-                  Specifications
+                  Product Description
                 </label>
-                <textarea
+                <RichTextEditor
                   value={formData.specifications}
-                  onChange={e => setFormData(prev => ({ ...prev, specifications: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-poppins"
-                  placeholder="Product specifications..."
+                  onChange={value => setFormData(prev => ({ ...prev, specifications: value }))}
+                  placeholder="Enter product description with formatting..."
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Use the toolbar to format your description with headings, bold, lists, etc.
+                </p>
               </div>
 
               <div>

@@ -151,7 +151,10 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
       {product.specifications && (
         <div className="pt-4 border-t">
           <h2 className="text-xl font-serif mb-4">Description</h2>
-          <div className="text-base font-poppins whitespace-pre-line">{product.specifications}</div>
+          <div
+            className="product-description prose prose-gray max-w-none text-base font-poppins"
+            dangerouslySetInnerHTML={{ __html: product.specifications }}
+          />
         </div>
       )}
 
