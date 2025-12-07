@@ -206,7 +206,7 @@
 
 /* Product Description HTML Rendering Styles */
 .product-description h1 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
   margin-top: 1.5rem;
@@ -214,8 +214,14 @@
   color: #111827;
 }
 
+@media (min-width: 768px) {
+  .product-description h1 {
+    font-size: 2rem;
+  }
+}
+
 .product-description h2 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
   margin-top: 1.25rem;
@@ -223,8 +229,14 @@
   color: #1f2937;
 }
 
+@media (min-width: 768px) {
+  .product-description h2 {
+    font-size: 1.5rem;
+  }
+}
+
 .product-description h3 {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
   margin-top: 1rem;
@@ -232,10 +244,23 @@
   color: #374151;
 }
 
+@media (min-width: 768px) {
+  .product-description h3 {
+    font-size: 1.25rem;
+  }
+}
+
 .product-description p {
   margin-bottom: 1rem;
   line-height: 1.75;
   color: #4b5563;
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 768px) {
+  .product-description p {
+    font-size: 1rem;
+  }
 }
 
 .product-description ul,

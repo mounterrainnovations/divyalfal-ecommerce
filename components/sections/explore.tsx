@@ -48,7 +48,7 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
 
   const cardContent = (
     <div
-      className={`shrink-0 w-64 md:w-72 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 snap-start ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
+      className={`shrink-0 w-[280px] sm:w-64 md:w-72 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 snap-start ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -61,7 +61,7 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
           className={`object-cover transition-opacity duration-300 ${
             isHovered ? 'opacity-0' : 'opacity-100'
           }`}
-          sizes="(max-width: 768px) 256px, 288px"
+          sizes="(max-width: 640px) 280px, (max-width: 768px) 256px, 288px"
         />
         {/* Back Image (shown on hover) */}
         {product.backImage && (
@@ -72,13 +72,13 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
             className={`object-cover transition-opacity duration-300 ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
-            sizes="(max-width: 768px) 256px, 288px"
+            sizes="(max-width: 640px) 280px, (max-width: 768px) 256px, 288px"
           />
         )}
       </div>
       <div className="p-4 bg-white">
-        <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="font-medium text-gray-900 truncate text-sm sm:text-base">{product.name}</h3>
+        <p className="text-xs sm:text-sm text-gray-600 mt-1">
           {typeof product.price === 'string'
             ? product.price
             : `₹${product.price.toLocaleString('en-IN')}`}
@@ -96,7 +96,7 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
 };
 
 const SkeletonCard = () => (
-  <div className="shrink-0 w-64 md:w-72 rounded-2xl overflow-hidden shadow-sm snap-start">
+  <div className="shrink-0 w-[280px] sm:w-64 md:w-72 rounded-2xl overflow-hidden shadow-sm snap-start">
     <div className="relative aspect-3/4 bg-gray-200 animate-pulse" />
     <div className="p-4 bg-white space-y-2">
       <div className="h-5 bg-gray-200 rounded animate-pulse w-3/4" />
@@ -152,20 +152,20 @@ const Explore = () => {
       <div className="flex flex-col md:flex-row md:px-8 xl:px-20 relative py-10 md:pt-16">
         {/* Left Section (Heading) */}
         <aside className="w-full md:w-1/3 px-6 md:px-8 xl:px-12 mb-8 md:mb-0">
-          <h2 className="text-4xl md:text-5xl font-serif font-light text-black mb-6 md:mb-12">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-light text-black mb-6 md:mb-12">
             Explore Our Collection
           </h2>
 
-          <p className="text-gray-700 text-sm md:text-base leading-relaxed">
+          <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
             Discover our exquisite range of sarees, lehengas, and Indo-western pieces — designed for
             timeless elegance and contemporary style.
           </p>
 
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <Link href="/products">
               <Button
                 variant="outline"
-                className="rounded-full px-8 py-2 text-base font-medium hover:bg-gray-900 hover:text-white transition-colors"
+                className="rounded-full px-6 sm:px-8 py-2.5 sm:py-2 text-sm sm:text-base font-medium hover:bg-gray-900 hover:text-white transition-colors min-h-[44px]"
               >
                 View All
               </Button>
@@ -174,15 +174,15 @@ const Explore = () => {
         </aside>
 
         {/* Right Section */}
-        <div className="flex-1 overflow-x-hidden px-4 md:px-4 xl:px-8 xl:pr-12">
+        <div className="flex-1 overflow-x-hidden px-6 md:px-4 xl:px-8 xl:pr-12">
           {isLoading ? (
-            <div className="flex gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto">
+            <div className="flex gap-4 sm:gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto scrollbar-hide">
               {[1, 2, 3, 4].map(i => (
                 <SkeletonCard key={i} />
               ))}
             </div>
           ) : (
-            <div className="flex gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto">
+            <div className="flex gap-4 sm:gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto scrollbar-hide">
               {products.map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}

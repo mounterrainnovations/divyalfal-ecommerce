@@ -61,8 +61,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <>
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
-        <nav className="mb-8">
-          <ol className="flex items-center gap-2 text-sm md:text-base font-serif text-gray-600">
+        <nav className="mb-6 sm:mb-8">
+          <ol className="flex items-center gap-2 text-xs sm:text-sm md:text-base font-serif text-gray-600 flex-wrap">
             <li>
               <Link href="/" className="hover:text-black transition">
                 Home
@@ -83,7 +83,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 lg:items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-12 sm:mb-16 lg:items-start">
           <ProductHero photos={dbProduct.photos} productName={product.name} />
           <ProductDetails product={product} />
         </div>

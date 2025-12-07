@@ -7,9 +7,9 @@ import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
 const Footer = () => {
   return (
     <footer className="w-full bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 xl:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 xl:gap-12 py-12 xl:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 xl:gap-12 py-12 xl:py-16">
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
@@ -23,7 +23,7 @@ const Footer = () => {
               />
             </Link>
 
-            <p className="text-gray-300 leading-relaxed mb-6 max-w-md">
+            <p className="text-gray-300 leading-relaxed mb-6 max-w-md text-sm sm:text-base">
               Timeless elegance meets modern craftsmanship. Each piece is carefully designed to
               celebrate your unique story and style.
             </p>
@@ -33,14 +33,14 @@ const Footer = () => {
               <Link
                 href="#"
                 aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </Link>
               <Link
                 href="#"
                 aria-label="Facebook"
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
               >
                 <Facebook className="w-5 h-5" />
               </Link>
@@ -49,8 +49,10 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-serif font-medium mb-6">Quick Links</h3>
-            <ul className="space-y-3">
+            <h3 className="text-base sm:text-lg font-serif font-medium mb-4 sm:mb-6">
+              Quick Links
+            </h3>
+            <ul className="space-y-2 sm:space-y-3">
               <li>
                 <Link
                   href="/"
@@ -88,13 +90,13 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-serif font-medium mb-6">Get in Touch</h3>
-            <ul className="space-y-4">
+            <h3 className="text-base sm:text-lg font-serif font-medium mb-4 sm:mb-6">
+              Get in Touch
+            </h3>
+            <ul className="space-y-3 sm:space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">
-                  123 Fashion Street, Delhi, India
-                </span>
+                <span className="text-gray-300 text-sm">123 Fashion Street, Delhi, India</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-gray-400 shrink-0" />

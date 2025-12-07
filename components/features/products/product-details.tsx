@@ -52,11 +52,11 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
   return (
     <div className="space-y-6 lg:pt-0 font-poppins">
       {/* Product Title */}
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="text-4xl md:text-5xl font-serif mb-2">{product.name}</h1>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-2">{product.name}</h1>
         {/* Sale Badge */}
         {product.sale && (
-          <span className="inline-block px-4 py-2 text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg whitespace-nowrap">
+          <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg whitespace-nowrap">
             🔥 ON SALE
           </span>
         )}
@@ -66,23 +66,25 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
       {product.sale && product.salePrice ? (
         <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border-2 border-red-200">
           <div className="flex items-baseline gap-3 flex-wrap">
-            <p className="text-3xl md:text-4xl font-bold text-red-600">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-red-600">
               {formatPrice(product.salePrice)}
             </p>
-            <p className="text-xl text-gray-500 line-through">{formatPrice(product.price)}</p>
+            <p className="text-lg sm:text-xl text-gray-500 line-through">
+              {formatPrice(product.price)}
+            </p>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="inline-block px-3 py-1 bg-green-100 text-green-700 font-semibold text-sm rounded-full">
+            <span className="inline-block px-2.5 sm:px-3 py-1 bg-green-100 text-green-700 font-semibold text-xs sm:text-sm rounded-full">
               💰 Save {formatPrice(product.price - product.salePrice)}
             </span>
-            <span className="text-green-700 font-bold text-lg">
+            <span className="text-green-700 font-bold text-base sm:text-lg">
               ({Math.round(((product.price - product.salePrice) / product.price) * 100)}% OFF)
             </span>
           </div>
         </div>
       ) : (
         <div>
-          <p className="text-xl md:text-2xl font-bold">{formatPrice(product.price)}</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-bold">{formatPrice(product.price)}</p>
         </div>
       )}
 
@@ -103,7 +105,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             <button
               key={size}
               onClick={() => setSelectedSize(size)}
-              className={`min-w-[65px] px-5 py-3 border-2 rounded-full text-sm font-medium transition ${
+              className={`min-w-[56px] sm:min-w-[65px] px-4 sm:px-5 py-2.5 sm:py-3 border-2 rounded-full text-sm font-medium transition min-h-[44px] ${
                 selectedSize === size
                   ? 'bg-black text-white border-black'
                   : 'bg-white text-black border-gray-300 hover:border-black'
@@ -120,7 +122,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
         <div className="flex items-center border-2 border-gray-300 rounded-full overflow-hidden">
           <button
             onClick={decrementQuantity}
-            className="w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition"
+            className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center hover:bg-gray-100 transition"
             aria-label="Decrease quantity"
           >
             <Minus className="w-4 h-4" />
@@ -129,11 +131,11 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             type="number"
             value={quantity}
             onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-16 text-center border-none focus:outline-none"
+            className="w-14 sm:w-16 text-center border-none focus:outline-none text-sm sm:text-base"
           />
           <button
             onClick={incrementQuantity}
-            className="w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition"
+            className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center hover:bg-gray-100 transition"
             aria-label="Increase quantity"
           >
             <Plus className="w-4 h-4" />
@@ -141,7 +143,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
         </div>
         <Link
           href="/contact-us"
-          className="flex-1 py-3 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition text-center"
+          className="flex-1 py-3 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition text-center text-sm sm:text-base min-h-[44px] flex items-center justify-center"
         >
           Contact Us
         </Link>
@@ -150,9 +152,9 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
       {/* Product Specifications */}
       {product.specifications && (
         <div className="pt-4 border-t">
-          <h2 className="text-xl font-serif mb-4">Description</h2>
+          <h2 className="text-lg sm:text-xl font-serif mb-4">Description</h2>
           <div
-            className="product-description prose prose-gray max-w-none text-base font-poppins"
+            className="product-description prose prose-gray max-w-none text-sm sm:text-base font-poppins"
             dangerouslySetInnerHTML={{ __html: product.specifications }}
           />
         </div>

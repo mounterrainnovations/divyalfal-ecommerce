@@ -35,7 +35,7 @@ const ProductHero = ({ photos, productName }: ProductHeroProps) => {
 
     // Preload current image if not loaded
     preloadImage(selectedImage);
-    
+
     // Preload next and previous images
     const nextIndex = (selectedImage + 1) % images.length;
     const prevIndex = (selectedImage - 1 + images.length) % images.length;
@@ -60,7 +60,7 @@ const ProductHero = ({ photos, productName }: ProductHeroProps) => {
           {!isImageLoaded && (
             <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%]" />
           )}
-          
+
           <Image
             src={images[selectedImage]}
             alt={productName}
@@ -78,17 +78,17 @@ const ProductHero = ({ photos, productName }: ProductHeroProps) => {
         {/* Navigation Arrows */}
         <button
           onClick={prevImage}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition"
           aria-label="Previous image"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
         <button
           onClick={nextImage}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition"
           aria-label="Next image"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </div>
 
@@ -98,7 +98,7 @@ const ProductHero = ({ photos, productName }: ProductHeroProps) => {
           <button
             key={index}
             onClick={() => setSelectedImage(index)}
-            className={`relative shrink-0 w-20 h-24 rounded-md overflow-hidden border-2 transition ${
+            className={`relative shrink-0 w-16 h-20 sm:w-20 sm:h-24 rounded-md overflow-hidden border-2 transition ${
               selectedImage === index ? 'border-black' : 'border-transparent hover:border-gray-400'
             }`}
           >
@@ -106,7 +106,7 @@ const ProductHero = ({ photos, productName }: ProductHeroProps) => {
               src={img}
               alt={`${productName} thumbnail ${index + 1}`}
               fill
-              sizes="80px"
+              sizes="(max-width: 640px) 64px, 80px"
               quality={75}
               className="object-cover"
             />
