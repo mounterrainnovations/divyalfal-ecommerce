@@ -86,7 +86,7 @@ const NavBar = () => {
                 alt="DivyaFal Logo"
                 width={140}
                 height={60}
-                className="h-12 w-auto object-contain"
+                className="h-10 w-auto object-contain sm:h-12"
                 priority
               />
             </Link>
@@ -95,7 +95,7 @@ const NavBar = () => {
           {/* Right: Menu Icon */}
           <button
             aria-label="Open menu"
-            className="p-2 rounded hover:bg-gray-100 transition"
+            className="p-3 rounded-lg hover:bg-gray-100 transition min-w-[48px] min-h-[48px] flex items-center justify-center"
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu size={24} />
@@ -115,18 +115,22 @@ const NavBar = () => {
             isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          <div className="flex justify-end px-6 h-24">
-            <button aria-label="Close menu" onClick={closeMenu}>
+          <div className="flex justify-end px-6 h-24 items-center">
+            <button
+              aria-label="Close menu"
+              onClick={closeMenu}
+              className="p-3 rounded-lg hover:bg-gray-100 transition min-w-[48px] min-h-[48px] flex items-center justify-center"
+            >
               <X size={28} />
             </button>
           </div>
 
-          <div className="flex flex-col space-y-4 px-10">
+          <div className="flex flex-col space-y-6 px-8 sm:px-10">
             {navLinks.map(link => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-gray-700 hover:text-gray-900 transition text-xl"
+                className="text-gray-700 hover:text-gray-900 transition text-xl py-3 px-2 -mx-2 rounded-lg hover:bg-gray-50 min-h-[48px] flex items-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.name}

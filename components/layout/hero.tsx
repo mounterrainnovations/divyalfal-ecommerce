@@ -4,13 +4,13 @@ import Image from 'next/image';
 import { useMedia } from '@/lib/hooks/useMedia';
 
 const Hero = () => {
-  const isMobile = useMedia('(max-width: 1024px)');
+  const isMobile = useMedia('(max-width: 768px)');
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
-      {/* Desktop: background image */}
+      {/* Desktop & Tablet: background image */}
       {!isMobile && (
-        <div className="relative w-full h-full p-12">
+        <div className="relative w-full h-full p-6 sm:p-8 md:p-12">
           <div className="relative w-full h-full overflow-hidden rounded-md">
             <Image
               src="/mocks/mock_hero_desktop_2.webp"

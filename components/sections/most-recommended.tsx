@@ -90,7 +90,7 @@ const bgColors = ['bg-amber-100', 'bg-yellow-100', 'bg-purple-100', 'bg-yellow-5
 const ProductCard = ({ product }: { product: HomepageProduct }) => {
   const cardContent = (
     <div
-      className={`relative shrink-0 w-72 xl:w-md group ${product.isMock ? 'cursor-default' : 'cursor-pointer'}`}
+      className={`relative shrink-0 w-64 sm:w-72 xl:w-md group ${product.isMock ? 'cursor-default' : 'cursor-pointer'}`}
     >
       <div
         className={`${product.bgColor || 'bg-gray-100'} rounded-3xl overflow-hidden h-96 xl:h-146 flex items-center justify-center
@@ -115,8 +115,8 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
           className="w-16 h-16 rounded-lg object-cover shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-          <p className="text-base font-bold text-gray-900 mt-1">
+          <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{product.name}</p>
+          <p className="text-sm sm:text-base font-bold text-gray-900 mt-1">
             From {formatDisplayPrice(product.price)}
           </p>
         </div>
@@ -140,7 +140,7 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
 };
 
 const SkeletonCard = () => (
-  <div className="relative shrink-0 w-72 xl:w-md">
+  <div className="relative shrink-0 w-64 sm:w-72 xl:w-md">
     <div className="bg-gray-200 rounded-3xl overflow-hidden h-96 xl:h-146 animate-pulse" />
     <div className="absolute bottom-4 left-4 right-4 bg-white rounded-2xl p-4 flex items-center gap-4 shadow-lg">
       <div className="w-16 h-16 rounded-lg bg-gray-200 animate-pulse shrink-0" />
@@ -219,7 +219,7 @@ export default function MostRecommended() {
           className="w-full xl:w-1/3 px-6 xl:px-12 py-10 xl:py-16 border-b xl:border-b-0 border-gray-200
                           xl:sticky xl:top-24 xl:self-start h-fit"
         >
-          <h2 className="text-4xl xl:text-5xl font-serif font-light mb-10 xl:mb-16 text-black">
+          <h2 className="text-3xl sm:text-4xl xl:text-5xl font-serif font-light mb-10 xl:mb-16 text-black">
             Most Recommended
           </h2>
 
@@ -238,11 +238,11 @@ export default function MostRecommended() {
             <div className="flex-1 flex xl:flex-col gap-8 xl:gap-0">
               <button
                 onClick={() => setActiveSection('bestSellers')}
-                className={`text-left pb-4 border-b-2 xl:border-b-0 transition-colors ${
+                className={`text-left pb-4 border-b-2 xl:border-b-0 transition-colors flex-1 xl:flex-none ${
                   activeSection === 'bestSellers' ? 'border-black' : 'border-gray-200'
                 }`}
               >
-                <h3 className="text-lg xl:text-2xl font-serif font-light text-black">
+                <h3 className="text-lg sm:text-xl xl:text-2xl font-serif font-light text-black">
                   Best Sellers
                 </h3>
                 <p className="text-xs xl:text-sm text-gray-700 mt-2 xl:mt-4">
@@ -253,11 +253,11 @@ export default function MostRecommended() {
 
               <button
                 onClick={() => setActiveSection('freshArrivals')}
-                className={`text-left pb-4 xl:pb-0 border-b-2 xl:border-b-0 transition-colors ${
+                className={`text-left pb-4 xl:pb-0 border-b-2 xl:border-b-0 transition-colors flex-1 xl:flex-none ${
                   activeSection === 'freshArrivals' ? 'border-black' : 'border-gray-200'
                 }`}
               >
-                <h3 className="text-lg xl:text-2xl font-serif font-light text-black">
+                <h3 className="text-lg sm:text-xl xl:text-2xl font-serif font-light text-black">
                   Fresh Arrivals
                 </h3>
 
@@ -271,11 +271,11 @@ export default function MostRecommended() {
         </aside>
 
         {/* Right Section */}
-        <div className="flex-1 px-4 xl:px-8 py-8 xl:py-16 overflow-x-auto xl:overflow-x-visible">
+        <div className="flex-1 px-6 sm:px-4 xl:px-8 py-8 xl:py-16 overflow-x-auto xl:overflow-x-visible">
           {isLoading ? (
             <>
               {/* Mobile - Horizontal Skeleton */}
-              <div className="flex xl:hidden gap-6 pb-4 overflow-x-auto snap-x snap-mandatory">
+              <div className="flex xl:hidden gap-4 sm:gap-6 pb-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} className="snap-center">
                     <SkeletonCard />
@@ -298,7 +298,7 @@ export default function MostRecommended() {
           ) : (
             <>
               {/* Mobile - Horizontal */}
-              <div className="flex xl:hidden gap-6 pb-4 overflow-x-auto snap-x snap-mandatory">
+              <div className="flex xl:hidden gap-4 sm:gap-6 pb-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                 {products.map(p => (
                   <div key={p.id} className="snap-center">
                     <ProductCard product={p} />

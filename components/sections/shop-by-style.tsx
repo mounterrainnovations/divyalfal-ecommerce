@@ -51,7 +51,7 @@ const StyleCard = ({ product }: { product: HomepageProduct }) => {
 
   const cardContent = (
     <div
-      className={`relative shrink-0 w-72 xl:w-96 group ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
+      className={`relative shrink-0 w-64 sm:w-72 xl:w-96 group ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -64,7 +64,7 @@ const StyleCard = ({ product }: { product: HomepageProduct }) => {
           className={`object-cover object-center transition-opacity duration-300 ${
             isHovered ? 'opacity-0' : 'opacity-100'
           }`}
-          sizes="(max-width: 768px) 288px, 384px"
+          sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 384px"
         />
         {/* Back Image (shown on hover) */}
         {product.backImage && (
@@ -75,13 +75,13 @@ const StyleCard = ({ product }: { product: HomepageProduct }) => {
             className={`object-cover object-center transition-opacity duration-300 ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
-            sizes="(max-width: 768px) 288px, 384px"
+            sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 384px"
           />
         )}
       </div>
 
       {/* Product Name - Center Aligned */}
-      <h3 className="text-base xl:text-lg font-medium text-gray-900 mt-4 leading-snug text-center">
+      <h3 className="text-sm sm:text-base xl:text-lg font-medium text-gray-900 mt-4 leading-snug text-center px-2">
         {product.name}
       </h3>
     </div>
@@ -96,7 +96,7 @@ const StyleCard = ({ product }: { product: HomepageProduct }) => {
 };
 
 const SkeletonCard = () => (
-  <div className="relative shrink-0 w-72 xl:w-96">
+  <div className="relative shrink-0 w-64 sm:w-72 xl:w-96">
     <div className="rounded-2xl overflow-hidden bg-gray-200 h-96 xl:h-146 animate-pulse" />
     <div className="mt-4 h-5 bg-gray-200 rounded animate-pulse w-3/4 mx-auto" />
   </div>
@@ -160,8 +160,8 @@ export default function ShopByStyle() {
     <section className="bg-white py-12 xl:py-20">
       <div className="w-full">
         {/* Section Header */}
-        <div className="mb-8 xl:mb-12">
-          <h2 className="text-3xl xl:text-5xl font-serif font-light text-center text-black">
+        <div className="mb-8 xl:mb-12 px-4">
+          <h2 className="text-3xl sm:text-4xl xl:text-5xl font-serif font-light text-center text-black">
             Shop By Style
           </h2>
         </div>
@@ -171,25 +171,25 @@ export default function ShopByStyle() {
           {/* Left Scroll Button */}
           <button
             onClick={() => scroll('left')}
-            className="absolute left-4 xl:left-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hover:scale-110"
+            className="absolute left-2 sm:left-4 xl:left-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 sm:p-3 transition-all hover:scale-110"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
           </button>
 
           {/* Right Scroll Button */}
           <button
             onClick={() => scroll('right')}
-            className="absolute right-4 xl:right-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hover:scale-110"
+            className="absolute right-2 sm:right-4 xl:right-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 sm:p-3 transition-all hover:scale-110"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-6 h-6 text-gray-800" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
           </button>
 
           {/* Horizontal Scrolling Container */}
           <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide">
             {isLoading ? (
-              <div className="flex gap-6 xl:gap-8 pb-4 px-4 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
+              <div className="flex gap-4 sm:gap-6 xl:gap-8 pb-4 px-6 sm:px-8 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} className="snap-center">
                     <SkeletonCard />
@@ -197,7 +197,7 @@ export default function ShopByStyle() {
                 ))}
               </div>
             ) : (
-              <div className="flex gap-6 xl:gap-8 pb-4 px-4 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
+              <div className="flex gap-4 sm:gap-6 xl:gap-8 pb-4 px-6 sm:px-8 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
                 {products.map(product => (
                   <div key={product.id} className="snap-center">
                     <StyleCard product={product} />

@@ -65,7 +65,7 @@ const Testimonials = () => {
   return (
     <section className="py-12 xl:py-20 bg-gray-50">
       <div className="w-full">
-        <h2 className="text-3xl xl:text-5xl font-serif font-light text-center text-gray-800 mb-8 xl:mb-12">
+        <h2 className="text-3xl sm:text-4xl xl:text-5xl font-serif font-light text-center text-gray-800 mb-8 xl:mb-12 px-4">
           What Our Customers Say
         </h2>
 
@@ -74,28 +74,28 @@ const Testimonials = () => {
           {/* Left Scroll Button */}
           <button
             onClick={() => scroll('left')}
-            className="absolute left-4 xl:left-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hover:scale-110"
+            className="absolute left-2 sm:left-4 xl:left-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 sm:p-3 transition-all hover:scale-110"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
           </button>
 
           {/* Right Scroll Button */}
           <button
             onClick={() => scroll('right')}
-            className="absolute right-4 xl:right-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hover:scale-110"
+            className="absolute right-2 sm:right-4 xl:right-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 sm:p-3 transition-all hover:scale-110"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-6 h-6 text-gray-800" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
           </button>
 
           {/* Horizontal Scrolling Container */}
           <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide">
-            <div className="flex gap-6 xl:gap-8 pb-4 px-4 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
+            <div className="flex gap-4 sm:gap-6 xl:gap-8 pb-4 px-6 sm:px-8 xl:px-20 snap-x snap-mandatory w-fit mx-auto scrollbar-hide">
               {testimonials.map((t, i) => (
                 <div
                   key={i}
-                  className="shrink-0 w-72 xl:w-96 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 snap-center"
+                  className="shrink-0 w-64 sm:w-72 xl:w-96 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 snap-center"
                 >
                   <div className="relative h-96 xl:h-146 bg-gray-50">
                     <Image
@@ -107,8 +107,12 @@ const Testimonials = () => {
                     />
                   </div>
                   <div className="p-4 xl:p-6 bg-white">
-                    <h3 className="font-medium text-gray-900 text-base xl:text-lg">{t.name}</h3>
-                    <p className="text-sm xl:text-base text-gray-600 mt-2">{t.message}</p>
+                    <h3 className="font-medium text-gray-900 text-sm sm:text-base xl:text-lg">
+                      {t.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm xl:text-base text-gray-600 mt-2">
+                      {t.message}
+                    </p>
                     <div className="flex justify-start mt-3">
                       <div className="flex gap-1">
                         {[...Array(t.rating)].map((_, j) => (

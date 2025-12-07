@@ -68,7 +68,7 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         />
 
         {/* Category Badge */}
-        <div className="absolute top-3 left-3 z-10">
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-white/90 text-gray-700 rounded-full backdrop-blur-sm shadow-sm">
             {product.category}
           </span>
@@ -76,17 +76,17 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
 
         {/* Sale Badge */}
         {product.sale && (
-          <div className="absolute top-3 right-3 z-10">
-            <span className="inline-block px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg animate-pulse">
+          <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
+            <span className="inline-block px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg animate-pulse">
               SALE
             </span>
           </div>
         )}
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {/* Product Name */}
-        <h3 className="text-base font-medium text-gray-900 mb-2 line-clamp-2 leading-relaxed">
+        <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-2 line-clamp-2 leading-relaxed">
           {product.name}
         </h3>
 
@@ -94,8 +94,12 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         {product.sale && product.salePrice ? (
           <div className="mb-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-lg font-bold text-red-600">{formatPrice(product.salePrice)}</p>
-              <p className="text-sm text-gray-500 line-through">{formatPrice(product.price)}</p>
+              <p className="text-base sm:text-lg font-bold text-red-600">
+                {formatPrice(product.salePrice)}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 line-through">
+                {formatPrice(product.price)}
+              </p>
             </div>
             <p className="text-xs font-semibold text-green-600 mt-1">
               Save {formatPrice(product.price - product.salePrice)} (
@@ -103,7 +107,9 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
             </p>
           </div>
         ) : (
-          <p className="text-lg font-semibold text-gray-900 mb-2">{formatPrice(product.price)}</p>
+          <p className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+            {formatPrice(product.price)}
+          </p>
         )}
 
         {/* Specifications preview (if available) */}

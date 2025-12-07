@@ -229,7 +229,9 @@ const ProductsPage = () => {
           </nav>
 
           {/* Hero Heading */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-center">All Products</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif text-center">
+            All Products
+          </h1>
         </div>
       </section>
 
@@ -244,14 +246,14 @@ const ProductsPage = () => {
               placeholder="Search products..."
               value={filters.search}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm sm:text-base"
             />
           </div>
 
           {/* Mobile Filter Button */}
           <button
             onClick={() => setShowMobileFilters(true)}
-            className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors lg:hidden"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors lg:hidden min-w-[120px] min-h-[44px]"
           >
             <SlidersHorizontal className="w-5 h-5" />
             <span>Filters</span>
@@ -429,7 +431,7 @@ const ProductsPage = () => {
 
             {/* Products Grid */}
             {!loading && !error && filteredProducts.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
                 {filteredProducts.map((product, index) => (
                   <ProductCard key={product.id} product={product} priority={index < 8} />
                 ))}
@@ -466,7 +468,7 @@ const ProductFilters = ({
     <div className="space-y-6">
       {/* Category Filter */}
       <div className="bg-white p-6 rounded-lg border">
-        <h3 className="font-poppins font-semibold mb-4">Categories</h3>
+        <h3 className="font-poppins font-semibold mb-4 text-base sm:text-lg">Categories</h3>
         <div className="space-y-2">
           {categories.map(category => (
             <label key={category} className="flex items-center space-x-3 cursor-pointer">
@@ -484,7 +486,7 @@ const ProductFilters = ({
 
       {/* Price Range Filter */}
       <div className="bg-white p-6 rounded-lg border">
-        <h3 className="font-poppins font-semibold mb-4">Price Range</h3>
+        <h3 className="font-poppins font-semibold mb-4 text-base sm:text-lg">Price Range</h3>
         <div className="space-y-3">
           {priceRanges.map(range => (
             <label key={range.label} className="flex items-center space-x-3 cursor-pointer group">
@@ -561,7 +563,7 @@ const ProductFilters = ({
         <div className="bg-white p-6 rounded-lg border">
           <button
             onClick={onClearFilters}
-            className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+            className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm sm:text-base min-h-[44px]"
           >
             Clear all filters ({activeFiltersCount})
           </button>
@@ -572,7 +574,7 @@ const ProductFilters = ({
         <div className="bg-white p-6 rounded-lg border">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+            className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm sm:text-base min-h-[44px]"
           >
             Apply Filters
           </button>
