@@ -2,19 +2,13 @@
 
 import { ShoppingBag } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { formatDisplayPrice, HomepageProduct } from '@/lib/common/product-interfaces';
 import Link from 'next/link';
 import { formatDisplayPrice, HomepageProduct } from '@/lib/common/product-interfaces';
 
 // Mock fallback data
 const mockBestSellers: HomepageProduct[] = [
-// Mock fallback data
-const mockBestSellers: HomepageProduct[] = [
   {
-    id: 'mock-1',
     id: 'mock-1',
     name: 'Red Velvet Saree Border with...',
     price: 10999,
@@ -22,10 +16,8 @@ const mockBestSellers: HomepageProduct[] = [
     thumbnail: '/mostrec/1.png',
     bgColor: 'bg-amber-100',
     isMock: true,
-    isMock: true,
   },
   {
-    id: 'mock-2',
     id: 'mock-2',
     name: 'Midnight Brown Indo Lehenga Set...',
     price: 21999,
@@ -33,10 +25,8 @@ const mockBestSellers: HomepageProduct[] = [
     thumbnail: '/mostrec/2.png',
     bgColor: 'bg-yellow-100',
     isMock: true,
-    isMock: true,
   },
   {
-    id: 'mock-3',
     id: 'mock-3',
     name: 'White Silk Kurti with Long...',
     price: 60000,
@@ -44,10 +34,8 @@ const mockBestSellers: HomepageProduct[] = [
     thumbnail: '/mostrec/3.png',
     bgColor: 'bg-purple-100',
     isMock: true,
-    isMock: true,
   },
   {
-    id: 'mock-4',
     id: 'mock-4',
     name: 'Indo Western Lehenga Set...',
     price: 12000,
@@ -55,14 +43,11 @@ const mockBestSellers: HomepageProduct[] = [
     thumbnail: '/mostrec/4.png',
     bgColor: 'bg-yellow-50',
     isMock: true,
-    isMock: true,
   },
 ];
 
 const mockFreshArrivals: HomepageProduct[] = [
-const mockFreshArrivals: HomepageProduct[] = [
   {
-    id: 'mock-5',
     id: 'mock-5',
     name: 'Emerald Green Silk Saree...',
     price: 45999,
@@ -70,10 +55,8 @@ const mockFreshArrivals: HomepageProduct[] = [
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-green-100',
     isMock: true,
-    isMock: true,
   },
   {
-    id: 'mock-6',
     id: 'mock-6',
     name: 'Rose Gold Lehenga Choli...',
     price: 85000,
@@ -81,10 +64,8 @@ const mockFreshArrivals: HomepageProduct[] = [
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-pink-100',
     isMock: true,
-    isMock: true,
   },
   {
-    id: 'mock-7',
     id: 'mock-7',
     name: 'Coral Silk Anarkali...',
     price: 55000,
@@ -92,10 +73,8 @@ const mockFreshArrivals: HomepageProduct[] = [
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-orange-100',
     isMock: true,
-    isMock: true,
   },
   {
-    id: 'mock-8',
     id: 'mock-8',
     name: 'Navy Blue Banarasi Saree...',
     price: 72000,
@@ -103,11 +82,8 @@ const mockFreshArrivals: HomepageProduct[] = [
     thumbnail: '/mocks/mock_mostRecommended_common.jpg',
     bgColor: 'bg-blue-100',
     isMock: true,
-    isMock: true,
   },
 ];
-
-const bgColors = ['bg-amber-100', 'bg-yellow-100', 'bg-purple-100', 'bg-yellow-50'];
 
 const bgColors = ['bg-amber-100', 'bg-yellow-100', 'bg-purple-100', 'bg-yellow-50'];
 
@@ -183,54 +159,6 @@ export default function MostRecommended() {
   const [activeSection, setActiveSection] = useState<'bestSellers' | 'freshArrivals'>(
     'bestSellers'
   );
-  const [bestSellers, setBestSellers] = useState<HomepageProduct[]>([]);
-  const [freshArrivals, setFreshArrivals] = useState<HomepageProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/homepage-sections');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch homepage sections');
-        }
-
-        const data = await response.json();
-
-        // Transform database products and add bgColor
-        const transformProducts = (products: any[], mockData: HomepageProduct[]) => {
-          const dbProducts = products.map((p, index) => ({
-            ...p,
-            thumbnail: p.image,
-            bgColor: bgColors[index % bgColors.length],
-            isMock: false,
-          }));
-
-          // Fill with mock data if we have fewer than 4 items
-          const remaining = 4 - dbProducts.length;
-          if (remaining > 0) {
-            return [...dbProducts, ...mockData.slice(0, remaining)];
-          }
-
-          return dbProducts.slice(0, 4);
-        };
-
-        setBestSellers(transformProducts(data.bestSellers || [], mockBestSellers));
-        setFreshArrivals(transformProducts(data.freshArrivals || [], mockFreshArrivals));
-      } catch (error) {
-        console.error('Error fetching homepage sections:', error);
-        // Use all mock data on error
-        setBestSellers(mockBestSellers);
-        setFreshArrivals(mockFreshArrivals);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
   const [bestSellers, setBestSellers] = useState<HomepageProduct[]>([]);
   const [freshArrivals, setFreshArrivals] = useState<HomepageProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -378,19 +306,6 @@ export default function MostRecommended() {
                 ))}
               </div>
 
-              {/* Desktop - Masonry Grid */}
-              <div className="hidden xl:grid grid-cols-2 gap-8 max-w-5xl mx-auto">
-                <div className="flex flex-col gap-8">
-                  <ProductCard product={products[0]} />
-                  <ProductCard product={products[2]} />
-                </div>
-                <div className="flex flex-col gap-8 pt-32">
-                  <ProductCard product={products[1]} />
-                  <ProductCard product={products[3]} />
-                </div>
-              </div>
-            </>
-          )}
               {/* Desktop - Masonry Grid */}
               <div className="hidden xl:grid grid-cols-2 gap-8 max-w-5xl mx-auto">
                 <div className="flex flex-col gap-8">
