@@ -14,6 +14,8 @@ model Product {
   name           String      @db.VarChar(255)
   photos         String[]
   price          Decimal     @db.Decimal(10, 2)
+  sale           Boolean?
+  salePrice      Decimal?    @db.Decimal(10, 2)
   specifications String
   category       ProductType @default(OTHER) @map("type")
   createdAt      DateTime    @default(now()) @map("createdAt")

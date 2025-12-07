@@ -24,7 +24,9 @@ const CTABanner = () => {
               </p>
 
               <Link
-                href="/contact-us#contact-section"
+                href="https://wa.me/919977057045"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block px-8 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
               >
                 Book an Appointment

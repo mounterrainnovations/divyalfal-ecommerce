@@ -20,6 +20,16 @@ const formatPrice = (price: number): string => {
   return `₹${price.toLocaleString('en-IN')}`;
 };
 
+// Helper function to strip HTML tags and get plain text
+const stripHtml = (html: string): string => {
+  // Remove HTML tags
+  const withoutTags = html.replace(/<[^>]*>/g, '');
+  // Decode HTML entities
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = withoutTags;
+  return textarea.value;
+};
+
 const ProductCard = ({ product, className = '', priority = false }: ProductCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -63,6 +73,15 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
             {product.category}
           </span>
         </div>
+
+        {/* Sale Badge */}
+        {product.sale && (
+          <div className="absolute top-3 right-3 z-10">
+            <span className="inline-block px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg animate-pulse">
+              SALE
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="p-5">
@@ -72,14 +91,28 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         </h3>
 
         {/* Price */}
-        <p className="text-lg font-semibold text-gray-900 mb-2">{formatPrice(product.price)}</p>
+        {product.sale && product.salePrice ? (
+          <div className="mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-lg font-bold text-red-600">{formatPrice(product.salePrice)}</p>
+              <p className="text-sm text-gray-500 line-through">{formatPrice(product.price)}</p>
+            </div>
+            <p className="text-xs font-semibold text-green-600 mt-1">
+              Save {formatPrice(product.price - product.salePrice)} (
+              {Math.round(((product.price - product.salePrice) / product.price) * 100)}% OFF)
+            </p>
+          </div>
+        ) : (
+          <p className="text-lg font-semibold text-gray-900 mb-2">{formatPrice(product.price)}</p>
+        )}
 
         {/* Specifications preview (if available) */}
         {product.specifications && (
           <p className="text-sm text-gray-600 line-clamp-1">
-            {product.specifications.length > 50
-              ? `${product.specifications.substring(0, 50)}...`
-              : product.specifications}
+            {(() => {
+              const plainText = stripHtml(product.specifications);
+              return plainText.length > 50 ? `${plainText.substring(0, 50)}...` : plainText;
+            })()}
           </p>
         )}
       </div>
