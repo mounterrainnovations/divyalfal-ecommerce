@@ -8,6 +8,8 @@ export interface DbProduct {
   name: string;
   photos: string[];
   price: Prisma.Decimal | string | number; // Prisma.Decimal type - handled by transform functions
+  sale?: boolean | null;
+  salePrice?: Prisma.Decimal | string | number | null;
   specifications: string;
   category: ProductType;
   createdAt: Date;
@@ -19,6 +21,8 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  sale?: boolean;
+  salePrice?: number;
   image: string; // First photo for backward compatibility
   photos: string[]; // All photos
   category: string;

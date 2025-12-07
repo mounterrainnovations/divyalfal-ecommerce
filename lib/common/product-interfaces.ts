@@ -41,3 +41,12 @@ export const CATEGORY_CONFIG: CategoryItem[] = [
   { name: 'Kurta Pant', image: '/categories/kurta.jpg' },
   { name: 'Western', image: '/categories/western.png' },
 ];
+
+// Homepage product interface with mock fallback support
+export interface HomepageProduct extends BaseProduct {
+  isMock?: boolean;
+  thumbnail?: string;
+  bgColor?: string;
+  backImage?: string;
+  frontImage?: string;
+}
