@@ -30,6 +30,25 @@ const stripHtml = (html: string): string => {
   return textarea.value;
 };
 
+/**
+ * Formats a price value to Indian Rupee format
+ * @param price - The price to format
+ * @returns Formatted price string with ₹ symbol
+ */
+const formatPrice = (price: number): string => {
+  return `₹${price.toLocaleString('en-IN')}`;
+};
+
+// Helper function to strip HTML tags and get plain text
+const stripHtml = (html: string): string => {
+  // Remove HTML tags
+  const withoutTags = html.replace(/<[^>]*>/g, '');
+  // Decode HTML entities
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = withoutTags;
+  return textarea.value;
+};
+
 const ProductCard = ({ product, className = '', priority = false }: ProductCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -115,6 +134,10 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         {/* Specifications preview (if available) */}
         {product.specifications && (
           <p className="text-sm text-gray-600 line-clamp-1">
+            {(() => {
+              const plainText = stripHtml(product.specifications);
+              return plainText.length > 50 ? `${plainText.substring(0, 50)}...` : plainText;
+            })()}
             {(() => {
               const plainText = stripHtml(product.specifications);
               return plainText.length > 50 ? `${plainText.substring(0, 50)}...` : plainText;
