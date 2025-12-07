@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npx prisma generate && next build",
-  "installCommand": "npm install",
   "functions": {
     "app/api/**/*.ts": {
       "includeFiles": "node_modules/.prisma/client/**"
@@ -10,4 +8,3 @@
     }
   }
 }
-
