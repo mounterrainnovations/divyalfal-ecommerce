@@ -96,7 +96,9 @@ const Footer = () => {
             <ul className="space-y-3 sm:space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-                <span className="text-gray-300 text-sm">123 Fashion Street, Delhi, India</span>
+                <span className="text-gray-300 text-sm">
+                  A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039
+                </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-gray-400 shrink-0" />
@@ -104,7 +106,7 @@ const Footer = () => {
                   href="tel:+919876543210"
                   className="text-gray-300 hover:text-white transition-colors text-sm"
                 >
-                  +91 98765 43210
+                  ‪+91 99770 57045‬
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -128,13 +130,22 @@ const Footer = () => {
             </p>
             <div className="flex gap-6 text-sm">
               <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-white transition-colors">
                 Terms of Service
               </Link>
               <Link href="#" className="text-gray-400 hover:text-white transition-colors">
                 Shipping Policy
+              </Link>
+              <Link
+                href="/refund-policy"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Refund Policy
+              </Link>
+              <Link
+                href="/cancellation-policy"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Cancellation Policy
               </Link>
             </div>
           </div>

@@ -3,9 +3,9 @@
 import { MapPin, Clock, Phone, Mail } from 'lucide-react';
 
 const StoreLocationMap = () => {
-  // Mock coordinates for Bhopal, Madhya Pradesh (to be replaced with actual address)
+  // Store location in Bhopal, Madhya Pradesh
   const mockAddress = 'A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039';
-  const mapEmbedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3666.5!2d77.4!3d23.25!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDE1JzAwLjAiTiA3N8KwMjQnMDAuMCJF!5e0!3m2!1sen!2sin!4v1234567890`;
+  const mapEmbedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3667.2!2d77.4126!3d23.2599!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x397c428f00000000%3A0x0!2zMjPCsDE1JzM1LjYiTiA3N8KwMjQnNDUuNCJF!5e0!3m2!1sen!2sin!4v1734451200000&q=${encodeURIComponent(mockAddress)}`;
 
   return (
     <section id="map-section" className="py-16 md:py-24 bg-white">
