@@ -284,12 +284,12 @@ export default function MostRecommended() {
               </div>
 
               {/* Desktop - Masonry Grid Skeleton */}
-              <div className="hidden xl:grid grid-cols-2 gap-8 max-w-5xl mx-auto">
-                <div className="flex flex-col gap-8">
+              <div className="hidden xl:flex gap-8 max-w-5xl mx-auto">
+                <div className="flex flex-col gap-8 flex-1">
                   <SkeletonCard />
                   <SkeletonCard />
                 </div>
-                <div className="flex flex-col gap-8 pt-32">
+                <div className="flex flex-col gap-8 flex-1 pt-32">
                   <SkeletonCard />
                   <SkeletonCard />
                 </div>
@@ -307,12 +307,12 @@ export default function MostRecommended() {
               </div>
 
               {/* Desktop - Masonry Grid */}
-              <div className="hidden xl:grid grid-cols-2 gap-8 max-w-5xl mx-auto">
-                <div className="flex flex-col gap-8">
+              <div className="hidden xl:flex gap-8 max-w-5xl mx-auto">
+                <div className="flex flex-col gap-8 flex-1">
                   <ProductCard product={products[0]} />
                   <ProductCard product={products[2]} />
                 </div>
-                <div className="flex flex-col gap-8 pt-32">
+                <div className="flex flex-col gap-8 flex-1 pt-32">
                   <ProductCard product={products[1]} />
                   <ProductCard product={products[3]} />
                 </div>

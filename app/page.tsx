@@ -8,6 +8,7 @@ import Testimonials from '@/components/sections/testimonials';
 import ShopByStyle from '@/components/sections/shop-by-style';
 import OurValues from '@/components/sections/our-values';
 import CTABanner from '@/components/sections/cta-banner';
+import VirasathAcademy from '@/components/sections/virasath-academy';
 import Footer from '@/components/layout/footer';
 
 export default function Home() {
@@ -23,6 +24,7 @@ export default function Home() {
         <Testimonials />
         <About />
         <CTABanner />
+        <VirasathAcademy />
         <OurValues />
         <Footer />
       </main>
