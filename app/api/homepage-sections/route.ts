@@ -63,8 +63,8 @@ export async function GET() {
           prisma.product.findMany({
             where: {
               price: {
-                gte: new Prisma.Decimal(10000),
-                lte: new Prisma.Decimal(20000),
+                gte: new Prisma.Decimal(5000),
+                lte: new Prisma.Decimal(10000),
               },
             },
             orderBy: {
