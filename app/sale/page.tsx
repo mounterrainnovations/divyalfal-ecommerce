@@ -245,9 +245,9 @@ const SalePage = () => {
     (filters.search ? 1 : 0) + filters.categories.length + (filters.discountRange ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-amber-50/30 to-gray-50">
       {/* Hero Section */}
-      <section className="relative w-full py-20 md:py-32 border-b border-red-200">
+      <section className="relative w-full py-20 md:py-32 border-b border-gray-200">
         <div className="container mx-auto px-4 lg:px-12 xl:px-16">
           {/* Breadcrumb Navigation */}
           <nav className="flex items-center justify-center gap-2 mb-8 text-sm md:text-base">
@@ -261,14 +261,14 @@ const SalePage = () => {
           {/* Hero Heading */}
           <div className="text-center">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <Flame className="w-12 h-12 md:w-16 md:h-16 text-red-500 animate-pulse" />
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+              <Flame className="w-12 h-12 md:w-16 md:h-16 text-amber-600" />
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-black">
                 Sale
               </h1>
-              <Flame className="w-12 h-12 md:w-16 md:h-16 text-red-500 animate-pulse" />
+              <Flame className="w-12 h-12 md:w-16 md:h-16 text-amber-600" />
             </div>
             <p className="text-lg md:text-xl text-gray-700 font-medium">
-              🎉 Exclusive deals and discounts on premium products
+              Exclusive deals and discounts on premium products
             </p>
           </div>
         </div>
@@ -285,19 +285,19 @@ const SalePage = () => {
               placeholder="Search sale products..."
               value={filters.search}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
             />
           </div>
 
           {/* Mobile Filter Button */}
           <button
             onClick={() => setShowMobileFilters(true)}
-            className="flex items-center gap-2 px-4 py-3 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors lg:hidden"
+            className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors lg:hidden"
           >
             <SlidersHorizontal className="w-5 h-5" />
             <span>Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {activeFiltersCount}
               </span>
             )}
@@ -373,7 +373,7 @@ const SalePage = () => {
 
             {/* Active Filters */}
             {activeFiltersCount > 0 && (
-              <div className="mb-8 p-4 bg-white rounded-lg border border-red-200">
+              <div className="mb-8 p-4 bg-white rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-medium">Active Filters</h3>
                   <button
@@ -385,7 +385,7 @@ const SalePage = () => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {filters.search && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full text-sm">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm">
                       Search: {filters.search}
                       <button onClick={() => handleSearchChange('')}>
                         <X className="w-4 h-4" />
@@ -395,7 +395,7 @@ const SalePage = () => {
                   {filters.categories.map(category => (
                     <span
                       key={category}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full text-sm"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm"
                     >
                       {category}
                       <button onClick={() => handleCategoryToggle(category)}>
@@ -404,7 +404,7 @@ const SalePage = () => {
                     </span>
                   ))}
                   {filters.discountRange && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full text-sm">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm">
                       {filters.discountRange.min}-{filters.discountRange.max}% OFF
                       <button onClick={() => handleDiscountRangeChange(null)}>
                         <X className="w-4 h-4" />
@@ -418,7 +418,7 @@ const SalePage = () => {
             {/* Loading State */}
             {loading && (
               <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+                <div className="w-24 h-24 mx-auto mb-6 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
                 <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-2">
                   Loading Sale Products...
                 </h3>
@@ -429,8 +429,8 @@ const SalePage = () => {
             {/* Error State */}
             {error && !loading && (
               <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-                  <Filter className="w-12 h-12 text-red-400" />
+                <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Filter className="w-12 h-12 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-2">
                   Something went wrong
@@ -438,7 +438,7 @@ const SalePage = () => {
                 <p className="text-gray-600 mb-6">{error}</p>
                 <button
                   onClick={() => fetchProducts()}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Try Again
                 </button>
@@ -448,8 +448,8 @@ const SalePage = () => {
             {/* No Results State */}
             {!loading && !error && filteredProducts.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-orange-100 rounded-full flex items-center justify-center">
-                  <Flame className="w-12 h-12 text-orange-400" />
+                <div className="w-24 h-24 mx-auto mb-6 bg-amber-100 rounded-full flex items-center justify-center">
+                  <Flame className="w-12 h-12 text-amber-600" />
                 </div>
                 <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-2">
                   No sale products found
@@ -459,7 +459,7 @@ const SalePage = () => {
                 </p>
                 <button
                   onClick={clearAllFilters}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -504,7 +504,7 @@ const SaleFilters = ({
   return (
     <div className="space-y-6">
       {/* Category Filter */}
-      <div className="bg-white p-6 rounded-lg border border-red-200">
+      <div className="bg-white p-6 rounded-lg border border-gray-200">
         <h3 className="font-poppins font-semibold mb-4">Categories</h3>
         <div className="space-y-2">
           {categories.map(category => (
@@ -513,7 +513,7 @@ const SaleFilters = ({
                 type="checkbox"
                 checked={filters.categories.includes(category)}
                 onChange={() => onCategoryToggle(category)}
-                className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
               />
               <span className="text-gray-700">{category}</span>
             </label>
@@ -522,7 +522,7 @@ const SaleFilters = ({
       </div>
 
       {/* Discount Range Filter */}
-      <div className="bg-white p-6 rounded-lg border border-red-200">
+      <div className="bg-white p-6 rounded-lg border border-gray-200">
         <h3 className="font-poppins font-semibold mb-4">Discount</h3>
         <div className="space-y-3">
           {discountRanges.map(range => (
@@ -542,8 +542,8 @@ const SaleFilters = ({
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                     filters.discountRange?.min === range.min &&
                     filters.discountRange?.max === range.max
-                      ? 'border-red-600 bg-red-600'
-                      : 'border-gray-300 group-hover:border-red-400'
+                      ? 'border-black bg-black'
+                      : 'border-gray-300 group-hover:border-gray-600'
                   }`}
                 >
                   {filters.discountRange?.min === range.min &&
@@ -556,8 +556,8 @@ const SaleFilters = ({
                 className={`text-sm transition-colors duration-200 ${
                   filters.discountRange?.min === range.min &&
                   filters.discountRange?.max === range.max
-                    ? 'text-red-600 font-medium'
-                    : 'text-gray-700 group-hover:text-red-600'
+                    ? 'text-black font-medium'
+                    : 'text-gray-700 group-hover:text-black'
                 }`}
               >
                 {range.label}
@@ -576,8 +576,8 @@ const SaleFilters = ({
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                   filters.discountRange === null
-                    ? 'border-red-600 bg-red-600'
-                    : 'border-gray-300 group-hover:border-red-400'
+                    ? 'border-black bg-black'
+                    : 'border-gray-300 group-hover:border-gray-600'
                 }`}
               >
                 {filters.discountRange === null && (
@@ -588,8 +588,8 @@ const SaleFilters = ({
             <span
               className={`text-sm transition-colors duration-200 ${
                 filters.discountRange === null
-                  ? 'text-red-600 font-medium'
-                  : 'text-gray-700 group-hover:text-red-600'
+                  ? 'text-black font-medium'
+                  : 'text-gray-700 group-hover:text-black'
               }`}
             >
               All Discounts
@@ -600,10 +600,10 @@ const SaleFilters = ({
 
       {/* Clear Filters */}
       {activeFiltersCount > 0 && (
-        <div className="bg-white p-6 rounded-lg border border-red-200">
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
           <button
             onClick={onClearFilters}
-            className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="w-full px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
             Clear all filters ({activeFiltersCount})
           </button>
@@ -611,10 +611,10 @@ const SaleFilters = ({
       )}
 
       {isMobile && (
-        <div className="bg-white p-6 rounded-lg border border-red-200">
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="w-full px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
             Apply Filters
           </button>
@@ -629,9 +629,9 @@ export default function SalePageWrapper() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-amber-50/30 to-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-6 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+            <div className="w-24 h-24 mx-auto mb-6 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
             <p className="text-gray-600">Loading sale products...</p>
           </div>
         </div>

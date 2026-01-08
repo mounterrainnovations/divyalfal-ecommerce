@@ -28,6 +28,7 @@ const NavBar = () => {
     { name: 'Home', href: '/' },
     { name: 'All Products', href: '/products' },
     { name: 'Sale', href: '/sale' },
+    { name: 'Virasath Academy', href: '/virasath-academy' },
     { name: 'Contact', href: '/contact-us' },
   ];
 

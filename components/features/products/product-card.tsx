@@ -77,7 +77,7 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         {/* Sale Badge */}
         {product.sale && (
           <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
-            <span className="inline-block px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg animate-pulse">
+            <span className="inline-block px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold bg-black text-white rounded-full shadow-lg">
               SALE
             </span>
           </div>
@@ -94,14 +94,14 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         {product.sale && product.salePrice ? (
           <div className="mb-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-base sm:text-lg font-bold text-red-600">
+              <p className="text-base sm:text-lg font-bold text-gray-900">
                 {formatPrice(product.salePrice)}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 line-through">
                 {formatPrice(product.price)}
               </p>
             </div>
-            <p className="text-xs font-semibold text-green-600 mt-1">
+            <p className="text-xs font-semibold text-amber-700 mt-1">
               Save {formatPrice(product.price - product.salePrice)} (
               {Math.round(((product.price - product.salePrice) / product.price) * 100)}% OFF)
             </p>

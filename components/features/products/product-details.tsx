@@ -56,17 +56,17 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-2">{product.name}</h1>
         {/* Sale Badge */}
         {product.sale && (
-          <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full shadow-lg whitespace-nowrap">
-            🔥 ON SALE
+          <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-black text-white rounded-full shadow-lg whitespace-nowrap">
+            ON SALE
           </span>
         )}
       </div>
 
       {/* Price */}
       {product.sale && product.salePrice ? (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border-2 border-red-200">
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl border-2 border-amber-200">
           <div className="flex items-baseline gap-3 flex-wrap">
-            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-red-600">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
               {formatPrice(product.salePrice)}
             </p>
             <p className="text-lg sm:text-xl text-gray-500 line-through">
@@ -74,10 +74,10 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             </p>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="inline-block px-2.5 sm:px-3 py-1 bg-green-100 text-green-700 font-semibold text-xs sm:text-sm rounded-full">
-              💰 Save {formatPrice(product.price - product.salePrice)}
+            <span className="inline-block px-2.5 sm:px-3 py-1 bg-amber-100 text-amber-800 font-semibold text-xs sm:text-sm rounded-full">
+              Save {formatPrice(product.price - product.salePrice)}
             </span>
-            <span className="text-green-700 font-bold text-base sm:text-lg">
+            <span className="text-amber-800 font-bold text-base sm:text-lg">
               ({Math.round(((product.price - product.salePrice) / product.price) * 100)}% OFF)
             </span>
           </div>
