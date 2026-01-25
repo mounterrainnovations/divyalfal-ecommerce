@@ -6,6 +6,7 @@ import Explore from '@/components/sections/explore';
 import About from '@/components/sections/about';
 import Testimonials from '@/components/sections/testimonials';
 import ShopByStyle from '@/components/sections/shop-by-style';
+import Slideshow from '@/components/sections/slideshow';
 import OurValues from '@/components/sections/our-values';
 import CTABanner from '@/components/sections/cta-banner';
 import VirasatAcademy from '@/components/sections/virasat-academy';
@@ -21,6 +22,7 @@ export default function Home() {
         <MostRecommended />
         <Explore />
         <ShopByStyle />
+        <Slideshow />
         <Testimonials />
         <About />
         <CTABanner />
