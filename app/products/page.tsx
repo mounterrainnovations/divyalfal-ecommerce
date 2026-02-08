@@ -76,7 +76,6 @@ const ProductsPage = () => {
   // Fetch products from API with retry logic
   const fetchProducts = useCallback(
     async (retryCount = 0) => {
-      console.log('[CLIENT] Starting fetchProducts, attempt:', retryCount + 1);
       setLoading(true);
       setError(null);
 
@@ -93,7 +92,6 @@ const ProductsPage = () => {
         if (filters.sortBy !== 'default') params.append('sortBy', filters.sortBy);
         params.append('limit', '50'); // Load more products initially
 
-        console.log('[CLIENT] Fetching:', `/api/products?${params.toString()}`);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
@@ -108,7 +106,6 @@ const ProductsPage = () => {
           );
           // Retry on 500 errors up to 2 times
           if (response.status === 500 && retryCount < 2) {
-            console.log(`[CLIENT] Retrying in 1 second...`);
             setTimeout(() => fetchProducts(retryCount + 1), 1000);
             return;
           }
@@ -116,20 +113,17 @@ const ProductsPage = () => {
         }
 
         const data: ApiResponse = await response.json();
-        console.log(`[CLIENT] Successfully fetched ${data.products.length} products`);
         setProducts(data.products);
       } catch (err) {
         console.error('[CLIENT] Fetch error:', err);
         // Retry on network errors up to 2 times
         if (err instanceof Error && err.name === 'TypeError' && retryCount < 2) {
-          console.log(`[CLIENT] Network error, retrying in 1 second...`);
           setTimeout(() => fetchProducts(retryCount + 1), 1000);
           return;
         }
         setError(err instanceof Error ? err.message : 'Failed to fetch products');
         setProducts([]);
       } finally {
-        console.log('[CLIENT] Fetch completed');
         setLoading(false);
       }
     },

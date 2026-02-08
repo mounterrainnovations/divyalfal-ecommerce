@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { HomepageProduct } from '@/lib/common/product-interfaces';
 
+interface HomepageSectionsResponse {
+  exploreCollection?: Array<HomepageProduct & { photos?: string[] }>;
+}
+
 // Mock fallback data
 const mockProducts: HomepageProduct[] = [
   {
@@ -119,10 +123,10 @@ const Explore = () => {
           throw new Error('Failed to fetch homepage sections');
         }
 
-        const data = await response.json();
+        const data: HomepageSectionsResponse = await response.json();
 
         // Transform database products and add backImage
-        const dbProducts = (data.exploreCollection || []).map((p: any) => ({
+        const dbProducts = (data.exploreCollection || []).map(p => ({
           ...p,
           backImage: p.photos?.[1] || p.image, // Use second photo as back image if available
           isMock: false,

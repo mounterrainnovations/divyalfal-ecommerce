@@ -46,6 +46,10 @@
 }
 
 :root {
+  --font-geist-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-geist-mono: 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  --font-eb-garamond: 'Times New Roman', Times, serif;
+  --font-poppins: 'Avenir Next', 'Segoe UI', sans-serif;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
