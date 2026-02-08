@@ -6,6 +6,10 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HomepageProduct } from '@/lib/common/product-interfaces';
 
+interface HomepageSectionsResponse {
+  shopByStyle?: Array<HomepageProduct & { photos?: string[] }>;
+}
+
 // Mock fallback data
 const mockStyleProducts: HomepageProduct[] = [
   {
@@ -117,10 +121,10 @@ export default function ShopByStyle() {
           throw new Error('Failed to fetch homepage sections');
         }
 
-        const data = await response.json();
+        const data: HomepageSectionsResponse = await response.json();
 
         // Transform database products and add frontImage/backImage
-        const dbProducts = (data.shopByStyle || []).map((p: any) => ({
+        const dbProducts = (data.shopByStyle || []).map(p => ({
           ...p,
           frontImage: p.image,
           backImage: p.photos?.[1] || p.image, // Use second photo as back image if available

@@ -6,6 +6,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatDisplayPrice, HomepageProduct } from '@/lib/common/product-interfaces';
 
+interface HomepageSectionsResponse {
+  bestSellers?: Array<HomepageProduct & { photos?: string[] }>;
+  freshArrivals?: Array<HomepageProduct & { photos?: string[] }>;
+}
+
 // Mock fallback data
 const mockBestSellers: HomepageProduct[] = [
   {
@@ -173,10 +178,13 @@ export default function MostRecommended() {
           throw new Error('Failed to fetch homepage sections');
         }
 
-        const data = await response.json();
+        const data: HomepageSectionsResponse = await response.json();
 
         // Transform database products and add bgColor
-        const transformProducts = (products: any[], mockData: HomepageProduct[]) => {
+        const transformProducts = (
+          products: Array<HomepageProduct & { photos?: string[] }>,
+          mockData: HomepageProduct[]
+        ) => {
           const dbProducts = products.map((p, index) => ({
             ...p,
             thumbnail: p.image,

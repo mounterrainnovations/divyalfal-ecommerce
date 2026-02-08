@@ -15,21 +15,19 @@ import Footer from '@/components/layout/footer';
 export default function Home() {
   return (
     <>
-      <main>
-        <Hero />
-        <Categories />
-        <SpotlightCarousel />
-        <MostRecommended />
-        <Explore />
-        <ShopByStyle />
-        <Slideshow />
-        <Testimonials />
-        <About />
-        <CTABanner />
-        <VirasatAcademy />
-        <OurValues />
-        <Footer />
-      </main>
+      <Hero />
+      <Categories />
+      <SpotlightCarousel />
+      <MostRecommended />
+      <Explore />
+      <ShopByStyle />
+      <Slideshow />
+      <Testimonials />
+      <About />
+      <CTABanner />
+      <VirasatAcademy />
+      <OurValues />
+      <Footer />
     </>
   );
 }
