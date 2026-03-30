@@ -1,6 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = 'https://duwwgyobnpuqsqdromzj.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_ANON_KEY || process.env.ANON_KEY!;
+export function createClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  if (!url || !anonKey) {
+    console.error('Missing Supabase public URL or Anon Key. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env');
+    // Return a dummy client or handle appropriately in client components
+  }
+
+  return createBrowserClient(
+    url!,
+    anonKey!
+  )
+}
+

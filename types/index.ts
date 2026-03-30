@@ -27,6 +27,8 @@ export interface Product {
   photos: string[]; // All photos
   category: string;
   specifications?: string;
+  description?: string;
+  mostRecommended?: boolean;
 }
 
 export type ProductType =

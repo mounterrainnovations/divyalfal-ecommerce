@@ -9,6 +9,25 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Profile {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  fullName  String?
+  avatarUrl String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("Profile")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
 model Product {
   id             String      @id @default(uuid())
   name           String      @db.VarChar(255)
@@ -18,8 +37,10 @@ model Product {
   salePrice      Decimal?    @db.Decimal(10, 2)
   specifications String
   category       ProductType @default(OTHER) @map("type")
-  createdAt      DateTime    @default(now()) @map("createdAt")
-  updatedAt      DateTime    @updatedAt @map("updatedAt")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  orderItems OrderItem[]
 
   @@map("Product")
 }
@@ -32,4 +53,39 @@ enum ProductType {
   KURTA_PANT
   WESTERN
   OTHER
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  profileId   String      @db.Uuid
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  profile Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  items   OrderItem[]
+
+  @@map("Order")
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("OrderItem")
 }
