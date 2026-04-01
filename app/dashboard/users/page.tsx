@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 async function getUsers() {
   return await prisma.profile.findMany({
     orderBy: { createdAt: 'desc' },

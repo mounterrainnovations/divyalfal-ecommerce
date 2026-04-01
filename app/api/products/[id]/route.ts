@@ -7,7 +7,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   try {
     const { id } = await params;
     const dbProduct = await retryDatabaseOperation(async () =>
-      prisma.product.findUnique({ where: { id } })
+      prisma.product.findUnique({ where: { id }, include: { variants: true } })
     );
 
     if (!dbProduct) {

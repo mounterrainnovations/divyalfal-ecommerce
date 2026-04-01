@@ -37,6 +37,14 @@ export const transformDbProductToProduct = (dbProduct: DbProduct): Product => {
     photos: dbProduct.photos, // Include all photos
     category: CATEGORY_MAPPING_REVERSE[dbProduct.category] || 'Western',
     specifications: dbProduct.specifications,
+    isArchived: dbProduct.isArchived,
+    variants: (dbProduct.variants || []).map(v => ({
+      id: v.id,
+      productId: v.productId,
+      size: v.size,
+      color: v.color,
+      stock: v.stock,
+    })),
   };
 };
 

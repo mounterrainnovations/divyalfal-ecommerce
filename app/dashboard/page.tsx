@@ -1,7 +1,8 @@
-import { ShoppingBag, TrendingUp, Users, DollarSign, Package, Clock, ArrowRight } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { ShoppingBag, TrendingUp, Users, DollarSign, Package, Clock, ArrowRight, ChevronRight, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 async function getStats() {
   const prodCount = await prisma.product.count()
@@ -42,7 +43,7 @@ export default async function DashboardOverview() {
 
       {/* Metric Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, idx) => (
+        {statCards.map((stat) => (
           <div 
             key={stat.name}
             className="bg-white rounded-3xl p-6 border border-amber-50 shadow-[0_10px_30px_-10px_rgba(217,119,6,0.05)] relative overflow-hidden group hover:shadow-xl hover:shadow-amber-100/50 transition-all duration-300"

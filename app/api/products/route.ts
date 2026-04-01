@@ -33,7 +33,9 @@ export async function GET(request: Request) {
     const limit = Math.min(Number(searchParams.get('limit')) || 20, 100); // Cap at 100
 
     // Build where clause
-    const where: Prisma.ProductWhereInput = {};
+    const where: Prisma.ProductWhereInput = {
+      isArchived: searchParams.get('includeArchived') === 'true' ? undefined : false,
+    };
 
     if (search) {
       where.OR = [
@@ -86,6 +88,7 @@ export async function GET(request: Request) {
           orderBy,
           skip,
           take: limit,
+          include: { variants: true },
         }),
       ])
     );

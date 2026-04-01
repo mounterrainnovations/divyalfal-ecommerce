@@ -117,7 +117,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" name="password" className="text-sm font-medium text-gray-700 font-poppins">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700 font-poppins">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
                   <Input
@@ -140,7 +140,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" name="confirmPassword" className="text-sm font-medium text-gray-700 font-poppins">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 font-poppins">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
                   <Input

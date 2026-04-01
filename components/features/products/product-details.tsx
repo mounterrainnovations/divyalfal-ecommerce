@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Minus, Plus } from 'lucide-react';
 import type { Product } from '@/types';
 import { formatPrice } from '@/lib/common/product-interfaces';
+import { useCartStore } from '@/lib/store/cart';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -42,9 +43,13 @@ interface ProductDetailsProps {
 }
 
 const ProductDetails = ({ product }: ProductDetailsProps) => {
-  const sizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
-  const [selectedSize, setSelectedSize] = useState('XS');
+  const sizes = product.variants && product.variants.length > 0
+    ? product.variants.map(v => v.size)
+    : ['One Size'];
+  
+  const [selectedSize, setSelectedSize] = useState(sizes[0] || 'One Size');
   const [quantity, setQuantity] = useState(1);
+  const [measurements, setMeasurements] = useState({ bust: '', waist: '', hips: '' });
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
@@ -115,10 +120,47 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             </button>
           ))}
         </div>
+        {selectedSize === 'Custom' && (
+          <div className="w-full mt-4 p-4 border border-amber-200 rounded-xl bg-amber-50">
+            <p className="text-sm font-semibold text-amber-900 mb-3">Custom Dimensions (in inches)</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-amber-800 mb-1 block font-medium">Bust</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 36"
+                  className="w-full px-3 py-2 border border-amber-200 rounded-md bg-white focus:outline-none focus:border-amber-500 text-sm"
+                  value={measurements.bust}
+                  onChange={e => setMeasurements(prev => ({ ...prev, bust: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-amber-800 mb-1 block font-medium">Waist</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 28"
+                  className="w-full px-3 py-2 border border-amber-200 rounded-md bg-white focus:outline-none focus:border-amber-500 text-sm"
+                  value={measurements.waist}
+                  onChange={e => setMeasurements(prev => ({ ...prev, waist: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-amber-800 mb-1 block font-medium">Hips</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 40"
+                  className="w-full px-3 py-2 border border-amber-200 rounded-md bg-white focus:outline-none focus:border-amber-500 text-sm"
+                  value={measurements.hips}
+                  onChange={e => setMeasurements(prev => ({ ...prev, hips: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Quantity and Contact Us */}
-      <div className="flex items-center gap-3">
+      {/* Quantity and Actions */}
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center border-2 border-gray-300 rounded-full overflow-hidden">
           <button
             onClick={decrementQuantity}
@@ -131,7 +173,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             type="number"
             value={quantity}
             onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-14 sm:w-16 text-center border-none focus:outline-none text-sm sm:text-base"
+            className="w-14 sm:w-16 text-center border-none focus:outline-none text-sm sm:text-base bg-transparent"
           />
           <button
             onClick={incrementQuantity}
@@ -141,9 +183,28 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             <Plus className="w-4 h-4" />
           </button>
         </div>
+        <button
+          onClick={() => {
+            if (selectedSize === 'Custom' && (!measurements.bust || !measurements.waist || !measurements.hips)) {
+              alert("Please fill in all custom measurements before adding to cart.");
+              return;
+            }
+            useCartStore.getState().addItem({
+              productId: product.id,
+              product,
+              size: selectedSize,
+              quantity,
+              customMeasurements: selectedSize === 'Custom' ? measurements : undefined,
+            });
+            alert("Added to cart!");
+          }}
+          className="flex-1 py-3 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition text-center text-sm sm:text-base min-h-[44px] flex items-center justify-center"
+        >
+          Add to Cart
+        </button>
         <Link
           href="/contact-us"
-          className="flex-1 py-3 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition text-center text-sm sm:text-base min-h-[44px] flex items-center justify-center"
+          className="flex-1 py-3 bg-white border-2 border-gray-200 text-gray-900 rounded-full font-semibold hover:border-gray-900 transition text-center text-sm sm:text-base min-h-[44px] flex items-center justify-center"
         >
           Contact Us
         </Link>
