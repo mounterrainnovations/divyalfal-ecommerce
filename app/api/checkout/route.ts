@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     console.error('Checkout API Error:', error);
     return NextResponse.json(
       { error: errorMessage },
-      { status: 500 }
+      { status: errorMessage.includes('Insufficient stock') || errorMessage.includes('Variant not found') ? 400 : 500 }
     );
   }
 }

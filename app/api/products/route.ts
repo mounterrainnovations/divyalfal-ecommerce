@@ -141,7 +141,21 @@ export async function POST(req: Request) {
     };
 
     const product = await retryDatabaseOperation(async () =>
-      prisma.product.create({ data: productData })
+      prisma.$transaction(async (tx) => {
+        const newProduct = await tx.product.create({ data: productData });
+        
+        // Create initial variants (S, M, L, Custom) with stock 10
+        const defaultSizes = ['S', 'M', 'L', 'Custom'];
+        await tx.productVariant.createMany({
+          data: defaultSizes.map(size => ({
+            productId: newProduct.id,
+            size,
+            stock: 10,
+          }))
+        });
+        
+        return newProduct;
+      })
     );
 
     return NextResponse.json(transformDbProductToProduct(product), { status: 201 });
