@@ -33,7 +33,9 @@ export async function GET(request: Request) {
     const limit = Math.min(Number(searchParams.get('limit')) || 20, 100); // Cap at 100
 
     // Build where clause
-    const where: Prisma.ProductWhereInput = {};
+    const where: Prisma.ProductWhereInput = {
+      isArchived: searchParams.get('includeArchived') === 'true' ? undefined : false,
+    };
 
     if (search) {
       where.OR = [
@@ -86,6 +88,7 @@ export async function GET(request: Request) {
           orderBy,
           skip,
           take: limit,
+          include: { variants: true },
         }),
       ])
     );
@@ -138,7 +141,21 @@ export async function POST(req: Request) {
     };
 
     const product = await retryDatabaseOperation(async () =>
-      prisma.product.create({ data: productData })
+      prisma.$transaction(async (tx) => {
+        const newProduct = await tx.product.create({ data: productData });
+        
+        // Create initial variants (S, M, L, Custom) with stock 10
+        const defaultSizes = ['S', 'M', 'L', 'Custom'];
+        await tx.productVariant.createMany({
+          data: defaultSizes.map(size => ({
+            productId: newProduct.id,
+            size,
+            stock: 10,
+          }))
+        });
+        
+        return newProduct;
+      })
     );
 
     return NextResponse.json(transformDbProductToProduct(product), { status: 201 });

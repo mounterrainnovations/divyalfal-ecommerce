@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { NavLink } from '@/types';
 import { Button } from '@/components/ui/button';
+import CartIcon from '@/components/features/cart/cart-icon';
 
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -97,6 +98,11 @@ const NavBar = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Cart Icon */}
+            <div className="flex items-center justify-center mr-2">
+              <CartIcon />
+            </div>
+
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
             ) : user ? (
@@ -149,13 +155,16 @@ const NavBar = () => {
             </Link>
           </div>
 
-          <button
-            aria-label="Open menu"
-            className="p-3 rounded-lg hover:bg-amber-50 transition ml-auto"
-            onClick={() => setIsMobileMenuOpen(true)}
-          >
-            <Menu className="text-gray-900" size={24} />
-          </button>
+          <div className="flex items-center gap-4 ml-auto">
+            <CartIcon />
+            <button
+              aria-label="Open menu"
+              className="p-3 rounded-lg hover:bg-amber-50 transition"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="text-gray-900" size={24} />
+            </button>
+          </div>
         </div>
       </div>
 

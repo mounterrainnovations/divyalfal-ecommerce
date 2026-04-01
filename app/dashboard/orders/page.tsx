@@ -4,13 +4,17 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+import Link from 'next/link'
+
 async function getOrders() {
   return await prisma.order.findMany({
     include: {
       profile: true,
+      items: true
     },
     orderBy: { createdAt: 'desc' },
-    take: 20
+    take: 50
   })
 }
 
@@ -58,7 +62,7 @@ export default async function OrdersPage() {
                 <ShoppingCart className="w-8 h-8 text-amber-200" />
               </div>
               <h3 className="font-serif font-bold text-gray-900 text-xl">No active orders</h3>
-              <p className="text-sm text-gray-500 font-poppins mt-1">When customers start shopping, you'll see them here.</p>
+              <p className="text-sm text-gray-500 font-poppins mt-1">When customers start shopping, you&apos;ll see them here.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -67,6 +71,7 @@ export default async function OrdersPage() {
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Order ID</th>
                     <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Customer</th>
+                    <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Items</th>
                     <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Total</th>
                     <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Status</th>
                     <th className="px-6 py-4 text-right text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Actions</th>
@@ -84,16 +89,30 @@ export default async function OrdersPage() {
                         <p className="text-[10px] text-gray-400 font-poppins">{order.profile.email}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-poppins font-bold text-gray-900">₹{order.totalAmount.toLocaleString()}</span>
+                        <span className="font-poppins text-sm text-gray-600 font-medium">
+                          {order.items.reduce((acc, item) => acc + item.quantity, 0)} Items
+                        </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant="warning">{order.status}</Badge>
+                        <span className="font-poppins font-bold text-gray-900">₹{order.totalAmount.toNumber().toLocaleString('en-IN')}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="outline" className={`
+                          ${order.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-800 border-none' : 
+                            order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800 border-none' : 
+                            order.status === 'CANCELLED' ? 'bg-red-100 text-red-800 border-none' : 
+                            'bg-amber-100 text-amber-800 border-none'}
+                        `}>
+                          {order.status}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4 text-right">
                          <div className="flex items-center justify-end gap-2">
-                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-amber-100 hover:text-amber-600 text-gray-400">
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
+                           <Link href={`/dashboard/orders/${order.id}`}>
+                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-amber-100 hover:text-amber-600 text-gray-400 transition cursor-pointer">
+                              <ChevronRight className="w-5 h-5" />
+                             </Button>
+                           </Link>
                         </div>
                       </td>
                     </tr>

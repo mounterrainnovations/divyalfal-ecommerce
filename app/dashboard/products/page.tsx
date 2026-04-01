@@ -75,6 +75,7 @@ export default function ProductsPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
+        includeArchived: 'true',
         ...(search && { search }),
       })
       const response = await fetch(`/api/products?${params}`)
@@ -248,7 +249,14 @@ export default function ProductsPage() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-gray-900 truncate">{product.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-gray-900 truncate">{product.name}</p>
+                            {product.isArchived && (
+                              <Badge key="archived-badge" variant="outline" className="text-[10px] bg-gray-100 text-gray-500 border-gray-200">
+                                ARCHIVED
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-[10px] text-gray-400 truncate tracking-wide">#{product.id.split('-')[0].toUpperCase()}</p>
                         </div>
                       </div>
@@ -263,9 +271,18 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                       <Badge variant="success" className="gap-1 bg-emerald-50 text-emerald-700 border-emerald-100 uppercase tracking-tighter shadow-sm">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> In Stock
-                      </Badge>
+                      {(() => {
+                        const totalStock = product.variants ? product.variants.reduce((acc, v) => acc + v.stock, 0) : 0;
+                        return totalStock > 0 ? (
+                          <Badge variant="success" className="gap-1 bg-emerald-50 text-emerald-700 border-emerald-100 uppercase tracking-tighter shadow-sm">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> In Stock ({totalStock})
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive" className="gap-1 bg-red-50 text-red-700 border-red-100 uppercase tracking-tighter shadow-sm">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full" /> Out of Stock
+                          </Badge>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 px-1">

@@ -12,6 +12,18 @@ export interface DbProduct {
   salePrice?: Prisma.Decimal | string | number | null;
   specifications: string;
   category: ProductType;
+  isArchived: boolean;
+  variants?: DbProductVariant[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DbProductVariant {
+  id: string;
+  productId: string;
+  size: string;
+  color: string | null;
+  stock: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +41,16 @@ export interface Product {
   specifications?: string;
   description?: string;
   mostRecommended?: boolean;
+  isArchived?: boolean;
+  variants?: ProductVariant[];
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  size: string;
+  color?: string | null;
+  stock: number;
 }
 
 export type ProductType =

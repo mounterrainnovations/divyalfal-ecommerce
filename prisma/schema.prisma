@@ -14,13 +14,34 @@ model Profile {
   email     String   @unique
   fullName  String?
   avatarUrl String?
+  phone     String?
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders Order[]
+  orders    Order[]
+  addresses Address[]
 
   @@map("Profile")
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  profileId  String   @db.Uuid
+  fullName   String
+  phone      String
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("Address")
 }
 
 enum UserRole {
@@ -37,12 +58,29 @@ model Product {
   salePrice      Decimal?    @db.Decimal(10, 2)
   specifications String
   category       ProductType @default(OTHER) @map("type")
+  isArchived     Boolean     @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
+  variants   ProductVariant[]
   orderItems OrderItem[]
 
   @@map("Product")
+}
+
+model ProductVariant {
+  id        String   @id @default(uuid())
+  productId String
+  size      String
+  color     String?
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("ProductVariant")
 }
 
 enum ProductType {
@@ -56,12 +94,18 @@ enum ProductType {
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  profileId   String      @db.Uuid
-  status      OrderStatus @default(PENDING)
-  totalAmount Decimal     @db.Decimal(10, 2)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                String        @id @default(uuid())
+  profileId         String        @db.Uuid
+  status            OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  totalAmount       Decimal       @db.Decimal(10, 2)
+  shippingAddress   Json?
+  trackingId        String?
+  trackingUrl       String?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   profile Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
   items   OrderItem[]
@@ -77,15 +121,25 @@ enum OrderStatus {
   RETURNED
 }
 
-model OrderItem {
-  id        String  @id @default(uuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Decimal @db.Decimal(10, 2)
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+model OrderItem {
+  id                 String  @id @default(uuid())
+  orderId            String
+  productId          String
+  productVariantId   String
+  quantity           Int
+  price              Decimal @db.Decimal(10, 2)
+  customMeasurements Json?
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id])
+  variant ProductVariant @relation(fields: [productVariantId], references: [id])
 
   @@map("OrderItem")
 }
