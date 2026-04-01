@@ -45,6 +45,11 @@ next-env.d.ts
 .md
 .claude
 CLAUDE.md
+.md
+.claude
+CLAUDE.md
 
+/lib/generated/prisma
+.kilocodemodes
 /lib/generated/prisma
 .kilocodemodes
