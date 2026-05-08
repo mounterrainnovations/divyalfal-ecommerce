@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { checkAdmin } from '@/lib/auth-utils';
+
 
 export async function POST(request: Request) {
   try {
+    const { isAdmin } = await checkAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+    }
+
     const formData = await request.formData();
+
     const file = formData.get('file') as File;
 
     if (!file) {

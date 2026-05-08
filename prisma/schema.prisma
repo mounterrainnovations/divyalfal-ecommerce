@@ -21,6 +21,7 @@ model Profile {
 
   orders    Order[]
   addresses Address[]
+  payments  Payment[]
 
   @@map("Profile")
 }
@@ -95,8 +96,14 @@ enum ProductType {
 
 model Order {
   id                String        @id @default(uuid())
-  profileId         String        @db.Uuid
+  profileId         String?       @db.Uuid
+  isGuest           Boolean       @default(false)
+  guestEmail        String?
+  guestPhone        String?
+  guestName         String?
+  type              OrderType     @default(STANDARD)
   status            OrderStatus   @default(PENDING)
+
   paymentStatus     PaymentStatus @default(PENDING)
   totalAmount       Decimal       @db.Decimal(10, 2)
   shippingAddress   Json?
@@ -107,19 +114,59 @@ model Order {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  profile Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  items   OrderItem[]
+  profile  Profile?    @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+  payments Payment[]
 
   @@map("Order")
 }
 
+model Payment {
+  id                String   @id @default(uuid())
+  orderId           String
+  profileId         String?  @db.Uuid
+  provider          String   @default("razorpay")
+  providerOrderId   String   @unique @map("provider_order_id")
+  providerPaymentId String?  @map("provider_payment_id")
+  amount            Int      // in paise/minor units
+  currency          String   @default("INR")
+  status            String   // created, authorized, captured, refunded, etc.
+  metadata          Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  profile Profile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@map("Payment")
+}
+
+model PaymentEvent {
+  id              String   @id @default(uuid())
+  providerEventId String   @unique @map("provider_event_id")
+  provider        String
+  eventType       String   @map("event_type")
+  payload         Json
+  processedAt     DateTime @default(now()) @map("processed_at")
+
+  @@map("PaymentEvent")
+}
+
+
 enum OrderStatus {
   PENDING
+  QUOTE_REQUESTED
   SHIPPED
   DELIVERED
   CANCELLED
   RETURNED
 }
+
+enum OrderType {
+  STANDARD
+  RFQ
+}
+
 
 enum PaymentStatus {
   PENDING

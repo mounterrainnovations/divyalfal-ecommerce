@@ -85,8 +85,11 @@ export default async function OrdersPage() {
                         <p className="text-[10px] text-gray-400 font-poppins">{new Date(order.createdAt).toLocaleDateString()}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-poppins font-bold text-gray-900">{order.profile.fullName || 'User'}</p>
-                        <p className="text-[10px] text-gray-400 font-poppins">{order.profile.email}</p>
+                        <p className="font-poppins font-bold text-gray-900">
+                          {order.profile?.fullName || order.guestName || 'Guest User'}
+                          {order.isGuest && <Badge variant="outline" className="ml-2 bg-gray-100 text-[10px]">GUEST</Badge>}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-poppins">{order.profile?.email || order.guestEmail}</p>
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-poppins text-sm text-gray-600 font-medium">
@@ -97,14 +100,20 @@ export default async function OrdersPage() {
                         <span className="font-poppins font-bold text-gray-900">₹{order.totalAmount.toNumber().toLocaleString('en-IN')}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant="outline" className={`
-                          ${order.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-800 border-none' : 
-                            order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800 border-none' : 
-                            order.status === 'CANCELLED' ? 'bg-red-100 text-red-800 border-none' : 
-                            'bg-amber-100 text-amber-800 border-none'}
-                        `}>
-                          {order.status}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className={`
+                            ${order.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-800 border-none' : 
+                              order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800 border-none' : 
+                              order.status === 'CANCELLED' ? 'bg-red-100 text-red-800 border-none' : 
+                              order.status === 'QUOTE_REQUESTED' ? 'bg-purple-100 text-purple-800 border-none' :
+                              'bg-amber-100 text-amber-800 border-none'}
+                          `}>
+                            {order.status}
+                          </Badge>
+                          <span className="text-[10px] font-bold text-gray-400 px-2 uppercase tracking-tighter">
+                            {order.type}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                          <div className="flex items-center justify-end gap-2">

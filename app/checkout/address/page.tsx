@@ -25,14 +25,16 @@ export default function CheckoutAddressPage() {
   useEffect(() => {
     setMounted(true);
     
-    // Check authentication
+    // Check authentication and guest status
     const checkAuth = async () => {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        router.push('/login?callbackUrl=/checkout/address');
+      const isGuest = useCartStore.getState().isGuest;
+
+      if (!user && !isGuest) {
+        router.push('/checkout/auth');
         return;
       }
       

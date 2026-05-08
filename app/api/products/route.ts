@@ -8,6 +8,8 @@ import {
 } from '@/lib/utils/product-utils';
 import type { ProductCategory, ProductType } from '@/types';
 import { retryDatabaseOperation } from '@/lib/utils/database';
+import { checkAdmin } from '@/lib/auth-utils';
+
 
 export async function GET(request: Request) {
   try {
@@ -123,7 +125,13 @@ export async function GET(request: Request) {
 
 export async function POST(req: Request) {
   try {
+    const { isAdmin } = await checkAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+    }
+
     const data = await req.json();
+
 
     // Validate required fields
     if (!data.name || !data.price) {

@@ -12,7 +12,7 @@ import { formatPrice } from '@/lib/common/product-interfaces';
 export default function CartPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems, setIsGuest } = useCartStore();
 
   useEffect(() => {
     setMounted(true);
@@ -185,9 +185,10 @@ export default function CartPage() {
                     const { data: { user } } = await supabase.auth.getUser();
                     
                     if (!user) {
-                      router.push('/login?callbackUrl=/checkout/address');
+                      router.push('/checkout/auth');
                       return;
                     }
+                    setIsGuest(false);
                     router.push('/checkout/address');
                   }}
                   className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-full font-bold shadow-lg shadow-amber-200 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"

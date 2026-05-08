@@ -28,11 +28,13 @@ export interface CheckoutAddress {
 interface CartStore {
   items: CartItem[];
   address: CheckoutAddress | null;
+  isGuest: boolean;
   addItem: (item: Omit<CartItem, 'id'>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   setAddress: (address: CheckoutAddress) => void;
+  setIsGuest: (isGuest: boolean) => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
 }
@@ -42,6 +44,7 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       address: null,
+      isGuest: false,
       addItem: (item) =>
         set((state) => {
           const id = `${item.productId}-${item.size}`;
@@ -74,8 +77,9 @@ export const useCartStore = create<CartStore>()(
             item.id === id ? { ...item, quantity: Math.max(1, quantity) } : item
           ),
         })),
-      clearCart: () => set({ items: [], address: null }),
+      clearCart: () => set({ items: [], address: null, isGuest: false }),
       setAddress: (address) => set({ address }),
+      setIsGuest: (isGuest) => set({ isGuest }),
       getTotalItems: () =>
         get().items.reduce((total, item) => total + item.quantity, 0),
       getTotalPrice: () =>

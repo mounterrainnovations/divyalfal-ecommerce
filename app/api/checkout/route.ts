@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
+import { paymentsService } from '@/lib/payments';
+import { sendAdminRFQNotification } from '@/lib/email';
+
 
 export async function POST(req: Request) {
   try {
@@ -9,18 +12,19 @@ export async function POST(req: Request) {
 
     const profileId = user?.id;
 
-    if (!profileId) {
-      return NextResponse.json(
-        { error: 'Authentication required for checkout' },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
-    const { address, items, totalAmount } = body;
+    const { address, items, totalAmount, isGuest, type = 'STANDARD' } = body;
+
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+    }
+
+    if (!profileId && !isGuest) {
+      return NextResponse.json(
+        { error: 'Authentication or Guest status required for checkout' },
+        { status: 401 }
+      );
     }
 
     // Resolve missing variant IDs and Check Stock
@@ -59,24 +63,34 @@ export async function POST(req: Request) {
       };
     }));
 
-    // Begin Database Transaction to create Order and decrement stock
-    const order = await prisma.$transaction(async (tx) => {
+    // Begin Database Transaction to create Order, decrement stock, and create payment
+    const result = await prisma.$transaction(async (tx) => {
       // 1. Create the Order
       const newOrder = await tx.order.create({
         data: {
-          profileId: profileId!,
+          profileId: profileId || null,
+          isGuest: !!isGuest,
+          guestEmail: isGuest ? address.email : null,
+          guestPhone: isGuest ? address.phone : null,
+          guestName: isGuest ? address.fullName : null,
           totalAmount,
-          shippingAddress: address as any, // Cast to any to handle Prisma's complex JSON types
-          status: 'PENDING',
+          shippingAddress: address as any, 
+          type: type as any,
+          status: type === 'RFQ' ? 'QUOTE_REQUESTED' : 'PENDING',
           paymentStatus: 'PENDING',
           items: {
             create: resolvedItems
           }
         },
         include: {
-          items: true
+          items: {
+            include: {
+              product: true
+            }
+          }
         }
       });
+
 
       // 2. Deduct stock for each variant
       for (const item of resolvedItems) {
@@ -86,10 +100,49 @@ export async function POST(req: Request) {
         });
       }
 
-      return newOrder;
+      // 3. Conditional Razorpay Order Creation
+      let rzpOrderId = null;
+      if (type === 'STANDARD') {
+        const rzpOrder = await paymentsService.createOrder({
+          amount: Math.round(Number(totalAmount) * 100), // in paise
+          currency: 'INR',
+          receipt: newOrder.id,
+          notes: {
+            orderId: newOrder.id,
+            profileId: profileId || 'GUEST',
+            customerName: address.fullName
+          }
+        });
+
+        rzpOrderId = rzpOrder.id;
+
+        // 4. Update Order with Razorpay Order ID
+        await tx.order.update({
+          where: { id: newOrder.id },
+          data: { razorpayOrderId: rzpOrderId }
+        });
+
+        // 5. Create Payment record
+        await tx.payment.create({
+          data: {
+            id: crypto.randomUUID(),
+            orderId: newOrder.id,
+            profileId: profileId || null,
+            providerOrderId: rzpOrderId,
+            amount: Math.round(Number(totalAmount) * 100),
+            status: 'created',
+          }
+        });
+      } else if (type === 'RFQ') {
+        // For RFQ, trigger admin notification
+        await sendAdminRFQNotification(newOrder);
+      }
+
+      return { ...newOrder, razorpayOrderId: rzpOrderId };
     });
 
-    return NextResponse.json({ data: order });
+
+    return NextResponse.json({ data: result });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to place order';
     console.error('Checkout API Error:', error);

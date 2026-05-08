@@ -92,6 +92,34 @@ export default function AdminOrderDetailsPage() {
     }
   }
 
+  const handleManualApprove = async () => {
+    if (!confirm('Are you sure you want to manually approve this order? This will mark it as PAID.')) return
+    
+    setUpdating(true)
+    try {
+      const response = await fetch(`/api/orders/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentStatus: 'PAID',
+          status: 'SHIPPED' // Default to shipped upon approval, or keep as is? Let's keep status update flexible.
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to approve order')
+      const updatedData = await response.json()
+      setOrder({ ...order, ...updatedData })
+      setPaymentStatus('PAID')
+      setStatus(updatedData.status)
+      setSuccess('Order approved and marked as PAID manually')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -247,7 +275,7 @@ export default function AdminOrderDetailsPage() {
               <div className="p-6 space-y-4">
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest font-poppins">Email</p>
-                  <p className="font-poppins font-bold text-gray-900 mt-1">{order.profile?.email}</p>
+                  <p className="font-poppins font-bold text-gray-900 mt-1">{order.profile?.email || order.guestEmail}</p>
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest font-poppins">Phone</p>
@@ -342,8 +370,21 @@ export default function AdminOrderDetailsPage() {
               >
                 {updating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...</> : 'Save Changes'}
               </Button>
+
+              {(order.paymentStatus !== 'PAID') && (
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={handleManualApprove}
+                  disabled={updating}
+                  className="w-full h-12 border-emerald-200 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all font-poppins font-bold mt-4 flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" /> Approve & Mark Paid (Manual)
+                </Button>
+              )}
             </div>
           </form>
+
         </div>
       </div>
     </div>
