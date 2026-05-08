@@ -46,10 +46,26 @@ export default function DashboardLayout({
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      
+      const { data: profile } = await supabase
+        .from('Profile')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.role !== 'ADMIN') {
+        router.push('/profile')
+        return
+      }
+      
       setUser(user)
     }
     getUser()
-  }, [supabase.auth])
+  }, [supabase, router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

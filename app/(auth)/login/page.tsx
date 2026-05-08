@@ -34,7 +34,19 @@ export default function LoginPage() {
       setError(signInError.message)
       setIsLoading(false)
     } else {
-      router.push('/dashboard')
+      // Fetch the profile role directly from the database
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase
+        .from('Profile')
+        .select('role')
+        .eq('id', user?.id)
+        .single()
+      
+      if (profile?.role === 'ADMIN') {
+        router.push('/dashboard')
+      } else {
+        router.push('/profile')
+      }
       router.refresh()
     }
   }

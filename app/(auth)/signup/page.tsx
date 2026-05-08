@@ -48,8 +48,9 @@ export default function SignupPage() {
       setError(signUpError.message)
       setIsLoading(false)
     } else {
-      // Typically show a check your email message
-      router.push('/login?message=Check your email to confirm your account')
+      // Direct login after signup if email auto-confirm is enabled in Supabase
+      // For now, redirect to login but without the "check email" requirement message
+      router.push('/login?message=Account created! You can now sign in.')
     }
   }
 
