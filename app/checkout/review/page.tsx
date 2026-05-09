@@ -8,6 +8,7 @@ import { ChevronRight, Loader2, MapPin, Package, CreditCard } from 'lucide-react
 import Image from 'next/image';
 import { formatPrice } from '@/lib/common/product-interfaces';
 import Script from 'next/script';
+import { cn } from '@/lib/utils';
 
 
 export default function CheckoutReviewPage() {

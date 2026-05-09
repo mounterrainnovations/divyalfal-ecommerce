@@ -1,13 +1,29 @@
-import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
+const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_placeholder';
+
+async function resendFetch(endpoint: string, options: any) {
+  const response = await fetch(`https://api.resend.com${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(options),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    return { data: null, error: data };
+  }
+  return { data, error: null };
+}
 
 export async function sendOrderConfirmationEmail(order: any) {
   try {
     const email = order.profile?.email || order.guestEmail;
     if (!email) return;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resendFetch('/emails', {
       from: 'Divyafal <orders@divyafal.com>',
       to: [email],
       subject: `Order Confirmation - #${order.id.substring(0, 8)}`,
@@ -33,7 +49,7 @@ export async function sendShippingUpdateEmail(order: any) {
     const email = order.profile?.email || order.guestEmail;
     if (!email) return;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resendFetch('/emails', {
       from: 'Divyafal <orders@divyafal.com>',
       to: [email],
       subject: `Shipping Update - #${order.id.substring(0, 8)}`,
@@ -60,7 +76,7 @@ export async function sendAdminRFQNotification(order: any) {
     const customerName = order.profile?.fullName || order.guestName;
     const customerPhone = order.profile?.phone || order.guestPhone || order.shippingAddress?.phone;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resendFetch('/emails', {
       from: 'Divyafal RFQ <orders@divyafal.com>',
       to: [adminEmail],
       subject: `New Quote Request - #${order.id.substring(0, 8)}`,
@@ -99,4 +115,3 @@ export async function sendAdminRFQNotification(order: any) {
     console.error('Failed to send admin RFQ notification:', error);
   }
 }
-
