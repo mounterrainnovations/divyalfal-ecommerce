@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
-import { paymentsService } from '@/lib/payments';
+import { getPaymentsService } from '@/lib/payments';
 import { sendAdminRFQNotification } from '@/lib/email';
 import type { Prisma, OrderType } from '@prisma/client';
 
@@ -24,6 +24,7 @@ const publicRazorpayKeyId = process.env.RAZORPAY_KEY_ID || null;
 
 export async function POST(req: Request) {
   try {
+    const paymentsService = getPaymentsService();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
