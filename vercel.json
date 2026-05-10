@@ -1,4 +1,14 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/reconcile-payments",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-stock",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "functions": {
     "app/api/**/*.ts": {
       "includeFiles": "node_modules/.prisma/client/**"
