@@ -7,6 +7,9 @@ import Footer from '@/components/layout/footer';
 import { ChevronRight, Loader2, MapPin, Package, CreditCard } from 'lucide-react';
 import Image from 'next/image';
 import { formatPrice } from '@/lib/common/product-interfaces';
+import Script from 'next/script';
+import { cn } from '@/lib/utils';
+
 
 export default function CheckoutReviewPage() {
   const router = useRouter();
@@ -14,11 +17,22 @@ export default function CheckoutReviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   
-  const { items, address, getTotalPrice, getTotalItems, clearCart } = useCartStore();
+  const { items, address, getTotalPrice, getTotalItems, clearCart, isGuest } = useCartStore();
+
   
   const subtotal = getTotalPrice();
   const shipping = subtotal > 5000 ? 0 : 150;
   const total = subtotal + shipping;
+
+  const hasCustomItems = items.some(item => item.size === 'Custom');
+  const [orderType, setOrderType] = useState<'STANDARD' | 'RFQ'>('STANDARD');
+
+  useEffect(() => {
+    if (hasCustomItems) {
+      setOrderType('RFQ');
+    }
+  }, [hasCustomItems]);
+
 
   useEffect(() => {
     setMounted(true);
@@ -48,19 +62,22 @@ export default function CheckoutReviewPage() {
     setError('');
     
     try {
-      // Create simplified payload for creating the Mock Order in database
+      // 1. Create order in our database
       const orderPayload = {
         address,
         items: items.map(item => ({
           productId: item.productId,
-          variantId: item.product.variants?.find(v => v.size === item.size)?.id || null, // Will be null for Custom if custom size isn't linked, though our mock data has 'Custom' variant
+          variantId: item.product.variants?.find(v => v.size === item.size)?.id || null,
           size: item.size,
           quantity: item.quantity,
           price: item.product.sale && item.product.salePrice ? item.product.salePrice : item.product.price,
           customMeasurements: item.customMeasurements,
         })),
         totalAmount: total,
+        isGuest,
+        type: orderType,
       };
+
 
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -69,17 +86,74 @@ export default function CheckoutReviewPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create order');
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to create order');
       }
 
       const { data } = await response.json();
       
-      clearCart();
-      router.push(`/checkout/success?orderId=${data.id}`);
+      if (orderType === 'RFQ') {
+        clearCart();
+        router.push(`/checkout/success?orderId=${data.id}&type=rfq`);
+        return;
+      }
+      
+      // 2. Initialize Razorpay Checkout (Only for Standard)
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Should be in env
+        amount: Math.round(total * 100),
+        currency: "INR",
+        name: "Divyafal Boutique",
+        description: `Order #${data.id.substring(0, 8)}`,
+        order_id: data.razorpayOrderId,
+        handler: async function (response: any) {
+          try {
+            setIsSubmitting(true);
+            const verifyResponse = await fetch('/api/payments/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            if (verifyResponse.ok) {
+              clearCart();
+              router.push(`/checkout/success?orderId=${data.id}`);
+            } else {
+              const errorData = await verifyResponse.json();
+              setError(errorData.error || 'Payment verification failed. Please contact support.');
+              setIsSubmitting(false);
+            }
+          } catch (err) {
+            console.error('Verification error:', err);
+            setError('An error occurred during payment verification.');
+            setIsSubmitting(false);
+          }
+        },
+        prefill: {
+          name: address.fullName,
+          email: address.email,
+          contact: address.phone,
+        },
+        theme: {
+          color: "#d97706", // amber-600
+        },
+        modal: {
+          ondismiss: function() {
+            setIsSubmitting(false);
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
       
     } catch (err) {
       console.error('Checkout error:', err);
-      setError('An error occurred while placing your order. Please try again.');
+      setError(err instanceof Error ? err.message : 'An error occurred while placing your order.');
       setIsSubmitting(false);
     }
   };
@@ -87,7 +161,12 @@ export default function CheckoutReviewPage() {
   return (
     <div className="min-h-screen flex flex-col pt-24 font-poppins bg-gray-50">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-6xl">
+        <Script
+          id="razorpay-checkout-js"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+        />
         {/* Checkout Steps string */}
+
         <div className="flex items-center gap-2 mb-8 text-sm font-medium">
           <span className="text-gray-500">Cart</span>
           <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -122,13 +201,38 @@ export default function CheckoutReviewPage() {
             </div>
 
             {/* Payment Details */}
-            <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex gap-4 opacity-70">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
-                <CreditCard className="w-6 h-6 text-gray-500" />
+            <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+              <div className="flex gap-4">
+                <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center shrink-0">
+                  <CreditCard className="w-6 h-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Checkout Method</h3>
+                  <p className="text-gray-500 text-sm">Choose how you would like to proceed with this order.</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Method</h3>
-                <p className="text-gray-500 text-sm">Prepaid Order (Mock Gateway Integration Pending)</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div 
+                  onClick={() => setOrderType('STANDARD')}
+                  className={cn(
+                    "p-4 rounded-2xl border-2 cursor-pointer transition-all",
+                    orderType === 'STANDARD' ? "border-amber-600 bg-amber-50/30" : "border-gray-100 hover:border-amber-200"
+                  )}
+                >
+                  <p className="font-bold text-gray-900">Pay Now (Online)</p>
+                  <p className="text-xs text-gray-500 mt-1">Pay securely via Razorpay/GPay and confirm instantly.</p>
+                </div>
+                <div 
+                  onClick={() => setOrderType('RFQ')}
+                  className={cn(
+                    "p-4 rounded-2xl border-2 cursor-pointer transition-all",
+                    orderType === 'RFQ' ? "border-amber-600 bg-amber-50/30" : "border-gray-100 hover:border-amber-200"
+                  )}
+                >
+                  <p className="font-bold text-gray-900">Request a Quote</p>
+                  <p className="text-xs text-gray-500 mt-1">Recommended for custom orders. We will review and contact you for payment.</p>
+                </div>
               </div>
             </div>
 
@@ -207,9 +311,10 @@ export default function CheckoutReviewPage() {
                   {isSubmitting ? (
                     <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
                   ) : (
-                    'Place Order securely'
+                    orderType === 'RFQ' ? 'Request Quote' : 'Place Order securely'
                   )}
                 </button>
+
               </div>
             </div>
         </div>

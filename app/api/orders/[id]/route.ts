@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { createClient } from '@/lib/supabase/server'
+import { sendShippingUpdateEmail } from '@/lib/email'
+
 
 export async function PATCH(
   request: NextRequest,
@@ -27,6 +29,8 @@ export async function PATCH(
     const body = await request.json()
     const { status, paymentStatus, trackingId, trackingUrl } = body
 
+    const oldOrder = await prisma.order.findUnique({ where: { id } })
+
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
@@ -34,8 +38,14 @@ export async function PATCH(
         paymentStatus: paymentStatus || undefined,
         trackingId: trackingId !== undefined ? trackingId : undefined,
         trackingUrl: trackingUrl !== undefined ? trackingUrl : undefined,
-      }
+      },
+      include: { profile: true }
     })
+
+    // If tracking ID was added or changed, send shipping update email
+    if (trackingId && trackingId !== oldOrder?.trackingId) {
+      await sendShippingUpdateEmail(updatedOrder)
+    }
 
     return NextResponse.json(updatedOrder)
   } catch (error) {
@@ -57,14 +67,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is ADMIN
     const profile = await prisma.profile.findUnique({
       where: { id: user.id }
     })
-
-    if (profile?.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -81,6 +86,11 @@ export async function GET(
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
+
+    // Check if user is ADMIN or the owner of the order
+    if (profile?.role !== 'ADMIN' && order.profileId !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     return NextResponse.json(order)

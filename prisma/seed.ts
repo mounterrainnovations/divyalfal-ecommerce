@@ -11,13 +11,13 @@ async function main() {
   await prisma.order.deleteMany({});
   await prisma.productVariant.deleteMany({});
   await prisma.product.deleteMany({});
-  await prisma.address.deleteMany({});
-  await prisma.profile.deleteMany({});
 
   console.log('Seeding Profiles...');
-  // Create an Admin Profile
-  const admin = await prisma.profile.create({
-    data: {
+  // Create or Update Admin Profile
+  const admin = await prisma.profile.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000000' },
+    update: {},
+    create: {
       id: '00000000-0000-0000-0000-000000000000', // Dummy UUID
       email: 'admin@divyafal.com',
       fullName: 'Divyafal Admin',

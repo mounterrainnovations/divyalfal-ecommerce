@@ -1,0 +1,358 @@
+{
+  "info": {
+    "_postman_id": "divyafal-ecommerce-api",
+    "name": "Divyafal Ecommerce API",
+    "description": "Comprehensive API collection for Divyafal Boutique Ecommerce platform, including Payments, RFQ, and Order Management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Endpoints",
+      "item": [
+        {
+          "name": "Checkout (Standard)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": {\n        \"fullName\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"phone\": \"9876543210\",\n        \"street\": \"123 Fashion Street\",\n        \"city\": \"Mumbai\",\n        \"state\": \"Maharashtra\",\n        \"postalCode\": \"400001\"\n    },\n    \"items\": [\n        {\n            \"productId\": \"prod-uuid\",\n            \"size\": \"M\",\n            \"quantity\": 1,\n            \"price\": 4999\n        }\n    ],\n    \"totalAmount\": 4999,\n    \"isGuest\": true,\n    \"type\": \"STANDARD\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"]
+            },
+            "description": "Creates a standard order and a Razorpay order ID. Deducts stock immediately."
+          },
+          "response": []
+        },
+        {
+          "name": "Checkout (RFQ)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"address\": {\n        \"fullName\": \"Jane Smith\",\n        \"email\": \"jane@example.com\",\n        \"phone\": \"9988776655\",\n        \"street\": \"456 Custom Lane\",\n        \"city\": \"Delhi\",\n        \"state\": \"Delhi\",\n        \"postalCode\": \"110001\"\n    },\n    \"items\": [\n        {\n            \"productId\": \"prod-uuid\",\n            \"size\": \"Custom\",\n            \"quantity\": 1,\n            \"price\": 0,\n            \"customMeasurements\": {\n                \"bust\": \"34\",\n                \"waist\": \"28\",\n                \"hips\": \"36\"\n            }\n        }\n    ],\n    \"totalAmount\": 0,\n    \"isGuest\": true,\n    \"type\": \"RFQ\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"]
+            },
+            "description": "Creates a Request for Quote (RFQ) order. Triggers admin notification and sets status to QUOTE_REQUESTED."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"razorpay_order_id\": \"order_OTV...\",\n    \"razorpay_payment_id\": \"pay_OTV...\",\n    \"razorpay_signature\": \"...\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/verify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "verify"]
+            },
+            "description": "Verifies the Razorpay payment signature and updates order status to PAID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order-uuid"
+                }
+              ]
+            },
+            "description": "Fetches details of a specific order. Requires Auth (Admin or Owner)."
+          },
+          "response": []
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/products?search=Saree&categories=SAREE,LEHENGA&minPrice=1000&maxPrice=10000&sortBy=newest&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Saree"
+                },
+                {
+                  "key": "categories",
+                  "value": "SAREE,LEHENGA"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "1000"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "10000"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "newest"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Fetches and filters products with pagination."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Endpoints",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Banarasi Silk Saree\",\n    \"price\": 12500,\n    \"category\": \"SAREE\",\n    \"specifications\": \"Handwoven pure silk with gold zari work.\",\n    \"photos\": [\"https://.../photo1.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"]
+            },
+            "description": "Creates a new product with default variants (S, M, L, Custom). Requires Admin Auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Saree Name\",\n    \"price\": 13000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product-uuid"
+                }
+              ]
+            },
+            "description": "Updates product details. Requires Admin Auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product-uuid"
+                }
+              ]
+            },
+            "description": "Archives a product. Requires Admin Auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"SHIPPED\",\n    \"trackingId\": \"AWB123456789\",\n    \"trackingUrl\": \"https://delhivery.com/track/AWB123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order-uuid"
+                }
+              ]
+            },
+            "description": "Updates order status and tracking details. Triggers shipping email if trackingId is added. Requires Admin Auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload"]
+            },
+            "description": "Uploads an image to Supabase Storage. Requires Admin Auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System & Automation",
+      "item": [
+        {
+          "name": "Razorpay Webhook (Simulate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-razorpay-signature",
+                "value": "valid_hmac_signature"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"event\": \"payment.captured\",\n    \"payload\": {\n        \"payment\": {\n            \"entity\": {\n                \"id\": \"pay_123\",\n                \"order_id\": \"order_456\",\n                \"amount\": 50000\n            }\n        }\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "webhook"]
+            },
+            "description": "Simulates a Razorpay webhook event for payment capture."
+          },
+          "response": []
+        },
+        {
+          "name": "Cron: Cleanup Stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cron/cleanup-stock?secret={{cron_secret}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cron", "cleanup-stock"],
+              "query": [
+                {
+                  "key": "secret",
+                  "value": "{{cron_secret}}"
+                }
+              ]
+            },
+            "description": "Manually triggers the cleanup of expired pending orders and restores stock."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "cron_secret",
+      "value": "your_cron_secret_here",
+      "type": "string"
+    }
+  ]
+}

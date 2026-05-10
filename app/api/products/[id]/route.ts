@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { transformDbProductToProduct } from '@/lib/utils/product-utils';
 import { retryDatabaseOperation } from '@/lib/utils/database';
+import { checkAdmin } from '@/lib/auth-utils';
+
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -31,7 +33,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { isAdmin } = await checkAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+    }
+
     const { id } = await params;
+
     const data = await req.json();
     const product = await retryDatabaseOperation(async () =>
       prisma.product.update({ where: { id }, data })
@@ -57,7 +65,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { isAdmin } = await checkAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+    }
+
     const { id } = await params;
+
     await retryDatabaseOperation(async () => prisma.product.delete({ where: { id } }));
     return NextResponse.json({ message: 'Deleted successfully' });
   } catch (error) {
