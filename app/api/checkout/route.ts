@@ -120,7 +120,7 @@ export async function POST(req: Request) {
           status: type === 'RFQ' ? 'QUOTE_REQUESTED' : 'PENDING',
           paymentStatus: 'PENDING',
           items: {
-            create: resolvedItems
+            create: resolvedItems as unknown as Prisma.OrderItemUncheckedCreateWithoutOrderInput[]
           }
         },
         include: {

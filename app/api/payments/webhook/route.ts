@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { paymentsService } from '@/lib/payments';
 import { sendOrderConfirmationEmail } from '@/lib/email';
+import type { Prisma } from '@prisma/client';
 
 
 export async function POST(req: Request) {
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
         providerEventId: providerEventId || `evt_${Date.now()}`,
         provider: 'razorpay',
         eventType: event.type,
-        payload: event.raw,
+        payload: event.raw as Prisma.InputJsonValue,
       }
     });
 

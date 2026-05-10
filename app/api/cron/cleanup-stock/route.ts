@@ -29,7 +29,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'No expired orders found' });
     }
 
-    const reconciliationResults = [];
+    const reconciliationResults: any[] = [];
     for (const order of expiredOrders) {
       reconciliationResults.push(
         await reconcileOrderPayment({

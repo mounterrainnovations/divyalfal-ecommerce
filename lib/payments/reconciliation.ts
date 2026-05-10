@@ -1,7 +1,17 @@
 import { prisma } from '@/lib/db';
 import { paymentsService } from '@/lib/payments';
 import { sendOrderConfirmationEmail } from '@/lib/email';
-import type { PaymentStatus as GatewayPaymentStatus } from '@mounterrainnovations/payments';
+import type { Prisma } from '@prisma/client';
+
+// Using local type since library types might be missing in some environments
+type GatewayPaymentStatus = 
+  | "created"
+  | "pending"
+  | "authorized"
+  | "captured"
+  | "failed"
+  | "partially_refunded"
+  | "refunded";
 
 type ReconcilableOrder = {
   id: string;
@@ -159,7 +169,7 @@ export async function reconcileOrderPayment(
 
   try {
     const expectedAmount = Math.round(Number(order.totalAmount) * 100);
-    const payments = await paymentsService.fetchOrderPayments(order.razorpayOrderId);
+    const payments = await (paymentsService as any).fetchOrderPayments(order.razorpayOrderId);
 
     if (payments.length === 0) {
       return {
