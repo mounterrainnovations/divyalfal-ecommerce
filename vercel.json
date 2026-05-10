@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/reconcile-payments",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/cleanup-stock",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 0 * * *"
     }
   ],
   "functions": {
