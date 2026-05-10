@@ -115,7 +115,7 @@ export async function POST(req: Request) {
           guestPhone: isGuest ? address.phone : null,
           guestName: isGuest ? address.fullName : null,
           totalAmount: serverTotalAmount,
-          shippingAddress: address as Prisma.InputJsonValue,
+          shippingAddress: address as unknown as Prisma.InputJsonValue,
           type,
           status: type === 'RFQ' ? 'QUOTE_REQUESTED' : 'PENDING',
           paymentStatus: 'PENDING',

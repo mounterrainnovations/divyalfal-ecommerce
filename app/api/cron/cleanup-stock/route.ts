@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { reconcileOrderPayment } from '@/lib/payments/reconciliation';
+import { isValidCronRequest } from '@/lib/utils/cron-auth';
 
 export async function GET(request: Request) {
-  // Security check: Verify a cron secret to prevent unauthorized calls
-  const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
-
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+  if (!isValidCronRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -31,10 +29,35 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'No expired orders found' });
     }
 
+    const reconciliationResults = [];
+    for (const order of expiredOrders) {
+      reconciliationResults.push(
+        await reconcileOrderPayment({
+          id: order.id,
+          profileId: order.profileId,
+          totalAmount: order.totalAmount,
+          paymentStatus: order.paymentStatus,
+          razorpayOrderId: order.razorpayOrderId,
+        })
+      );
+    }
+
+    const ordersToCancel = expiredOrders.filter((order) => {
+      const reconciliation = reconciliationResults.find((result) => result.orderId === order.id);
+      return reconciliation?.outcome !== 'paid_reconciled' && reconciliation?.outcome !== 'already_paid';
+    });
+
+    if (ordersToCancel.length === 0) {
+      return NextResponse.json({
+        message: 'All expired orders were recovered during reconciliation',
+        reconciliationResults,
+      });
+    }
+
     const results = await prisma.$transaction(async (tx) => {
       const processed = [];
 
-      for (const order of expiredOrders) {
+      for (const order of ordersToCancel) {
         // Restore stock
         for (const item of order.items) {
           await tx.productVariant.update({
@@ -57,7 +80,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ 
       message: `Successfully cleaned up ${results.length} orders`,
-      orderIds: results 
+      orderIds: results,
+      reconciliationResults,
     });
   } catch (error) {
     console.error('Cron stock cleanup error:', error);
