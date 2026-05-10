@@ -1,5 +1,14 @@
 
 declare module '@mounterrainnovations/payments' {
+  export type PaymentStatus =
+    | 'created'
+    | 'pending'
+    | 'authorized'
+    | 'captured'
+    | 'failed'
+    | 'partially_refunded'
+    | 'refunded';
+
   export interface CreateOrderResult {
     providerOrderId: string;
     amount: number;
@@ -13,7 +22,7 @@ declare module '@mounterrainnovations/payments' {
     providerOrderId: string;
     amount: number;
     currency: string;
-    status: string;
+    status: PaymentStatus;
     method?: string;
     email?: string;
     contact?: string;
