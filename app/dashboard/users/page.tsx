@@ -16,33 +16,33 @@ export default async function CustomersPage() {
   const users = await getUsers()
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-500 font-poppins mt-1">Manage and view user accounts for Divyafal.</p>
+          <h1 className="text-4xl font-serif font-bold text-stone-900 tracking-tight">Customers</h1>
+          <p className="text-stone-500 font-poppins mt-2 text-[15px]">Manage and view user accounts for Divyafal.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-amber-100 bg-white font-poppins font-bold text-amber-600 hover:bg-amber-50 rounded-xl">
-            <Download className="w-4 h-4 mr-2" /> Export Users
+        <div className="flex items-center gap-4">
+          <Button variant="outline" className="border-stone-200 bg-white font-poppins font-semibold text-stone-700 hover:bg-stone-50 rounded-xl shadow-sm h-11 px-5">
+            <Download className="w-4 h-4 mr-2 text-stone-500" /> Export Users
           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-amber-50 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+      <div className="bg-white rounded-[2rem] border border-stone-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col min-h-[500px] relative">
         {/* Table Header / Toolbar */}
-        <div className="p-6 border-b border-amber-50 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/30">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="p-6 md:px-8 border-b border-stone-100 flex flex-col sm:flex-row gap-4 justify-between items-center bg-stone-50/50">
+          <div className="relative w-full sm:w-[400px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
             <Input 
               placeholder="Search by name or email..." 
-              className="pl-10 h-10 bg-white border-amber-100 focus:ring-amber-500 rounded-xl font-poppins"
+              className="pl-11 h-12 bg-white border-stone-200 focus:ring-rose-950/20 focus:border-rose-900 rounded-xl font-poppins shadow-sm transition-all text-[15px]"
             />
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hover:bg-amber-50 rounded-lg text-gray-400 hover:text-amber-600">
+            <Button variant="ghost" size="icon" className="hover:bg-stone-100 rounded-xl text-stone-400 hover:text-stone-700 transition-colors h-11 w-11 shadow-sm border border-stone-200 bg-white">
               <Filter className="w-5 h-5" />
             </Button>
           </div>
@@ -50,49 +50,49 @@ export default async function CustomersPage() {
 
         {/* Users Table */}
         <div className="flex-1 overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#fcf9f6] border-b border-amber-50">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-[#FDFBF7] border-b border-stone-100">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">User</th>
-                <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Role</th>
-                <th className="px-6 py-4 text-left text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Joined</th>
-                <th className="px-6 py-4 text-right text-xs font-poppins font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                <th className="px-8 py-5 text-[11px] font-poppins font-bold text-stone-500 uppercase tracking-[0.2em]">User</th>
+                <th className="px-8 py-5 text-[11px] font-poppins font-bold text-stone-500 uppercase tracking-[0.2em]">Role</th>
+                <th className="px-8 py-5 text-[11px] font-poppins font-bold text-stone-500 uppercase tracking-[0.2em]">Joined</th>
+                <th className="px-8 py-5 text-right text-[11px] font-poppins font-bold text-stone-500 uppercase tracking-[0.2em]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-amber-50">
+            <tbody className="divide-y divide-stone-100/60 font-poppins">
               {users.map((user) => (
-                <tr key={user.id} className="group hover:bg-amber-50/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 font-bold font-serif text-lg">
+                <tr key={user.id} className="group hover:bg-stone-50/50 transition-colors duration-300">
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-2xl bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-700 font-bold font-serif text-lg shadow-sm">
                         {(user.fullName?.[0] || user.email?.[0] || 'U').toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-poppins font-bold text-gray-900 truncate">{user.fullName || 'No Name Set'}</p>
-                        <p className="text-[10px] text-gray-400 font-poppins truncate tracking-tight flex items-center gap-1">
-                          <Mail className="w-2.5 h-2.5" /> {user.email}
+                        <p className="font-poppins font-bold text-stone-900 text-[15px] truncate">{user.fullName || 'No Name Set'}</p>
+                        <p className="text-[12px] text-stone-500 font-poppins truncate tracking-tight flex items-center gap-1.5 mt-0.5">
+                          <Mail className="w-3 h-3 text-stone-400" /> {user.email}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={user.role === 'ADMIN' ? 'warning' : 'outline'} className="font-poppins gap-1">
+                  <td className="px-8 py-5">
+                    <Badge variant={user.role === 'ADMIN' ? 'warning' : 'outline'} className={`font-poppins font-bold uppercase tracking-[0.1em] text-[10px] px-2.5 py-1 gap-1.5 shadow-sm ${user.role === 'ADMIN' ? 'bg-amber-50 text-amber-800 border-amber-200/50' : 'bg-stone-50 text-stone-600 border-stone-200'}`}>
                       {user.role === 'ADMIN' && <ShieldAlert className="w-3 h-3" />}
                       {user.role}
                     </Badge>
                   </td>
-                  <td className="px-6 py-4">
-                    <p className="font-poppins font-medium text-gray-700 text-sm flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                      {new Date(user.createdAt).toLocaleDateString()}
+                  <td className="px-8 py-5">
+                    <p className="font-poppins font-medium text-stone-700 text-[15px] flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-stone-400" />
+                      {new Date(user.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </p>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 text-gray-400 group-hover:text-gray-900 transition-colors">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-amber-100 hover:text-amber-600">
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end gap-2 text-stone-400 transition-colors">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-stone-100 hover:text-stone-900 transition-colors">
                         <Edit3 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-rose-50 hover:text-rose-700 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>

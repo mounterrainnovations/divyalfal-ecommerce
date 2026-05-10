@@ -54,14 +54,23 @@ export async function POST(req: Request) {
         throw new Error(`Insufficient stock for ${variant.product.name} (${variant.size}). Available: ${variant.stock}`);
       }
 
+      const dbPrice = variant.product.sale && variant.product.salePrice 
+        ? variant.product.salePrice 
+        : variant.product.price;
+
       return {
         productId: item.productId,
         productVariantId: variant.id,
         quantity: item.quantity,
-        price: item.price,
+        price: dbPrice,
         customMeasurements: item.customMeasurements,
       };
     }));
+
+    // Server-side calculation of total amount
+    const serverTotalAmount = resolvedItems.reduce((total, item) => {
+      return total + (Number(item.price) * item.quantity);
+    }, 0);
 
     // Begin Database Transaction to create Order, decrement stock, and create payment
     const result = await prisma.$transaction(async (tx) => {
@@ -73,7 +82,7 @@ export async function POST(req: Request) {
           guestEmail: isGuest ? address.email : null,
           guestPhone: isGuest ? address.phone : null,
           guestName: isGuest ? address.fullName : null,
-          totalAmount,
+          totalAmount: serverTotalAmount,
           shippingAddress: address as any, 
           type: type as any,
           status: type === 'RFQ' ? 'QUOTE_REQUESTED' : 'PENDING',
@@ -85,7 +94,8 @@ export async function POST(req: Request) {
         include: {
           items: {
             include: {
-              product: true
+              product: true,
+              variant: true
             }
           }
         }
@@ -104,7 +114,7 @@ export async function POST(req: Request) {
       let rzpOrderId = null;
       if (type === 'STANDARD') {
         const rzpOrder = await paymentsService.createOrder({
-          amount: Math.round(Number(totalAmount) * 100), // in paise
+          amount: Math.round(Number(serverTotalAmount) * 100), // in paise
           currency: 'INR',
           receipt: newOrder.id,
           notes: {
@@ -129,7 +139,7 @@ export async function POST(req: Request) {
             orderId: newOrder.id,
             profileId: profileId || null,
             providerOrderId: rzpOrderId,
-            amount: Math.round(Number(totalAmount) * 100),
+            amount: Math.round(Number(serverTotalAmount) * 100),
             status: 'created',
           }
         });

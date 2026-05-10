@@ -13,8 +13,9 @@ export async function GET(request: Request) {
   try {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    // Find expired pending standard orders
+    // Find expired pending standard orders (limit to 50 to prevent timeout)
     const expiredOrders = await prisma.order.findMany({
+      take: 50,
       where: {
         type: 'STANDARD',
         status: 'PENDING',

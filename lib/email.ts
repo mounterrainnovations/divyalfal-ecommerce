@@ -95,7 +95,7 @@ export async function sendAdminRFQNotification(order: any) {
         <ul>
           ${order.items.map((item: any) => `
             <li>
-              <strong>${item.product?.name}</strong> (Size: ${item.size})
+              <strong>${item.product?.name}</strong> (Size: ${item.variant?.size || 'N/A'})
               ${item.customMeasurements ? `<br/>Custom Measurements: ${JSON.stringify(item.customMeasurements)}` : ''}
             </li>
           `).join('')}
