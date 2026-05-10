@@ -10,10 +10,25 @@ declare module '@mounterrainnovations/payments' {
 
   export interface PaymentDetails {
     providerPaymentId: string;
-    providerOrderId?: string;
+    providerOrderId: string;
     amount: number;
     currency: string;
     status: string;
+    method?: string;
+    email?: string;
+    contact?: string;
+    notes?: Record<string, string>;
+    createdAt: Date;
+    raw?: unknown;
+  }
+
+  export interface OrderDetails {
+    providerOrderId: string;
+    amount: number;
+    currency: string;
+    receipt?: string;
+    status: string;
+    createdAt: Date;
     raw?: unknown;
   }
 
@@ -44,6 +59,9 @@ declare module '@mounterrainnovations/payments' {
       receipt: string;
       notes?: Record<string, string>;
     }): Promise<CreateOrderResult>;
+    fetchOrder(orderId: string): Promise<OrderDetails>;
+    fetchOrderPayments(orderId: string): Promise<PaymentDetails[]>;
+    fetchPayment(paymentId: string): Promise<PaymentDetails>;
     verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean;
     verifyAndFetchCheckoutPayment(data: {
       orderId: string;
