@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { transformDbProductToProduct, getDbCategory } from '@/lib/utils/product-utils';
+import { normalizeVariants, validateVariants } from '@/lib/utils/product-variants';
 import { retryDatabaseOperation } from '@/lib/utils/database';
 import { checkAdmin } from '@/lib/auth-utils';
 import type { ProductCategory } from '@/types';
@@ -43,8 +44,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { id } = await params;
     const body = await req.json();
 
+    if (body.variants !== undefined) {
+      const variantError = validateVariants(body.variants);
+      if (variantError) {
+        return NextResponse.json({ error: variantError }, { status: 400 });
+      }
+    }
+
     // Clean and transform data to match Prisma schema
-    const updateData: any = {};
+    const updateData: Prisma.ProductUpdateInput = {};
     if (body.name) updateData.name = body.name;
     if (body.price) updateData.price = new Prisma.Decimal(body.price);
     if (body.salePrice !== undefined) {
@@ -75,7 +83,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const product = await retryDatabaseOperation(async () =>
       prisma.$transaction(async (tx) => {
         // 1. Update the core product
-        const updated = await tx.product.update({ 
+        await tx.product.update({ 
           where: { id }, 
           data: updateData,
           include: { variants: true }
@@ -83,19 +91,59 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         // 2. Sync variants if provided
         if (body.variants && Array.isArray(body.variants)) {
-          // Simplest sync strategy: delete existing and recreate
-          await tx.productVariant.deleteMany({
-            where: { productId: id }
+          const existingVariants = await tx.productVariant.findMany({
+            where: { productId: id },
+            include: {
+              orderItems: {
+                select: { id: true }
+              }
+            }
           });
 
-          await tx.productVariant.createMany({
-            data: body.variants.map((v: any) => ({
-              productId: id,
-              size: v.size,
-              color: v.color || null,
-              stock: v.stock || 0,
-            }))
-          });
+          const normalizedVariants = normalizeVariants(body.variants);
+          const existingById = new Map(existingVariants.map((variant) => [variant.id, variant]));
+          const incomingIds = new Set(
+            normalizedVariants.map((variant) => variant.id).filter((variantId): variantId is string => Boolean(variantId))
+          );
+
+          for (const variant of normalizedVariants) {
+            if (variant.id && existingById.has(variant.id)) {
+              await tx.productVariant.update({
+                where: { id: variant.id },
+                data: {
+                  size: variant.size,
+                  color: variant.color,
+                  stock: variant.stock,
+                }
+              });
+              continue;
+            }
+
+            await tx.productVariant.create({
+              data: {
+                productId: id,
+                size: variant.size,
+                color: variant.color,
+                stock: variant.stock,
+              }
+            });
+          }
+
+          for (const existingVariant of existingVariants) {
+            if (incomingIds.has(existingVariant.id)) {
+              continue;
+            }
+
+            if (existingVariant.orderItems.length > 0) {
+              throw new Error(
+                `Cannot remove variant "${existingVariant.size}" because it is referenced by existing orders. Set its stock to 0 instead.`
+              );
+            }
+
+            await tx.productVariant.delete({
+              where: { id: existingVariant.id }
+            });
+          }
         }
 
         return tx.product.findUnique({
@@ -114,6 +162,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     if (errorMessage.includes('Record to update not found')) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    if (errorMessage.includes('Cannot remove variant')) {
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
     return NextResponse.json(

@@ -6,6 +6,7 @@ import {
   transformDbProductsToProducts,
   getDbCategory,
 } from '@/lib/utils/product-utils';
+import { normalizeVariants, validateVariants } from '@/lib/utils/product-variants';
 import type { ProductCategory, ProductType } from '@/types';
 import { retryDatabaseOperation } from '@/lib/utils/database';
 import { checkAdmin } from '@/lib/auth-utils';
@@ -118,6 +119,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 });
     }
 
+    if (data.variants !== undefined) {
+      const variantError = validateVariants(data.variants);
+      if (variantError) {
+        return NextResponse.json({ error: variantError }, { status: 400 });
+      }
+    }
+
     const product = await retryDatabaseOperation(async () =>
       prisma.$transaction(async (tx) => {
         const newProduct = await tx.product.create({
@@ -134,12 +142,13 @@ export async function POST(req: Request) {
         });
         
         if (data.variants && Array.isArray(data.variants)) {
+          const normalizedVariants = normalizeVariants(data.variants);
           await tx.productVariant.createMany({
-            data: data.variants.map((v: any) => ({
+            data: normalizedVariants.map((v) => ({
               productId: newProduct.id,
               size: v.size,
-              color: v.color || null,
-              stock: v.stock || 0,
+              color: v.color,
+              stock: v.stock,
             }))
           });
         } else {

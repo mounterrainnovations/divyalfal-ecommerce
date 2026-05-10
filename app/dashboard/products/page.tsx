@@ -12,7 +12,6 @@ import {
   Download,
   Loader2,
   Image as ImageIcon,
-  Archive,
   Eye,
   EyeOff,
   Star,
@@ -30,12 +29,13 @@ import {
   DialogFooter
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import type { Product, ProductType, ProductVariant } from '@/types'
+import type { Product, ProductCategory, ProductType, ProductVariant } from '@/types'
 import { toast, Toaster } from 'sonner'
 import { AlertModal } from '@/components/ui/alert-modal'
 import { ImageCropperModal } from '@/components/features/products/admin/image-cropper-modal'
 import { VariantManager } from '@/components/features/products/admin/variant-manager'
 import RichTextEditor from '@/components/ui/rich-text-editor'
+import { getDbCategory } from '@/lib/utils/product-utils'
 
 const CATEGORIES: ProductType[] = ['SAREE', 'INDO_WESTERN', 'LEHENGA', 'SUIT', 'KURTA_PANT', 'WESTERN', 'OTHER']
 
@@ -129,7 +129,7 @@ export default function ProductsPage() {
       description: product.specifications || product.description || '',
       price: product.price.toString(),
       salePrice: product.salePrice?.toString() || '',
-      category: product.category as any,
+      category: getDbCategory(product.category as ProductCategory),
       photos: product.photos || (product.image ? [product.image] : []),
       sale: product.sale || false,
       mostRecommended: product.mostRecommended || false,

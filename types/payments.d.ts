@@ -1,5 +1,33 @@
 
 declare module '@mounterrainnovations/payments' {
+  export interface CreateOrderResult {
+    providerOrderId: string;
+    amount: number;
+    currency: string;
+    receipt?: string;
+    raw?: unknown;
+  }
+
+  export interface PaymentDetails {
+    providerPaymentId: string;
+    providerOrderId?: string;
+    amount: number;
+    currency: string;
+    status: string;
+    raw?: unknown;
+  }
+
+  export interface PaymentEvent {
+    type: string;
+    provider: string;
+    providerOrderId?: string;
+    providerPaymentId?: string;
+    providerRefundId?: string;
+    amount?: number;
+    currency?: string;
+    raw: unknown;
+  }
+
   export class RazorpayProvider {
     constructor(config: {
       key_id: string;
@@ -9,19 +37,22 @@ declare module '@mounterrainnovations/payments' {
   }
 
   export class PaymentsService {
-    constructor(provider: any);
+    constructor(provider: unknown);
     createOrder(data: {
       amount: number;
       currency: string;
       receipt: string;
       notes?: Record<string, string>;
-    }): Promise<any>;
-    verifyPayment(data: {
-      razorpay_order_id: string;
-      razorpay_payment_id: string;
-      razorpay_signature: string;
-    }): Promise<boolean>;
-    verifyWebhook(body: string, signature: string): any;
-    constructEvent(payload: string, signature: string, secret: string): any;
+    }): Promise<CreateOrderResult>;
+    verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean;
+    verifyAndFetchCheckoutPayment(data: {
+      orderId: string;
+      paymentId: string;
+      signature: string;
+      expectedAmount?: number;
+      expectedCurrency?: string;
+      requireOrderMatch?: boolean;
+    }): Promise<PaymentDetails>;
+    processWebhook(rawBody: string, signature: string, providerEventId?: string): Promise<PaymentEvent>;
   }
 }

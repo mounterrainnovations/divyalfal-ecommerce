@@ -12,28 +12,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing payment details' }, { status: 400 });
     }
 
-    const isValid = paymentsService.verifyPayment({
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
+    const order = await prisma.order.findFirst({
+      where: { razorpayOrderId: razorpay_order_id }
     });
 
-    if (!isValid) {
-      console.error('Invalid Razorpay signature for order:', razorpay_order_id);
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    try {
+      await paymentsService.verifyAndFetchCheckoutPayment({
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+        expectedAmount: Math.round(Number(order.totalAmount) * 100),
+        expectedCurrency: 'INR',
+      });
+    } catch (error) {
+      console.error('Invalid Razorpay signature or mismatched payment:', error);
+      return NextResponse.json({ error: 'Invalid payment verification' }, { status: 400 });
     }
 
     // Update order and payment record in a transaction
-    await prisma.$transaction(async (tx) => {
-      // Find the order first to ensure it exists
-      const order = await tx.order.findFirst({
-        where: { razorpayOrderId: razorpay_order_id }
-      });
-
-      if (!order) {
-        throw new Error('Order not found');
-      }
-
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      
       await tx.order.update({
         where: { id: order.id },
         data: {
@@ -50,16 +52,19 @@ export async function POST(req: Request) {
         }
       });
 
-      // Trigger email notification
-      const fullOrder = await tx.order.findUnique({
+      return tx.order.findUnique({
         where: { id: order.id },
         include: { profile: true }
       });
-      if (fullOrder) {
-        await sendOrderConfirmationEmail(fullOrder);
-      }
     });
 
+    if (updatedOrder) {
+      try {
+        await sendOrderConfirmationEmail(updatedOrder);
+      } catch (error) {
+        console.error('Order confirmation email failed:', error);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

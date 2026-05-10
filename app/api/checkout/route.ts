@@ -3,7 +3,24 @@ import { prisma } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { paymentsService } from '@/lib/payments';
 import { sendAdminRFQNotification } from '@/lib/email';
+import type { Prisma, OrderType } from '@prisma/client';
 
+interface CheckoutAddressInput {
+  fullName: string;
+  email: string;
+  phone: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+}
+
+interface PaymentOrderResponse {
+  providerOrderId?: string;
+  id?: string;
+}
+
+const publicRazorpayKeyId = process.env.RAZORPAY_KEY_ID || null;
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +30,19 @@ export async function POST(req: Request) {
     const profileId = user?.id;
 
     const body = await req.json();
-    const { address, items, totalAmount, isGuest, type = 'STANDARD' } = body;
+    const { address, items, isGuest, type = 'STANDARD' } = body as {
+      address: CheckoutAddressInput;
+      items: Array<{
+        productId: string;
+        size: string;
+        quantity: number;
+        price: number;
+        variantId?: string;
+        customMeasurements?: { bust: string; waist: string; hips: string } | null;
+      }>;
+      isGuest?: boolean;
+      type?: OrderType;
+    };
 
 
     if (!items || items.length === 0) {
@@ -28,23 +57,26 @@ export async function POST(req: Request) {
     }
 
     // Resolve missing variant IDs and Check Stock
-    const resolvedItems = await Promise.all(items.map(async (item: { 
-      productId: string; 
-      size: string; 
-      quantity: number; 
-      price: number; 
-      variantId?: string; 
-      customMeasurements?: { bust: string; waist: string; hips: string } | null;
-    }) => {
+    const resolvedItems = await Promise.all(items.map(async (item) => {
       const variantId = item.variantId;
-      
-      const variant = await prisma.productVariant.findFirst({
-        where: variantId ? { id: variantId } : {
-          productId: item.productId,
-          size: item.size
-        },
-        include: { product: true }
-      });
+
+      let variant = null;
+      if (variantId) {
+        variant = await prisma.productVariant.findUnique({
+          where: { id: variantId },
+          include: { product: true }
+        });
+      }
+
+      if (!variant) {
+        variant = await prisma.productVariant.findFirst({
+          where: {
+            productId: item.productId,
+            size: item.size
+          },
+          include: { product: true }
+        });
+      }
       
       if (!variant) {
         throw new Error(`Variant not found for Product: ${item.productId}, Size: ${item.size}`);
@@ -83,8 +115,8 @@ export async function POST(req: Request) {
           guestPhone: isGuest ? address.phone : null,
           guestName: isGuest ? address.fullName : null,
           totalAmount: serverTotalAmount,
-          shippingAddress: address as any, 
-          type: type as any,
+          shippingAddress: address as Prisma.InputJsonValue,
+          type,
           status: type === 'RFQ' ? 'QUOTE_REQUESTED' : 'PENDING',
           paymentStatus: 'PENDING',
           items: {
@@ -113,6 +145,10 @@ export async function POST(req: Request) {
       // 3. Conditional Razorpay Order Creation
       let rzpOrderId = null;
       if (type === 'STANDARD') {
+        if (!publicRazorpayKeyId) {
+          throw new Error('Razorpay key is not configured');
+        }
+
         const rzpOrder = await paymentsService.createOrder({
           amount: Math.round(Number(serverTotalAmount) * 100), // in paise
           currency: 'INR',
@@ -122,9 +158,13 @@ export async function POST(req: Request) {
             profileId: profileId || 'GUEST',
             customerName: address.fullName
           }
-        });
+        }) as PaymentOrderResponse;
 
-        rzpOrderId = rzpOrder.id;
+        rzpOrderId = rzpOrder.providerOrderId || rzpOrder.id || null;
+
+        if (!rzpOrderId) {
+          throw new Error('Payment provider did not return an order ID');
+        }
 
         // 4. Update Order with Razorpay Order ID
         await tx.order.update({
@@ -148,7 +188,11 @@ export async function POST(req: Request) {
         await sendAdminRFQNotification(newOrder);
       }
 
-      return { ...newOrder, razorpayOrderId: rzpOrderId };
+      return {
+        ...newOrder,
+        razorpayOrderId: rzpOrderId,
+        razorpayKeyId: type === 'STANDARD' ? publicRazorpayKeyId : null,
+      };
     });
 
 

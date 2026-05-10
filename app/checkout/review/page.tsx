@@ -10,6 +10,25 @@ import { formatPrice } from '@/lib/common/product-interfaces';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 
+interface RazorpayHandlerResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayInstance {
+  open: () => void;
+}
+
+interface RazorpayConstructor {
+  new (options: Record<string, unknown>): RazorpayInstance;
+}
+
+declare global {
+  interface Window {
+    Razorpay: RazorpayConstructor;
+  }
+}
 
 export default function CheckoutReviewPage() {
   const router = useRouter();
@@ -99,14 +118,18 @@ export default function CheckoutReviewPage() {
       }
       
       // 2. Initialize Razorpay Checkout (Only for Standard)
+      if (!data.razorpayKeyId) {
+        throw new Error('Razorpay key is not configured');
+      }
+
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Should be in env
+        key: data.razorpayKeyId,
         amount: Math.round(total * 100),
         currency: "INR",
         name: "Divyafal Boutique",
         description: `Order #${data.id.substring(0, 8)}`,
         order_id: data.razorpayOrderId,
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayHandlerResponse) {
           try {
             setIsSubmitting(true);
             const verifyResponse = await fetch('/api/payments/verify', {
@@ -148,7 +171,7 @@ export default function CheckoutReviewPage() {
         }
       };
 
-      const rzp = new (window as any).Razorpay(options);
+      const rzp = new window.Razorpay(options);
       rzp.open();
       
     } catch (err) {
