@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { transformDbProductToProduct } from '@/lib/utils/product-utils';
 import { retryDatabaseOperation } from '@/lib/utils/database';
 import { checkAdmin } from '@/lib/auth-utils';
@@ -39,10 +40,29 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     const { id } = await params;
+    const body = await req.json();
 
-    const data = await req.json();
+    // Clean and transform data to match Prisma schema
+    const updateData: any = {};
+    if (body.name) updateData.name = body.name;
+    if (body.price) updateData.price = new Prisma.Decimal(body.price);
+    if (body.category) updateData.category = body.category;
+    if (body.isArchived !== undefined) updateData.isArchived = body.isArchived;
+    
+    // Map image/photos
+    if (body.photos) {
+      updateData.photos = body.photos;
+    } else if (body.image) {
+      updateData.photos = [body.image];
+    }
+
+    // Map description to specifications
+    if (body.description || body.specifications) {
+      updateData.specifications = body.description || body.specifications;
+    }
+
     const product = await retryDatabaseOperation(async () =>
-      prisma.product.update({ where: { id }, data })
+      prisma.product.update({ where: { id }, data: updateData })
     );
     return NextResponse.json(product);
   } catch (error) {

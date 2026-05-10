@@ -143,9 +143,9 @@ export async function POST(req: Request) {
       id: data.id || crypto.randomUUID(),
       name: data.name,
       price: new Prisma.Decimal(data.price),
-      specifications: data.specifications || '',
+      specifications: data.description || data.specifications || '',
       category: (data.category as ProductType) || 'OTHER',
-      photos: data.photos || [],
+      photos: data.photos || (data.image ? [data.image] : []),
     };
 
     const product = await retryDatabaseOperation(async () =>

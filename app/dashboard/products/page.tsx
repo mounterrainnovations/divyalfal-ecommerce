@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { 
@@ -57,6 +57,10 @@ export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  
+  // Upload state
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -123,6 +127,35 @@ export default function ProductsPage() {
       mostRecommended: false
     })
     setIsModalOpen(true)
+  }
+  
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    const formDataUpload = new FormData()
+    formDataUpload.append('file', file)
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFormData((prev) => ({ ...prev, image: data.url }))
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Upload failed')
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err)
+      alert('Upload failed')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -414,11 +447,38 @@ export default function ProductsPage() {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <Label className="text-[11px] font-bold text-stone-500 uppercase tracking-[0.15em]">Garment Image</Label>
-                  <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50/50 aspect-square flex flex-col items-center justify-center gap-4 transition-all hover:border-stone-400 hover:bg-stone-50 cursor-pointer">
-                    {formData.image ? (
+                  <input 
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "relative group overflow-hidden rounded-2xl border-2 border-dashed aspect-square flex flex-col items-center justify-center gap-4 transition-all cursor-pointer",
+                      formData.image ? "border-stone-200 bg-stone-50/50" : "border-rose-200 bg-rose-50/30 hover:border-rose-400 hover:bg-rose-50"
+                    )}
+                  >
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="w-8 h-8 animate-spin text-rose-900" />
+                        <p className="text-[13px] font-bold text-rose-900">Uploading...</p>
+                      </div>
+                    ) : formData.image ? (
                       <>
                         <Image src={formData.image} alt="Preview" fill className="object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                           <Button 
+                            type="button" 
+                            variant="secondary" 
+                            size="sm" 
+                            className="font-bold rounded-xl shadow-lg bg-white text-stone-900"
+                            onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
+                          >
+                            Change
+                          </Button>
                           <Button 
                             type="button" 
                             variant="destructive" 
@@ -432,20 +492,25 @@ export default function ProductsPage() {
                       </>
                     ) : (
                       <>
-                        <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-md text-stone-400">
+                        <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-md text-stone-400 group-hover:text-rose-900 group-hover:scale-110 transition-all">
                           <ImageIcon className="w-6 h-6" />
                         </div>
                         <div className="text-center px-6">
-                          <p className="text-[13px] font-bold text-stone-600">Enter Image URL</p>
+                          <p className="text-[13px] font-bold text-stone-600">Click to Upload</p>
                           <p className="text-[10px] text-stone-400 mt-1.5 uppercase tracking-[0.15em] font-medium">Square format recommended</p>
                         </div>
                       </>
                     )}
                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-[1px] bg-stone-100 flex-1" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">or</span>
+                    <div className="h-[1px] bg-stone-100 flex-1" />
+                  </div>
                   <Input 
                     value={formData.image}
                     onChange={(e) => setFormData({...formData, image: e.target.value})}
-                    placeholder="https://example.com/item.jpg"
+                    placeholder="Enter image URL manually..."
                     className="border-stone-200 focus:ring-rose-900/20 focus:border-rose-900 rounded-xl h-12 text-[15px] shadow-sm"
                   />
                 </div>
