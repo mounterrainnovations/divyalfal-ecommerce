@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import { transformDbProductToProduct } from '@/lib/utils/product-utils';
+import { transformDbProductToProduct, getDbCategory } from '@/lib/utils/product-utils';
 import { retryDatabaseOperation } from '@/lib/utils/database';
 import { checkAdmin } from '@/lib/auth-utils';
+import type { ProductCategory } from '@/types';
 
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -46,8 +47,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const updateData: any = {};
     if (body.name) updateData.name = body.name;
     if (body.price) updateData.price = new Prisma.Decimal(body.price);
-    if (body.category) updateData.category = body.category;
+    if (body.salePrice !== undefined) {
+      updateData.salePrice = body.salePrice ? new Prisma.Decimal(body.salePrice) : null;
+    }
+    
+    // Map category using utility
+    if (body.category) {
+      updateData.category = getDbCategory(body.category as ProductCategory);
+    }
+    
     if (body.isArchived !== undefined) updateData.isArchived = body.isArchived;
+    
+    if (body.sale !== undefined) updateData.sale = body.sale;
     
     // Map image/photos
     if (body.photos) {
@@ -62,9 +73,41 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     const product = await retryDatabaseOperation(async () =>
-      prisma.product.update({ where: { id }, data: updateData })
+      prisma.$transaction(async (tx) => {
+        // 1. Update the core product
+        const updated = await tx.product.update({ 
+          where: { id }, 
+          data: updateData,
+          include: { variants: true }
+        });
+
+        // 2. Sync variants if provided
+        if (body.variants && Array.isArray(body.variants)) {
+          // Simplest sync strategy: delete existing and recreate
+          await tx.productVariant.deleteMany({
+            where: { productId: id }
+          });
+
+          await tx.productVariant.createMany({
+            data: body.variants.map((v: any) => ({
+              productId: id,
+              size: v.size,
+              color: v.color || null,
+              stock: v.stock || 0,
+            }))
+          });
+        }
+
+        return tx.product.findUnique({
+          where: { id },
+          include: { variants: true }
+        });
+      })
     );
-    return NextResponse.json(product);
+    
+    if (!product) throw new Error('Product update failed');
+    
+    return NextResponse.json(transformDbProductToProduct(product));
   } catch (error) {
     console.error('Error updating product:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

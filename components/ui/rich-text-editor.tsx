@@ -17,6 +17,7 @@ import {
   Heading2,
   Heading3,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
   value: string;
@@ -24,8 +25,35 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
+const ToolbarButton = ({ 
+  onClick, 
+  active, 
+  title, 
+  children 
+}: { 
+  onClick: () => void; 
+  active?: boolean; 
+  title: string; 
+  children: React.ReactNode 
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "p-2 rounded-lg transition-all",
+      active 
+        ? "bg-rose-900 text-white shadow-md shadow-rose-900/20" 
+        : "text-stone-400 hover:bg-stone-100 hover:text-stone-900"
+    )}
+    title={title}
+  >
+    {children}
+  </button>
+);
+
 export default function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -35,7 +63,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 underline',
+          class: 'text-rose-900 underline font-bold',
         },
       }),
       TextAlign.configure({
@@ -48,7 +76,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] p-4',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[200px] p-6 font-poppins text-stone-700',
       },
     },
   });
@@ -65,136 +93,98 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   };
 
   return (
-    <div className="border border-gray-300 rounded-lg bg-white">
+    <div className="border border-stone-200 rounded-2xl bg-white overflow-hidden shadow-sm focus-within:border-rose-900 transition-all">
       {/* Toolbar */}
-      <div className="border-b border-gray-200 p-2 flex flex-wrap gap-1">
-        {/* Headings */}
-        <button
-          type="button"
+      <div className="border-b border-stone-100 bg-stone-50/50 p-2 flex flex-wrap gap-1.5">
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('heading', { level: 1 }) ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('heading', { level: 1 })}
           title="Heading 1"
         >
           <Heading1 className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('heading', { level: 2 }) ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('heading', { level: 2 })}
           title="Heading 2"
         >
           <Heading2 className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('heading', { level: 3 }) ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('heading', { level: 3 })}
           title="Heading 3"
         >
           <Heading3 className="w-4 h-4" />
-        </button>
+        </ToolbarButton>
 
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-6 bg-stone-200 mx-1 self-center" />
 
-        {/* Text formatting */}
-        <button
-          type="button"
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('bold') ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('bold')}
           title="Bold"
         >
           <Bold className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('italic') ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('italic')}
           title="Italic"
         >
           <Italic className="w-4 h-4" />
-        </button>
+        </ToolbarButton>
 
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-6 bg-stone-200 mx-1 self-center" />
 
-        {/* Lists */}
-        <button
-          type="button"
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('bulletList') ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('bulletList')}
           title="Bullet List"
         >
           <List className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('orderedList') ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('orderedList')}
           title="Numbered List"
         >
           <ListOrdered className="w-4 h-4" />
-        </button>
+        </ToolbarButton>
 
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-6 bg-stone-200 mx-1 self-center" />
 
-        {/* Alignment */}
-        <button
-          type="button"
+        <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive({ textAlign: 'left' })}
           title="Align Left"
         >
           <AlignLeft className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive({ textAlign: 'center' })}
           title="Align Center"
         >
           <AlignCenter className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive({ textAlign: 'right' })}
           title="Align Right"
         >
           <AlignRight className="w-4 h-4" />
-        </button>
+        </ToolbarButton>
 
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-6 bg-stone-200 mx-1 self-center" />
 
-        {/* Link */}
-        <button
-          type="button"
+        <ToolbarButton
           onClick={addLink}
-          className={`p-2 rounded hover:bg-gray-100 ${
-            editor.isActive('link') ? 'bg-gray-200' : ''
-          }`}
+          active={editor.isActive('link')}
           title="Add Link"
         >
           <LinkIcon className="w-4 h-4" />
-        </button>
+        </ToolbarButton>
       </div>
 
       {/* Editor */}

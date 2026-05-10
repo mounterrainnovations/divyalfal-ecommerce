@@ -8,13 +8,13 @@ import { notFound, redirect } from 'next/navigation';
 import { ChevronLeft, MapPin, Package, CreditCard, ExternalLink, CalendarDays } from 'lucide-react';
 import { formatPrice } from '@/lib/common/product-interfaces';
 
-export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect('/login');
 
-  const { id } = params;
+  const { id } = await params;
 
   const order = await prisma.order.findUnique({
     where: { 
