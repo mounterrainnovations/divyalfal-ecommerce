@@ -16,7 +16,10 @@ export const revalidate = 0;
 
 async function getProduct(id: string): Promise<{ product: Product; dbProduct: DbProduct } | null> {
   try {
-    const dbProduct = await prisma.product.findUnique({ where: { id } });
+    const dbProduct = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },
+    });
     if (!dbProduct) return null;
     const product = transformDbProductToProduct(dbProduct);
     return { product, dbProduct };

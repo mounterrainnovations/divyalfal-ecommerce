@@ -8,15 +8,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.text();
     const signature = req.headers.get('x-razorpay-signature');
+    const providerEventId = req.headers.get('x-razorpay-event-id') || undefined;
 
     if (!signature) {
       return NextResponse.json({ error: 'No signature' }, { status: 400 });
     }
 
-    // Verify webhook signature
     let event;
     try {
-      event = paymentsService.verifyWebhook(body, signature);
+      event = await paymentsService.processWebhook(body, signature, providerEventId);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -26,22 +26,19 @@ export async function POST(req: Request) {
     await prisma.paymentEvent.create({
       data: {
         id: crypto.randomUUID(),
-        providerEventId: (event as any).id || `evt_${Date.now()}`,
+        providerEventId: providerEventId || `evt_${Date.now()}`,
         provider: 'razorpay',
-        eventType: event.event,
-        payload: event as any,
+        eventType: event.type,
+        payload: event.raw,
       }
     });
 
-    // Process the event
-    const payload = (event as any).payload;
-    
-    if (event.event === 'payment.captured' || event.event === 'order.paid') {
-      const razorpayOrderId = payload.order?.entity?.id || payload.payment?.entity?.order_id;
-      const razorpayPaymentId = payload.payment?.entity?.id;
+    if (event.type === 'payment.captured') {
+      const razorpayOrderId = event.providerOrderId;
+      const razorpayPaymentId = event.providerPaymentId;
 
       if (razorpayOrderId) {
-        await prisma.$transaction(async (tx) => {
+        const fullOrder = await prisma.$transaction(async (tx) => {
           const order = await tx.order.findFirst({
             where: { razorpayOrderId }
           });
@@ -62,21 +59,26 @@ export async function POST(req: Request) {
                 status: 'captured'
               }
             });
-            
-            // Trigger email notification
-            const fullOrder = await tx.order.findUnique({
+
+            return tx.order.findUnique({
               where: { id: order.id },
               include: { profile: true }
             });
-            if (fullOrder) {
-              await sendOrderConfirmationEmail(fullOrder);
-            }
           }
+          return null;
         });
 
+        if (fullOrder) {
+          try {
+            await sendOrderConfirmationEmail(fullOrder);
+          } catch (error) {
+            console.error('Order confirmation email failed:', error);
+          }
+        }
+
       }
-    } else if (event.event === 'payment.failed') {
-      const razorpayOrderId = payload.payment?.entity?.order_id;
+    } else if (event.type === 'payment.failed') {
+      const razorpayOrderId = event.providerOrderId;
       if (razorpayOrderId) {
         await prisma.payment.updateMany({
           where: { providerOrderId: razorpayOrderId },
