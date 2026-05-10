@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/db';
-import { paymentsService } from '@/lib/payments';
+import { getPaymentsService } from '@/lib/payments';
 import { sendOrderConfirmationEmail } from '@/lib/email';
-import type { Prisma } from '@prisma/client';
 
 // Using local type since library types might be missing in some environments
 type GatewayPaymentStatus = 
@@ -168,8 +167,9 @@ export async function reconcileOrderPayment(
   }
 
   try {
+    const paymentsService = getPaymentsService();
     const expectedAmount = Math.round(Number(order.totalAmount) * 100);
-    const payments = await (paymentsService as any).fetchOrderPayments(order.razorpayOrderId);
+    const payments = await paymentsService.fetchOrderPayments(order.razorpayOrderId);
 
     if (payments.length === 0) {
       return {

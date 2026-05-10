@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { paymentsService } from '@/lib/payments';
+import { getPaymentsService } from '@/lib/payments';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import type { Prisma } from '@prisma/client';
 
 
 export async function POST(req: Request) {
   try {
+    const paymentsService = getPaymentsService();
     const body = await req.text();
     const signature = req.headers.get('x-razorpay-signature');
     const providerEventId = req.headers.get('x-razorpay-event-id') || undefined;

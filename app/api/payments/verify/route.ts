@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { paymentsService } from '@/lib/payments';
+import { getPaymentsService } from '@/lib/payments';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 
 
 export async function POST(req: Request) {
   try {
+    const paymentsService = getPaymentsService();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
