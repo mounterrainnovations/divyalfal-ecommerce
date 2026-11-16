@@ -60,7 +60,7 @@ function Button({
 export { Button, buttonVariants }
 
 // The editorial text-and-rule Button lives in components/primitives. It is re-exported here
-// as EditorialButton rather than replacing `Button` above: the legacy admin dashboard and
-// sections/explore call `Button` with shadcn's variant="outline" / size / type / disabled
-// API, which the editorial Button deliberately does not have.
+// as EditorialButton rather than replacing `Button` above: the legacy admin dashboard calls
+// `Button` with shadcn's variant="outline" / size / type / disabled API, which the editorial
+// Button deliberately does not have. (sections/explore, the other caller, is retired.)
 export { default as EditorialButton } from '@/components/primitives/Button'
