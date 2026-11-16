@@ -15,11 +15,9 @@ export interface CategoryItem {
   href?: string;
 }
 
-// Utility function to format price consistently across components
-export const formatPrice = (price: number | string): string => {
-  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return `₹${numericPrice.toLocaleString('en-IN')}`;
-};
+// Price formatting lives in lib/utils/price.ts, the single implementation. Re-exported
+// here so existing importers keep working.
+export { formatPrice } from '@/lib/utils/price';
 
 // Utility function to format display price (for mock data)
 export const formatDisplayPrice = (price: string | number): string => {

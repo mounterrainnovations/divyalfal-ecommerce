@@ -1,0 +1,38 @@
+/* One slow horizontal drift. The track holds two identical copies, so moving it by half
+   its own width loops seamlessly. */
+.viewport {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.track {
+  display: inline-flex;
+  width: max-content;
+  animation: drift 48s linear infinite;
+}
+
+.copy {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding-right: 4rem;
+}
+
+.viewport:hover .track,
+.viewport:focus-within .track {
+  animation-play-state: paused;
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation-play-state: paused;
+  }
+}
