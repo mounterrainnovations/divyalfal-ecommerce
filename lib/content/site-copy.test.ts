@@ -51,6 +51,9 @@ describe('siteCopy', () => {
   });
 
   it('preserves the three named collection entries and the fourth fallback', () => {
+    // arrayContaining ignores length, so pin the count too: a fifth entry would be
+    // invented copy and a dropped one would be lost copy.
+    expect(siteCopy.home.collection).toHaveLength(4);
     expect(siteCopy.home.collection.map(c => c.title)).toEqual(
       expect.arrayContaining([
         'Haldi & Kumkum Dress',
@@ -237,5 +240,54 @@ describe('siteCopy', () => {
     );
     expect(JSON.stringify(siteCopy)).not.toContain('&apos;');
     expect(JSON.stringify(siteCopy)).not.toContain('&quot;');
+  });
+
+  // The phone number as the old markup printed it: U+202A ... U+202C bidi isolation
+  // around the digits, U+00A0 between the groups. Those characters are in the shipped
+  // site, so "tidying" them to a plain '+91 99770 57045' would be a content change.
+  // All three sites are pinned, because all three printed the same string.
+  it('keeps the bidi marks and non-breaking spaces in every displayed phone number', () => {
+    expect(siteCopy.footer.contact.phoneDisplay).toBe('\u202a+91\u00a099770\u00a057045\u202c');
+    expect(siteCopy.refundPolicy.questions.phoneDisplay).toBe(
+      '\u202a+91\u00a099770\u00a057045\u202c'
+    );
+    expect(siteCopy.cancellationPolicy.help.phoneDisplay).toBe(
+      '\u202a+91\u00a099770\u00a057045\u202c'
+    );
+  });
+});
+
+/**
+ * Full-fidelity guard.
+ *
+ * The assertions above name the client-critical strings and document intent, but they
+ * only cover part of the copy. This snapshot covers all of it: every leaf, flattened
+ * to the `page.section.field` keys Phase 2's seed consumes. Reword any string, rename
+ * any key, add or drop one, and the snapshot fails -- which is the whole point of the
+ * module. Review the `.snap` diff as copy, and only run `-u` when the client has
+ * actually approved a wording change.
+ */
+const flatten = (node: unknown, key: string, out: Record<string, string>) => {
+  if (typeof node === 'string') {
+    out[key] = node;
+  } else if (Array.isArray(node)) {
+    node.forEach((v, i) => flatten(v, `${key}[${i}]`, out));
+  } else if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node)) flatten(v, key ? `${key}.${k}` : k, out);
+  }
+};
+
+describe('siteCopy snapshot', () => {
+  const flat: Record<string, string> = {};
+  flatten(siteCopy, '', flat);
+
+  it('has not gained or lost a single leaf', () => {
+    // Explicit, so an added or removed key is a loud failure rather than a quiet
+    // snapshot update. Change this number only together with an approved copy change.
+    expect(Object.keys(flat)).toHaveLength(323);
+  });
+
+  it('matches the committed copy, string for string', () => {
+    expect(flat).toMatchSnapshot();
   });
 });

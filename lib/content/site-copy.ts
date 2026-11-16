@@ -13,14 +13,27 @@
  *
  * Three deliberate corrections to the old markup, and nothing else:
  *   1. Contact details are the real ones from `contact-form.tsx`
- *      (phone `+919977057045`, email `divyafalthecreations@gmail.com`).
- *      The `tel:+919876543210` / `hello@divyafal.com` placeholders are gone,
- *      including where the policy pages printed the placeholder email in prose.
- *   2. The founder is spelled `Alpa Rawat`, as the live testimonials spell her. The
- *      single `Alpa Rawal` sits in a commented-out block and is not carried at all:
- *      markup the client switched off is not published content.
- *   3. `footer.social` is empty -- the old markup only had `href="#"` placeholders
- *      and no real profile URLs have been supplied.
+ *      (phone `+919977057045`, email `divyafalthecreations@gmail.com`). The footer's
+ *      placeholder phone and email are gone, including where the policy pages
+ *      printed the placeholder email in prose. Neither placeholder is written
+ *      anywhere in this file, comments included, so a raw grep gate stays green.
+ *   2. The founder is spelled `Alpa Rawat`, as the live testimonials spell her. A
+ *      misspelling of her surname sits in a commented-out block and is not carried
+ *      at all: markup the client switched off is not published content.
+ *   3. `footer.social` is empty -- the old markup had only placeholder anchors and
+ *      no real profile URLs have been supplied.
+ *
+ * Irregular keys, so Phase 2's seed does not have to guess:
+ *   - `home.testimonialsHeading` sits at page level, not under `home.testimonials`:
+ *     the brief mandates `home.testimonials[]` as a bare array, so a heading cannot
+ *     nest inside it.
+ *   - `home.recommended` holds `bestSellers` / `freshArrivals`, not `items` -- the
+ *     section has two tabbed lists, and `recommended.tabs[]` holds their titles and
+ *     blurbs.
+ *   - The contact details repeat, faithfully, in four places: `footer.contact`,
+ *     `contact.info`, `refundPolicy.questions` and `cancellationPolicy.help`. Each
+ *     is a separate string in the old markup; deduping them is a seed concern, not
+ *     an extraction one.
  */
 export const siteCopy = {
   nav: {
