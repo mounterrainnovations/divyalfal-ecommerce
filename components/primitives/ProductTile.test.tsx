@@ -44,6 +44,37 @@ describe('ProductTile', () => {
     expect(screen.getAllByRole('img')).toHaveLength(1);
   });
 
+  it('hides the swap image until hover or keyboard focus, and shows it then', () => {
+    const { container } = render(<ProductTile product={base} />);
+    const [first, second] = Array.from(container.querySelectorAll('img'));
+    expect(first).not.toHaveClass('opacity-0');
+    expect(second).toHaveClass('opacity-0', 'group-hover:opacity-100', 'group-focus-visible:opacity-100');
+    expect(screen.getByRole('link')).toHaveClass('group');
+  });
+
+  it('is a 3:4 portrait frame with sizes matching the editorial grid', () => {
+    const { container } = render(<ProductTile product={base} />);
+    expect(container.querySelector('[class~="aspect-[3/4]"]')).not.toBeNull();
+    const sizes = container.querySelector('img')?.getAttribute('sizes') ?? '';
+    expect(sizes).toContain('25vw');
+    expect(sizes).toContain('50vw');
+  });
+
+  it('lazy-loads by default and eager-loads the first photo when priority is set', () => {
+    const { container, rerender } = render(<ProductTile product={base} />);
+    expect(container.querySelector('img')).toHaveAttribute('loading', 'lazy');
+    rerender(<ProductTile product={base} priority />);
+    expect(container.querySelector('img')).not.toHaveAttribute('loading', 'lazy');
+  });
+
+  it('names the product in an h3 by default and honours headingLevel', () => {
+    const { rerender } = render(<ProductTile product={base} />);
+    expect(screen.getByRole('heading', { level: 3, name: 'Red Velvet Saree' })).toBeInTheDocument();
+    rerender(<ProductTile product={base} headingLevel={2} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Red Velvet Saree' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+  });
+
   it('links to the product detail page and exposes an accessible name', () => {
     render(<ProductTile product={base} />);
     expect(screen.getByRole('link', { name: /Red Velvet Saree/i })).toHaveAttribute(

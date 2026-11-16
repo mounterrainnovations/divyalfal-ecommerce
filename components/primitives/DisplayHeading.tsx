@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 const SIZE_CLASS = {
   1: 'text-display-1',
@@ -17,14 +18,17 @@ export default function DisplayHeading({
   children,
   level = 2,
   size,
+  className,
 }: {
   children: ReactNode;
   level?: 1 | 2 | 3;
   size?: 1 | 2 | 3;
+  /** Placement inside the grid, e.g. `col-span-6`. */
+  className?: string;
 }) {
   const Tag = TAG[level];
   return (
-    <Tag className={`font-display font-light text-ink ${SIZE_CLASS[size ?? level]}`}>
+    <Tag className={cn('font-display font-light text-ink', SIZE_CLASS[size ?? level], className)}>
       {children}
     </Tag>
   );

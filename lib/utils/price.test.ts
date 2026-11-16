@@ -65,11 +65,16 @@ describe('resolvePrice', () => {
     expect(resolvePrice({ ...base, sale: true, salePrice: 9000 }).display).toBe('₹8,000');
   });
 
-  it('treats a salePrice of zero as a real price, not a missing one', () => {
-    // 0 != null, and 0 < price, so the rule says the sale is active.
-    expect(resolvePrice({ ...base, sale: true, salePrice: 0 })).toMatchObject({
-      display: '₹0',
-      onSale: true,
+  it('does not treat a salePrice of zero as a sale', () => {
+    // The admin form can store 0 with sale: true; a free garment must never render.
+    expect(resolvePrice({ ...base, sale: true, salePrice: 0 })).toEqual({
+      display: '₹8,000',
+      compareAt: null,
+      onSale: false,
     });
+  });
+
+  it('does not treat a negative salePrice as a sale', () => {
+    expect(resolvePrice({ ...base, sale: true, salePrice: -100 }).onSale).toBe(false);
   });
 });

@@ -19,16 +19,22 @@ const SIZES = '(min-width: 1440px) 336px, (min-width: 1024px) 25vw, (min-width: 
  *
  * The hover swap is two stacked images crossfaded with CSS opacity, and the second image
  * exists only when there is a second photo. It is decorative (`alt=""`), so the tile reads
- * as one image to assistive tech. The tile has no entrance animation of its own; wrap it in
+ * as one image to assistive tech. `priority` maps to `preload` (Next 16 deprecates the
+ * `priority` image prop). The tile has no entrance animation of its own; wrap it in
  * `Reveal` for scroll-in, which is a no-op for tiles already on screen.
  */
 export default function ProductTile({
   product,
   priority = false,
+  headingLevel = 3,
 }: {
   product: Product;
+  /** Eager-loads and preloads the first photo; use for above-the-fold tiles. */
   priority?: boolean;
+  /** Heading element for the product name. Pick the level that follows the page's outline. */
+  headingLevel?: 2 | 3 | 4;
 }) {
+  const Heading = `h${headingLevel}` as const;
   const id = useId();
   const nameId = `${id}-name`;
   const priceId = `${id}-price`;
@@ -49,7 +55,7 @@ export default function ProductTile({
               alt={product.name}
               fill
               sizes={SIZES}
-              priority={priority}
+              preload={priority}
               className="object-cover"
             />
             {second ? (
@@ -70,9 +76,9 @@ export default function ProductTile({
       </div>
 
       <div className="mt-4 flex flex-col gap-1">
-        <h3 id={nameId} className="font-display text-body font-light text-ink">
+        <Heading id={nameId} className="font-display text-body font-light text-ink">
           {product.name}
-        </h3>
+        </Heading>
         <p id={priceId} className="flex items-baseline gap-3 font-ui text-caption">
           <span className={onSale ? 'text-sale' : 'text-ink'}>{display}</span>
           {compareAt ? (

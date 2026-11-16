@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 /**
  * Asymmetric image / text pair on the 12-column editorial grid: media takes seven columns,
@@ -10,13 +11,16 @@ export default function EditorialPair({
   media,
   children,
   flip = false,
+  className,
 }: {
   media: ReactNode;
   children: ReactNode;
   flip?: boolean;
+  /** Applied to the grid root, e.g. `section-rhythm`. */
+  className?: string;
 }) {
   return (
-    <div className="grid-editorial gap-y-8 md:gap-y-0">
+    <div className={cn('grid-editorial gap-y-8 md:gap-y-0', className)}>
       <div
         className={
           flip

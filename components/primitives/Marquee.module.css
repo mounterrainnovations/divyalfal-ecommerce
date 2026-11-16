@@ -14,7 +14,11 @@
 .copy {
   display: inline-flex;
   flex-shrink: 0;
+  /* A copy always fills the viewport, so the two together never leave the right side
+     empty at any point in the cycle, however short the line. */
+  min-width: 100vw;
   padding-right: 4rem;
+  box-sizing: border-box;
 }
 
 .viewport:hover .track,
@@ -34,5 +38,10 @@
 @media (prefers-reduced-motion: reduce) {
   .track {
     animation-play-state: paused;
+  }
+
+  /* Motion is off, so the loop copy has no job: show the line once. */
+  .copy[aria-hidden] {
+    display: none;
   }
 }

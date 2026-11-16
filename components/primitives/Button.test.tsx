@@ -21,7 +21,7 @@ describe('Button', () => {
   it('is a text-and-rule treatment in both variants, with no fill', () => {
     const { rerender } = render(<Button href="/x">Primary</Button>);
     expect(screen.getByRole('link').className).toMatch(/border-b/);
-    expect(screen.getByRole('link').className).not.toMatch(/(^|\s)bg-/);
+    expect(screen.getByRole('link').className).not.toMatch(/(?:^|\s)(?:[a-z-]+:)*bg-/);
 
     rerender(
       <Button href="/x" variant="quiet">
@@ -29,7 +29,22 @@ describe('Button', () => {
       </Button>,
     );
     expect(screen.getByRole('link').className).toMatch(/border-b/);
-    expect(screen.getByRole('link').className).not.toMatch(/(^|\s)bg-/);
+    expect(screen.getByRole('link').className).not.toMatch(/(?:^|\s)(?:[a-z-]+:)*bg-/);
+  });
+
+  it('keeps the eyebrow size and the variant colour, which twMerge would otherwise collapse', () => {
+    const { rerender } = render(<Button href="/x">Primary</Button>);
+    expect(screen.getByRole('link')).toHaveClass('text-eyebrow', 'text-ink');
+
+    rerender(
+      <Button href="/x" variant="quiet">
+        Quiet
+      </Button>,
+    );
+    expect(screen.getByRole('link')).toHaveClass('text-eyebrow', 'text-ink-soft');
+
+    rerender(<Button onClick={() => {}}>Btn</Button>);
+    expect(screen.getByRole('button')).toHaveClass('text-eyebrow', 'text-ink');
   });
 
   it('keeps a visible focus ring when focused by keyboard', async () => {

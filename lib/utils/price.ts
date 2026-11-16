@@ -26,8 +26,9 @@ export interface ResolvedPrice {
 }
 
 /**
- * A sale is active only when `sale === true`, a sale price exists, and it is below the
- * regular price. `salePrice` is `null` in the raw database shape and `undefined` after
+ * A sale is active only when `sale === true`, a sale price exists, is above zero, and is
+ * below the regular price. (The admin form accepts "0" as a sale price; it must never render
+ * as a free garment.) `salePrice` is `null` in the raw database shape and `undefined` after
  * `transformDbProductToProduct`; `!= null` treats both as absent. A flagged sale with no
  * usable price falls back to the regular price rather than showing "₹NaN" or a markup.
  */
@@ -35,7 +36,7 @@ export function resolvePrice(
   product: Pick<Product, 'price' | 'sale'> & { salePrice?: number | null },
 ): ResolvedPrice {
   const { price, sale, salePrice } = product;
-  if (sale === true && salePrice != null && salePrice < price) {
+  if (sale === true && salePrice != null && salePrice > 0 && salePrice < price) {
     return { display: formatPrice(salePrice), compareAt: formatPrice(price), onSale: true };
   }
   return { display: formatPrice(price), compareAt: null, onSale: false };
