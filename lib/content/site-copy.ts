@@ -347,6 +347,22 @@ export const siteCopy = {
       emailLabel: 'Gmail:',
       email: 'divyafalthecreations@gmail.com',
     },
+    // From `components/features/maps/store-location-map.tsx`, which the contact page
+    // renders between the hero and the form. Its store hours are worded differently
+    // from `contact.info.hours` above; both are preserved as written.
+    store: {
+      heading: 'Visit Our Store',
+      body: "Experience our exquisite collection in person. We're here to help you find the perfect piece.",
+      mapTitle: 'Store Location Map',
+      addressHeading: 'Address',
+      address: 'A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039',
+      hoursHeading: 'Store Hours',
+      hours: ['Mon - Sat: 11:00am - 8:00pm', 'Sunday: Closed'],
+      contactHeading: 'Contact',
+      phone: '9977057045',
+      email: 'divyafalthecreations@gmail.com',
+      directionsCta: 'Get Directions',
+    },
     form: {
       heading: 'Get in Touch',
       fields: [

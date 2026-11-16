@@ -205,6 +205,16 @@ describe('siteCopy', () => {
     expect(siteCopy.contact.form.submit).toBe('Submit Now');
   });
 
+  it('preserves the store-location section the contact page renders', () => {
+    expect(siteCopy.contact.store.heading).toBe('Visit Our Store');
+    expect(siteCopy.contact.store.body).toBe(
+      "Experience our exquisite collection in person. We're here to help you find the perfect piece."
+    );
+    // Worded differently from contact.info.hours; both forms are on the page today.
+    expect(siteCopy.contact.store.hours).toEqual(['Mon - Sat: 11:00am - 8:00pm', 'Sunday: Closed']);
+    expect(siteCopy.contact.store.directionsCta).toBe('Get Directions');
+  });
+
   it('preserves the refund policy copy', () => {
     expect(siteCopy.refundPolicy.hero.heading).toBe('Refund Policy');
     expect(siteCopy.refundPolicy.hero.subheading).toBe('Your satisfaction is our priority');
@@ -284,7 +294,7 @@ describe('siteCopy snapshot', () => {
   it('has not gained or lost a single leaf', () => {
     // Explicit, so an added or removed key is a loud failure rather than a quiet
     // snapshot update. Change this number only together with an approved copy change.
-    expect(Object.keys(flat)).toHaveLength(323);
+    expect(Object.keys(flat)).toHaveLength(335);
   });
 
   it('matches the committed copy, string for string', () => {
