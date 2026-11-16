@@ -63,7 +63,12 @@ describe('siteCopy', () => {
 
   it('spells the founder Alpa Rawat everywhere', () => {
     expect(JSON.stringify(siteCopy)).not.toContain('Alpa Rawal');
-    expect(siteCopy.home.about.founder.name).toBe('Alpa Rawat');
+    expect(siteCopy.home.testimonials[0].quote).toContain('Alpa Rawat');
+  });
+
+  it('does not revive the commented-out founder card', () => {
+    expect('founder' in siteCopy.home.about).toBe(false);
+    expect(JSON.stringify(siteCopy)).not.toContain('Founder & Designer');
   });
 
   it('carries the real contact details, not the footer placeholders', () => {
@@ -80,7 +85,9 @@ describe('siteCopy', () => {
 
   it('carries only the wordmark and the two media sources in the hero', () => {
     expect(Object.keys(siteCopy.home.hero)).toEqual(['wordmark', 'desktopImage', 'mobileVideo']);
-    expect(siteCopy.home.hero.wordmark).toBe('DIVYAFAL');
+    // The brand's own spelling, not an uppercased presentation of it: Task 5 applies
+    // `text-transform: uppercase` and the eyebrow tracking in CSS.
+    expect(siteCopy.home.hero.wordmark).toBe('Divyafal');
     expect(siteCopy.home.hero.desktopImage).toBe('/mocks/mock_hero_desktop_2.webp');
     expect(siteCopy.home.hero.mobileVideo).toBe(
       'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm'

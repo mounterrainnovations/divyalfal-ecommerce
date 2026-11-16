@@ -16,8 +16,9 @@
  *      (phone `+919977057045`, email `divyafalthecreations@gmail.com`).
  *      The `tel:+919876543210` / `hello@divyafal.com` placeholders are gone,
  *      including where the policy pages printed the placeholder email in prose.
- *   2. The founder is spelled `Alpa Rawat` (the spelling used in the live
- *      testimonials); the single `Alpa Rawal` in a commented-out block is dropped.
+ *   2. The founder is spelled `Alpa Rawat`, as the live testimonials spell her. The
+ *      single `Alpa Rawal` sits in a commented-out block and is not carried at all:
+ *      markup the client switched off is not published content.
  *   3. `footer.social` is empty -- the old markup only had `href="#"` placeholders
  *      and no real profile URLs have been supplied.
  */
@@ -40,7 +41,7 @@ export const siteCopy = {
     // The old hero rendered no text at all: its overlay was commented out. Only the
     // wordmark and the two existing media sources live here -- no tagline, no est. mark.
     hero: {
-      wordmark: 'DIVYAFAL',
+      wordmark: 'Divyafal',
       desktopImage: '/mocks/mock_hero_desktop_2.webp',
       mobileVideo:
         'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
@@ -216,12 +217,6 @@ export const siteCopy = {
         { value: '15', label: 'Years of Excellence' },
         { value: '5000+', label: 'Happy Clients' },
       ],
-      // Dormant in a commented-out "floating owner card" in the old about.tsx, where
-      // the surname was misspelled `Alpa Rawal`. Corrected per ruling 2.
-      founder: {
-        name: 'Alpa Rawat',
-        role: 'Founder & Designer',
-      },
     },
 
     cta: {
@@ -301,9 +296,10 @@ export const siteCopy = {
       heading: 'Get in Touch',
       address: 'A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039',
       phone: '+919977057045',
-      // As printed in the old footer, including the bidi isolation marks and the
-      // non-breaking spaces between the groups of digits.
-      phoneDisplay: '‪+91 99770 57045‬',
+      // Deliberate: as printed in the old footer, including the U+202A/U+202C bidi
+      // isolation marks and the U+00A0 between the digit groups. They are in the
+      // shipped site today, so escaped here rather than tidied away.
+      phoneDisplay: '\u202a+91\u00a099770\u00a057045\u202c',
       email: 'divyafalthecreations@gmail.com',
     },
     legal: {
@@ -461,7 +457,8 @@ export const siteCopy = {
       email: 'divyafalthecreations@gmail.com',
       phoneLabel: 'Phone:',
       phone: '+919977057045',
-      phoneDisplay: '‪+91 99770 57045‬',
+      // Deliberate: the bidi marks and non-breaking spaces are in the shipped page.
+      phoneDisplay: '\u202a+91\u00a099770\u00a057045\u202c',
       addressLabel: 'Address:',
       address: 'A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039',
     },
@@ -575,7 +572,8 @@ export const siteCopy = {
       email: 'divyafalthecreations@gmail.com',
       phoneLabel: 'Phone:',
       phone: '+919977057045',
-      phoneDisplay: '‪+91 99770 57045‬',
+      // Deliberate: the bidi marks and non-breaking spaces are in the shipped page.
+      phoneDisplay: '\u202a+91\u00a099770\u00a057045\u202c',
       hoursLabel: 'Business Hours:',
       hours: 'Monday - Saturday, 10:00 AM - 7:00 PM IST',
       addressLabel: 'Address:',
