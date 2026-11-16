@@ -205,10 +205,20 @@ body {
   animation-delay: var(--reveal-delay, 0ms);
 }
 
-/* Text fade-up, driven by components/primitives/Reveal.tsx. A block carrying
-   [data-reveal] is readable as authored; Reveal only arms it ("armed") once it
-   has confirmed motion is allowed, then plays it ("in"). No JS, a dead
-   IntersectionObserver or reduced motion all leave the block visible. */
+/* Text fade-up on first paint, for above-the-fold blocks. CSS-only, so it is
+   styled from the very first frame and cannot flash. Stagger with
+   --reveal-delay (the spec's step is --stagger, 60ms). */
+@utility reveal-text {
+  animation: atelier-text-reveal var(--duration-text) var(--ease-atelier) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Scroll-triggered text fade-up, driven by components/primitives/Reveal.tsx. A
+   block carrying [data-reveal] is readable as authored; Reveal arms it ("armed")
+   only once it has confirmed motion is allowed, an observer exists and the block
+   is off screen, then plays it ("in") when it scrolls in. No JS, a dead
+   IntersectionObserver, reduced motion and a block already in view all leave the
+   block visible. Use reveal-text above, not this, for load motion. */
 [data-reveal='armed'] {
   opacity: 0;
 }
@@ -233,6 +243,7 @@ body {
   [data-reveal],
   [data-reveal='armed'],
   [data-reveal='in'],
+  .reveal-text,
   .reveal-image {
     animation: none !important;
     opacity: 1 !important;
