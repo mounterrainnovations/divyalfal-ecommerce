@@ -1,7 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import Collection from './collection';
 import ShopByStyle from './shop-by-style';
+
+/** Collection's spotlight band asks `useMedia` how many clips to render; answer "desktop". */
+const useMedia = vi.hoisted(() => vi.fn<(query: string) => boolean>());
+vi.mock('@/lib/hooks/useMedia', () => ({ useMedia }));
 import { siteCopy } from '@/lib/content/site-copy';
 import { formatPrice } from '@/lib/utils/price';
 import type { Product } from '@/types';
@@ -38,8 +42,16 @@ const fallbackTiles = (container: HTMLElement) =>
   Array.from(container.querySelectorAll('[data-tier="fallback"]'));
 
 describe('ShopByStyle', () => {
+  beforeEach(() => {
+    useMedia.mockReset();
+    useMedia.mockImplementation(query => query === '(min-width: 768px)');
+    // The data hook logs the failure mode before falling back; keep the output readable.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('renders the heading verbatim from siteCopy', async () => {
@@ -107,16 +119,27 @@ describe('ShopByStyle', () => {
       expect(screen.getByRole('heading', { level: 3, name: item.name })).toBeInTheDocument();
     }
     for (const tile of tiles) {
-      expect(tile.className).toMatch(/\bopacity-70\b/);
+      // The dim is on the plate, never on the name — `opacity` applies to the whole subtree
+      // and axe measures the result, so a dimmed ancestor would cost the name its contrast.
+      expect(tile.querySelector('.opacity-70 img')).not.toBeNull();
+      expect(tile.className).not.toMatch(/\bopacity-\d+\b/);
+      const name: Element | null = tile.querySelector('h3');
+      for (let el: Element | null = name; el && el !== tile; el = el.parentElement) {
+        expect(el.className).not.toMatch(/\bopacity-\d+\b/);
+      }
       expect(tile.querySelectorAll('a')).toHaveLength(0);
       expect(tile.textContent ?? '').not.toMatch(/₹|Rs\./);
+      // Decorative: the name below carries the label, so the alt must not repeat it.
+      expect(tile.querySelector('img')).toHaveAttribute('alt', '');
     }
     expect(container.querySelector('a[href^="/product/"]')).toBeNull();
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
   });
 
   it.each([
     ['an empty object', {}, true, 200],
     ['an error payload with a 500', { error: 'Failed to fetch homepage sections' }, false, 500],
+    ['an error payload with a 200', { error: 'Database configuration error' }, true, 200],
     ['a 500 with no body at all', null, false, 500],
     ['sections that are not arrays', { freshArrivals: null, shopByStyle: 'nope' }, true, 200],
   ])('falls back when the API returns %s, and never throws', async (_label, body, ok, status) => {
@@ -143,7 +166,10 @@ describe('ShopByStyle', () => {
     expect(fallbackTiles(container)).toHaveLength(siteCopy.home.style.items.length);
   });
 
-  it('shares a single homepage-sections request with Collection', async () => {
+  it('takes its data from the shared hook, not from a sibling section', async () => {
+    // The two movements import `lib/hooks/useHomepageSections` independently; neither
+    // reaches into the other. This renders both only to pin the integration claim — that a
+    // page carrying both movements still makes exactly one request.
     const spy = mockFetch({ freshArrivals: products, shopByStyle: products });
     render(
       <>

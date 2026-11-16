@@ -6,9 +6,10 @@ import DisplayHeading from '@/components/primitives/DisplayHeading';
 import HairlineRule from '@/components/primitives/HairlineRule';
 import ProductTile from '@/components/primitives/ProductTile';
 import Reveal from '@/components/primitives/Reveal';
-import { photographedFirst, useHomepageSections } from '@/components/sections/collection';
 import { siteCopy } from '@/lib/content/site-copy';
+import { useHomepageSections } from '@/lib/hooks/useHomepageSections';
 import { cn } from '@/lib/utils';
+import { photographedFirst } from '@/lib/utils/product-utils';
 
 /**
  * Six slots, two per row, each row a different asymmetry: a wide tile with a narrower one
@@ -102,21 +103,20 @@ export default function ShopByStyle() {
 }
 
 /**
- * A look from `siteCopy.home.style`, dimmed and inert. The text block matches `ProductTile`'s
- * so the two tiers share one silhouette, minus the price line — these garments are archive,
- * not stock, and must never read as purchasable.
+ * A look from `siteCopy.home.style`, inert. The text block matches `ProductTile`'s so the two
+ * tiers share one silhouette, minus the price line — these garments are archive, not stock,
+ * and must never read as purchasable.
+ *
+ * The dim sits on the photograph, not on the tile: `opacity` applies to a subtree, and
+ * dimming the name with it costs contrast the accessibility gate measures. The pale plate
+ * carries the archive reading on its own.
  */
 function StyleFallbackTile({ item }: { item: (typeof siteCopy.home.style.items)[number] }) {
   return (
-    <div data-tier="fallback" className="opacity-70">
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-paper-deep">
-        <Image
-          src={item.frontImage}
-          alt={item.name}
-          fill
-          sizes={TILE_SIZES}
-          className="object-cover"
-        />
+    <div data-tier="fallback">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-paper-deep opacity-70">
+        {/* Decorative: the name below is the accessible label for this tile. */}
+        <Image src={item.frontImage} alt="" fill sizes={TILE_SIZES} className="object-cover" />
       </div>
       <h3 className="mt-4 font-display text-body font-light text-ink">{item.name}</h3>
     </div>

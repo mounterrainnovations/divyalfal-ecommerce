@@ -1,9 +1,21 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import Collection from './collection';
 import { siteCopy } from '@/lib/content/site-copy';
 import { formatPrice } from '@/lib/utils/price';
 import type { Product } from '@/types';
+
+/**
+ * The spotlight band decides in JavaScript how many clips to render, because a CSS `hidden`
+ * would still have downloaded them (`autoplay` overrides `preload="none"`). So the hook is
+ * mocked rather than stubbed through `window.matchMedia`: that pins *which* queries the band
+ * asks for, not just what it does with the answer.
+ */
+const useMedia = vi.hoisted(() => vi.fn<(query: string) => boolean>());
+vi.mock('@/lib/hooks/useMedia', () => ({ useMedia }));
+
+const DESKTOP = '(min-width: 768px)';
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
 /**
  * The live database holds two products, one of them with no photos at all, so the fixture
@@ -48,8 +60,17 @@ const fallbackTiles = (container: HTMLElement) =>
   Array.from(container.querySelectorAll('[data-tier="fallback"]'));
 
 describe('Collection', () => {
+  beforeEach(() => {
+    // Desktop width, motion allowed, unless a test says otherwise.
+    useMedia.mockReset();
+    useMedia.mockImplementation(query => query === DESKTOP);
+    // The hook logs the failure mode before falling back; keep the suite's output readable.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('opens the movement with the merged heading and lead, verbatim from siteCopy', async () => {
@@ -124,12 +145,54 @@ describe('Collection', () => {
     expect(tiles).toHaveLength(siteCopy.home.collection.length);
 
     for (const tile of tiles) {
-      // Dimmed, never a link, never priced as if purchasable.
-      expect(tile.className).toMatch(/\bopacity-70\b/);
+      // Dimmed on the plate, never a link, never priced as if purchasable.
+      expect(tile.querySelector('.opacity-70 img')).not.toBeNull();
       expect(tile.querySelectorAll('a')).toHaveLength(0);
       expect(tile.textContent ?? '').not.toMatch(/₹|Rs\.|Add to Cart/);
     }
     expect(container.querySelector('a[href^="/product/"]')).toBeNull();
+  });
+
+  it('dims the photograph but never the prose, so the tier keeps its contrast', async () => {
+    // `opacity` applies to the whole subtree. `text-ink-soft` at 70% over paper computes to
+    // ~2.98:1 — below AA at body size, and axe accounts for opacity — so no dimmed ancestor
+    // may wrap the words. The plate carries the archive reading on its own.
+    mockFetch({ freshArrivals: [], shopByStyle: [] });
+    const { container } = render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+
+    const dimmedAncestor = (node: Element | null) => {
+      for (let el = node; el && el !== container; el = el.parentElement) {
+        if (/\bopacity-\d+\b/.test(el.className)) return el;
+      }
+      return null;
+    };
+
+    for (const entry of siteCopy.home.collection) {
+      expect(dimmedAncestor(screen.getByText(entry.description))).toBeNull();
+      expect(
+        dimmedAncestor(screen.getByRole('heading', { level: 3, name: entry.title }))
+      ).toBeNull();
+    }
+    // The numeral apparatus is text too, and it is the smallest text in the tier.
+    expect(dimmedAncestor(screen.getByText('01'))).toBeNull();
+    // The dim did not simply vanish: it moved onto the image frame.
+    expect(container.querySelectorAll('[data-tier="fallback"] .opacity-70 img')).toHaveLength(
+      siteCopy.home.collection.length
+    );
+  });
+
+  it('leaves the fallback photographs decorative, so no name is announced twice', async () => {
+    mockFetch({ freshArrivals: [], shopByStyle: [] });
+    const { container } = render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+    const images = Array.from(container.querySelectorAll('[data-tier="fallback"] img'));
+    expect(images).toHaveLength(siteCopy.home.collection.length);
+    for (const image of images) expect(image).toHaveAttribute('alt', '');
+    // An empty alt takes them out of the image role entirely.
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
   });
 
   it('renders the four named collection entries verbatim', async () => {
@@ -153,6 +216,7 @@ describe('Collection', () => {
   it.each([
     ['an empty object', {}, true, 200],
     ['an error payload with a 500', { error: 'Failed to fetch homepage sections' }, false, 500],
+    ['an error payload with a 200', { error: 'Database configuration error' }, true, 200],
     ['a 500 with no body at all', null, false, 500],
     ['sections that are not arrays', { freshArrivals: null, shopByStyle: 'nope' }, true, 200],
   ])('falls back when the API returns %s, and never throws', async (_label, body, ok, status) => {
@@ -196,6 +260,32 @@ describe('Collection', () => {
     expect(fallbackTiles(container)).toHaveLength(siteCopy.home.collection.length);
   });
 
+  it('says which failure mode it hit before falling back', async () => {
+    // All four modes render the same tier, which is the point — but in production they must
+    // still be tellable apart, as they were before the rails were retired.
+    const logged = vi.spyOn(console, 'error');
+    mockFetch({ error: 'Failed to fetch homepage sections' }, false, 500);
+    render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+    const calls = logged.mock.calls.filter(call => String(call[0]).includes('[homepage-sections]'));
+    expect(calls.length).toBeGreaterThan(0);
+    expect(String(calls[0][0])).toMatch(/request failed/);
+    expect(JSON.stringify(calls[0][1])).toContain('500');
+  });
+
+  it('does not log an empty catalogue as a failure', async () => {
+    // Low inventory is a normal state, not an error, and must not cry wolf in the console.
+    const logged = vi.spyOn(console, 'error');
+    mockFetch({ freshArrivals: [], shopByStyle: [] });
+    render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+    expect(
+      logged.mock.calls.filter(call => String(call[0]).includes('[homepage-sections]'))
+    ).toHaveLength(0);
+  });
+
   it('absorbs the spotlight footage as part of the sequence', async () => {
     mockFetch({ freshArrivals: products, shopByStyle: [] });
     const { container } = render(<Collection />);
@@ -214,12 +304,40 @@ describe('Collection', () => {
       expect(video).toHaveAttribute('aria-hidden', 'true');
       expect(video).toHaveAttribute('tabindex', '-1');
     }
-    // A third of a phone viewport crops a 9:16 clip to a sliver, so the band is the lead
-    // clip on a phone and the full triptych from md up. No source is dropped.
-    expect(videos[0].className).not.toMatch(/\bhidden\b/);
-    expect(videos[1].className).toMatch(/\bhidden\b/);
-    expect(videos[1].className).toMatch(/md:block/);
-    expect(videos[2].className).toMatch(/\bhidden\b/);
+    expect(useMedia).toHaveBeenCalledWith(DESKTOP);
+  });
+
+  it('serves a phone the lead clip only, and never requests the other two', async () => {
+    // A third of a 390px viewport is 130px, which crops a 9:16 clip to a sliver. A CSS
+    // `hidden` would not have saved the bytes — `autoplay` overrides `preload="none"`, so a
+    // display:none video with a src still downloads — so the extra clips are not rendered.
+    useMedia.mockImplementation(() => false);
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    const { container } = render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+    const videos = Array.from(container.querySelectorAll('video'));
+    expect(videos).toHaveLength(1);
+    expect(videos[0]).toHaveAttribute('src', SPOTLIGHT[0]);
+    // Not merely hidden: the other two sources are nowhere in the document.
+    expect(container.innerHTML).not.toContain('sp02.webm');
+    expect(container.innerHTML).not.toContain('sp03.webm');
+  });
+
+  it('does not autoplay the footage under prefers-reduced-motion', async () => {
+    useMedia.mockImplementation(query => query === DESKTOP || query === REDUCED_MOTION);
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    const { container } = render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+    const videos = Array.from(container.querySelectorAll('video'));
+    expect(videos).toHaveLength(3);
+    for (const video of videos) {
+      expect(video).not.toHaveAttribute('autoplay');
+      // Still composed, just still: enough is loaded to paint a first frame.
+      expect(video).toHaveAttribute('preload', 'metadata');
+    }
+    expect(useMedia).toHaveBeenCalledWith(REDUCED_MOTION);
   });
 
   it('keeps the spotlight interlude on screen in the fallback state too', async () => {

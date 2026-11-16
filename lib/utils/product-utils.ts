@@ -122,3 +122,17 @@ export const getAvailableCategories = (products: Product[]): ProductCategory[] =
   });
   return Array.from(categories).sort();
 };
+
+/**
+ * Photographed garments lead; the rest keep their order behind them.
+ *
+ * `ProductTile` renders an honest labelled frame for a product with no photos, and that is
+ * right — but a 660px-wide empty frame cannot carry the opening moment of an editorial
+ * sequence, and the live catalogue's newest product happens to have no photos at all. A
+ * stable partition is the whole rule: nothing is hidden, nothing is reordered within a
+ * group, and a sequence simply opens with a garment it can actually show.
+ */
+export const photographedFirst = (products: Product[]): Product[] => [
+  ...products.filter(product => product.photos.length > 0),
+  ...products.filter(product => product.photos.length === 0),
+];
