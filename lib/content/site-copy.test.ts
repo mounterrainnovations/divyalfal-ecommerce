@@ -1,0 +1,234 @@
+import { describe, it, expect } from 'vitest';
+import { siteCopy } from './site-copy';
+
+describe('siteCopy', () => {
+  it('preserves the About paragraph verbatim', () => {
+    expect(siteCopy.home.about.body).toContain(
+      'In 2010, our founder embarked on an extraordinary journey with nothing but a dream and 16 carefully curated sarees.'
+    );
+    expect(siteCopy.home.about.body).toContain(
+      'most spectacular yet, featuring cutting-edge designs, world-class models'
+    );
+  });
+
+  it('preserves both About statistics', () => {
+    expect(siteCopy.home.about.stats).toEqual([
+      { value: '15', label: 'Years of Excellence' },
+      { value: '5000+', label: 'Happy Clients' },
+    ]);
+  });
+
+  it('preserves all five testimonials verbatim and unattributed', () => {
+    expect(siteCopy.home.testimonials).toHaveLength(5);
+    expect(siteCopy.home.testimonials[0].quote).toBe(
+      'Wearing Divyafal by Alpa Rawat was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.'
+    );
+    expect(siteCopy.home.testimonials.every(t => !('name' in t) || t.name === '')).toBe(true);
+  });
+
+  it('preserves the typographic apostrophes in the testimonials', () => {
+    expect(siteCopy.home.testimonials[1].quote).toBe(
+      'Alpa Rawat’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.'
+    );
+    expect(siteCopy.home.testimonials[2].quote).toBe(
+      'Divyafal’ lives up to its name. My outfit felt like a rare treasure timeless, personal, and heirloom-worthy.'
+    );
+  });
+
+  it('preserves all six value statements', () => {
+    expect(siteCopy.home.values.items).toHaveLength(6);
+    expect(siteCopy.home.values.items.map(v => v.body)).toContain(
+      'We pursue perfection in every stitch, every design, and every customer interaction.'
+    );
+    expect(siteCopy.home.values.items.map(v => v.title)).toEqual([
+      'Excellence',
+      'Passion',
+      'Community',
+      'Quality',
+      'Creativity',
+      'Growth',
+    ]);
+  });
+
+  it('preserves the three named collection entries and the fourth fallback', () => {
+    expect(siteCopy.home.collection.map(c => c.title)).toEqual(
+      expect.arrayContaining([
+        'Haldi & Kumkum Dress',
+        'The Rajwadi Brocade',
+        'Neelam Frill Lehenga',
+        'The Royal Cascade Lehenga',
+      ])
+    );
+  });
+
+  it('spells the founder Alpa Rawat everywhere', () => {
+    expect(JSON.stringify(siteCopy)).not.toContain('Alpa Rawal');
+    expect(siteCopy.home.about.founder.name).toBe('Alpa Rawat');
+  });
+
+  it('carries the real contact details, not the footer placeholders', () => {
+    expect(siteCopy.footer.contact.phone).toBe('+919977057045');
+    expect(siteCopy.footer.contact.email).toBe('divyafalthecreations@gmail.com');
+    expect(JSON.stringify(siteCopy)).not.toContain('9876543210');
+    expect(JSON.stringify(siteCopy)).not.toContain('hello@divyafal.com');
+  });
+
+  it('leaves the social collection empty until real URLs exist', () => {
+    expect(siteCopy.footer.social).toEqual([]);
+    expect(JSON.stringify(siteCopy)).not.toContain('"href":"#"');
+  });
+
+  it('carries only the wordmark and the two media sources in the hero', () => {
+    expect(Object.keys(siteCopy.home.hero)).toEqual(['wordmark', 'desktopImage', 'mobileVideo']);
+    expect(siteCopy.home.hero.wordmark).toBe('DIVYAFAL');
+    expect(siteCopy.home.hero.desktopImage).toBe('/mocks/mock_hero_desktop_2.webp');
+    expect(siteCopy.home.hero.mobileVideo).toBe(
+      'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm'
+    );
+  });
+
+  it('preserves the six category names', () => {
+    expect(siteCopy.home.categories.items.map(c => c.name)).toEqual([
+      'Sarees',
+      'Indo-Western',
+      'Lehengas',
+      'Suits',
+      'Kurta Pant',
+      'Western',
+    ]);
+  });
+
+  it('preserves the hardcoded garment names', () => {
+    expect(siteCopy.home.recommended.bestSellers.map(p => p.name)).toEqual([
+      'Red Velvet Saree Border with...',
+      'Midnight Brown Indo Lehenga Set...',
+      'White Silk Kurti with Long...',
+      'Indo Western Lehenga Set...',
+    ]);
+    expect(siteCopy.home.recommended.freshArrivals.map(p => p.name)).toEqual([
+      'Emerald Green Silk Saree...',
+      'Rose Gold Lehenga Choli...',
+      'Coral Silk Anarkali...',
+      'Navy Blue Banarasi Saree...',
+    ]);
+    expect(siteCopy.home.style.items.map(p => p.name)).toEqual([
+      'Raw Silk Off White Printed with Sequence Detailing',
+      'Pure Cotton Block Print Ajragh Bagh',
+      'Banarasi Anarkali Suit',
+      'Peach and off white Banarasi Angrakha Anarkarli',
+    ]);
+  });
+
+  it('preserves the section headings and calls to action', () => {
+    expect(siteCopy.home.categories.heading).toBe('Shop by Category');
+    expect(siteCopy.home.recommended.heading).toBe('Most Recommended');
+    expect(siteCopy.home.explore.heading).toBe('Explore Our Collection');
+    expect(siteCopy.home.explore.cta).toBe('View All');
+    expect(siteCopy.home.style.heading).toBe('Shop By Style');
+    expect(siteCopy.home.testimonialsHeading).toBe('What Our Customers Say');
+    expect(siteCopy.home.about.heading).toBe('About Divyafal');
+    expect(siteCopy.home.values.heading).toBe('Our Values');
+    expect(siteCopy.home.academy.heading).toBe('Virasat Academy');
+    expect(siteCopy.home.academy.cta).toBe('Apply Now');
+  });
+
+  it('preserves both call-to-action cards', () => {
+    expect(siteCopy.home.cta.cards).toHaveLength(2);
+    expect(siteCopy.home.cta.cards[0].title).toBe('Shop via Video Call');
+    expect(siteCopy.home.cta.cards[0].body).toBe(
+      'Get a free virtual styling session with our expert designers from the comfort of your home.'
+    );
+    expect(siteCopy.home.cta.cards[0].cta).toBe('Book an Appointment');
+    expect(siteCopy.home.cta.cards[1].title).toBe('The Stylist Session');
+    expect(siteCopy.home.cta.cards[1].cta).toBe('Visit Store');
+  });
+
+  it('preserves the footer copy', () => {
+    expect(siteCopy.footer.brand.body).toBe(
+      'Timeless elegance meets modern craftsmanship. Each piece is carefully designed to celebrate your unique story and style.'
+    );
+    expect(siteCopy.footer.contact.heading).toBe('Get in Touch');
+    expect(siteCopy.footer.contact.address).toBe(
+      'A-41, Bawadiya Kalan, Pallavi Nagar, Bhopal, Madhya Pradesh 462039'
+    );
+    expect(siteCopy.footer.quickLinks.items.map(l => l.label)).toEqual([
+      'Home',
+      'All Products',
+      'Collections',
+      'Contact Us',
+    ]);
+    expect(siteCopy.footer.legal.copyright).toBe('Divyafal. All rights reserved.');
+  });
+
+  it('preserves the navigation labels', () => {
+    expect(siteCopy.nav.items.map(l => l.label)).toEqual([
+      'Home',
+      'All Products',
+      'Sale',
+      'Virasat Academy',
+      'Contact',
+    ]);
+  });
+
+  it('preserves the Virasat Academy page copy', () => {
+    expect(siteCopy.academy.hero.heading).toBe('Virasat Academy');
+    expect(siteCopy.academy.hero.body).toBe(
+      'Embark on a journey to master the art of traditional Indian fashion design. Apply now to join our esteemed academy.'
+    );
+    expect(siteCopy.academy.form.heading).toBe('Application Form');
+    expect(siteCopy.academy.form.subheading).toBe(
+      'Fill in your details to apply for Virasat Academy'
+    );
+    expect(siteCopy.academy.form.submit).toBe('Submit Application');
+    expect(siteCopy.academy.success.heading).toBe('Submission Successful!');
+    expect(siteCopy.academy.success.body).toBe(
+      'Thank you! Stay tuned while we look into your application.'
+    );
+  });
+
+  it('preserves the contact page copy', () => {
+    expect(siteCopy.contact.hero.heading).toBe('Contact Us');
+    expect(siteCopy.contact.info.hours).toEqual(['Mon - Sat, 11:00am - 8:00pm,', 'Sunday- Closed']);
+    expect(siteCopy.contact.info.phone).toBe('9977057045');
+    expect(siteCopy.contact.info.email).toBe('divyafalthecreations@gmail.com');
+    expect(siteCopy.contact.form.heading).toBe('Get in Touch');
+    expect(siteCopy.contact.form.submit).toBe('Submit Now');
+  });
+
+  it('preserves the refund policy copy', () => {
+    expect(siteCopy.refundPolicy.hero.heading).toBe('Refund Policy');
+    expect(siteCopy.refundPolicy.hero.subheading).toBe('Your satisfaction is our priority');
+    expect(siteCopy.refundPolicy.intro).toBe(
+      'At Divyafal, we want you to be completely satisfied with your purchase. If for any reason you are not happy with your order, we offer a comprehensive refund policy to ensure your peace of mind.'
+    );
+    expect(siteCopy.refundPolicy.returnWindow.items).toEqual([
+      'Unused and in the same condition that you received them',
+      'In the original packaging with all tags attached',
+      'Accompanied by the original receipt or proof of purchase',
+    ]);
+    expect(siteCopy.refundPolicy.process.steps).toHaveLength(5);
+    expect(siteCopy.refundPolicy.process.steps[0].label).toBe('Initiate Return:');
+    expect(siteCopy.refundPolicy.lastUpdated).toBe('Last updated: December 2025');
+  });
+
+  it('preserves the cancellation policy copy', () => {
+    expect(siteCopy.cancellationPolicy.hero.heading).toBe('Cancellation Policy');
+    expect(siteCopy.cancellationPolicy.hero.subheading).toBe(
+      'Flexible options for order modifications'
+    );
+    expect(siteCopy.cancellationPolicy.window.tip.heading).toBe('Quick Tip');
+    expect(siteCopy.cancellationPolicy.howTo.steps).toHaveLength(4);
+    expect(siteCopy.cancellationPolicy.timeline.items).toHaveLength(4);
+    expect(siteCopy.cancellationPolicy.lastUpdated).toBe('Last updated: December 2025');
+  });
+
+  it('decodes the HTML entities in the transcribed prose', () => {
+    expect(siteCopy.home.about.body).toContain("This year's showcase");
+    expect(siteCopy.refundPolicy.nonReturnable.items).toContain('Items marked as "Final Sale"');
+    expect(siteCopy.cancellationPolicy.nonCancellable.items).toContain(
+      'Items marked as "Made to Order"'
+    );
+    expect(JSON.stringify(siteCopy)).not.toContain('&apos;');
+    expect(JSON.stringify(siteCopy)).not.toContain('&quot;');
+  });
+});
