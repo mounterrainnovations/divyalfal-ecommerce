@@ -161,16 +161,19 @@ export default function EnquiriesPage() {
 
   const columns: Column<Enquiry>[] = [
     {
+      // Hidden on a phone, where the six columns cannot all fit and the two that matter are
+      // the name and what state it is in. The date moves under the name instead of being
+      // scrolled off the right edge with the actions.
       key: 'when',
       head: 'Received',
-      className: 'w-[104px] tabular-nums',
+      className: 'hidden w-[104px] tabular-nums sm:table-cell',
       cell: enquiry => <span className="text-ink-soft">{when(enquiry.createdAt)}</span>,
     },
     {
       key: 'name',
       head: 'Name',
       wrap: true,
-      className: 'min-w-[120px]',
+      className: 'min-w-[100px]',
       cell: enquiry => (
         <button
           type="button"
@@ -179,11 +182,14 @@ export default function EnquiriesPage() {
             if (enquiry.status === 'UNREAD') void setStatus(enquiry, 'READ');
           }}
           className={cn(
-            'text-left hover:underline hover:decoration-gold',
+            'block py-1 text-left hover:underline hover:decoration-gold',
             enquiry.status === 'UNREAD' ? 'text-ink' : 'text-ink-soft'
           )}
         >
           {enquiry.name}
+          <span className="block font-ui text-eyebrow text-ink-soft sm:hidden">
+            {when(enquiry.createdAt)}
+          </span>
         </button>
       ),
     },
@@ -208,7 +214,7 @@ export default function EnquiriesPage() {
     {
       key: 'status',
       head: 'State',
-      className: 'w-[84px]',
+      className: 'w-[72px]',
       cell: enquiry => (
         <span className={enquiry.status === 'UNREAD' ? 'text-ink' : 'text-ink-soft'}>
           {STATUS_LABEL[enquiry.status]}

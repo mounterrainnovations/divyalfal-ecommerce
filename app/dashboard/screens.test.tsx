@@ -295,7 +295,7 @@ describe('the enquiries screen', () => {
     ]);
 
     render(<EnquiriesPage />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Ravi Nair' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Ravi Nair/ }));
 
     expect(await screen.findByText('Applying for the academy.')).toBeInTheDocument();
     expect(screen.getAllByText('Academy form').length).toBeGreaterThan(0);

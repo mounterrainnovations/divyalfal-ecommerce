@@ -110,6 +110,8 @@ export default function AssetSheet({
   }
 
   const working = busy !== '';
+  /** A seeded file served from `public/`, not an object in the storage bucket. */
+  const shipsWithTheSite = asset.url.startsWith('/');
 
   return (
     <Sheet
@@ -185,24 +187,38 @@ export default function AssetSheet({
 
         <div className={cn('border-t pt-4', RULE)}>
           <p className={cn(LABEL, 'mb-2')}>The file itself</p>
-          <p className="measure mb-3 font-ui text-caption text-ink-soft">
-            A replacement keeps this address, so every product, page and slide that shows this
-            file shows the new one. The address is <span className="break-all">{asset.url}</span>
-          </p>
-          <label className={cn(ACTION_QUIET, 'cursor-pointer')}>
-            <input
-              type="file"
-              accept={asset.kind === 'VIDEO' ? 'video/mp4,video/webm' : 'image/*'}
-              className="sr-only"
-              disabled={working}
-              onChange={event => {
-                const file = event.target.files?.[0];
-                if (file) replace(file);
-                event.target.value = '';
-              }}
-            />
-            {busy === 'replacing' ? 'Replacing' : 'Replace this file'}
-          </label>
+          {shipsWithTheSite ? (
+            // A seeded asset's bytes are a file in `public/`, under source control, not an
+            // object in storage. The API refuses to replace one, so the button is not offered:
+            // a control that always fails is worse than a sentence explaining why.
+            <p className="measure font-ui text-caption text-ink-soft">
+              This file ships with the site rather than living in storage, so its bytes cannot be
+              replaced here. Upload the new photograph as its own file and use that instead. The
+              address is <span className="break-all">{asset.url}</span>
+            </p>
+          ) : (
+            <>
+              <p className="measure mb-3 font-ui text-caption text-ink-soft">
+                A replacement keeps this address, so every product, page and slide that shows
+                this file shows the new one. The address is{' '}
+                <span className="break-all">{asset.url}</span>
+              </p>
+              <label className={cn(ACTION_QUIET, 'cursor-pointer')}>
+                <input
+                  type="file"
+                  accept={asset.kind === 'VIDEO' ? 'video/mp4,video/webm' : 'image/*'}
+                  className="sr-only"
+                  disabled={working}
+                  onChange={event => {
+                    const file = event.target.files?.[0];
+                    if (file) replace(file);
+                    event.target.value = '';
+                  }}
+                />
+                {busy === 'replacing' ? 'Replacing' : 'Replace this file'}
+              </label>
+            </>
+          )}
         </div>
 
         <div className={cn('border-t pt-4', RULE)}>
