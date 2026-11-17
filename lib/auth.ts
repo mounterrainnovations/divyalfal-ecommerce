@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { timingSafeEqual } from 'crypto';
+import { readJwtSecret, type JWTPayload } from '@/lib/auth-verify';
+
+export type { JWTPayload };
 
 // Get admin credentials from environment variables with validation
 function getAdminCredentials() {
@@ -15,16 +18,15 @@ function getAdminCredentials() {
   return { email, password };
 }
 
-export interface JWTPayload {
-  email: string;
-  role: 'admin';
-  iat: number;
-  exp: number;
-}
-
-// Get JWT secret from environment or use development fallback
+// The signing secret comes from the environment ONLY. There is no development fallback: a
+// secret compiled into the source is readable by anyone with the repository and would let them
+// forge an admin session on any deploy that forgot to set JWT_SECRET.
 function getJWTSecret(): string {
-  return process.env.JWT_SECRET || 'divyafal-development-secret-2024';
+  const secret = readJwtSecret();
+  if (!secret) {
+    throw new Error('JWT_SECRET is not configured.');
+  }
+  return secret;
 }
 
 // Generate JWT token for admin
@@ -39,10 +41,11 @@ export function generateToken(email: string): string {
   });
 }
 
-// Verify JWT token
+// Verify JWT token (Node runtime only). Request enforcement does NOT use this: middleware.ts and
+// requireAdmin share the edge-safe verifier in lib/auth-verify.ts. Kept for the existing API.
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, getJWTSecret()) as JWTPayload;
+    return jwt.verify(token, getJWTSecret(), { algorithms: ['HS256'] }) as JWTPayload;
   } catch {
     return null;
   }

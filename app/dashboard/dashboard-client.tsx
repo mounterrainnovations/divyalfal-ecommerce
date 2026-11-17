@@ -23,9 +23,12 @@ import { Prisma } from '@prisma/client';
 import type { Product, ProductCategory, ProductType } from '@/types';
 import { getDbCategory } from '@/lib/utils/product-utils';
 
-export default function DashboardClient() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+// `dashboard`: reached only past middleware, which has already verified the session, so the
+// product manager renders straight away. `login`: the /dashboard/login screen, which shows the
+// sign-in form and then moves on to /dashboard. Authentication is enforced server-side; nothing
+// in the browser decides who is signed in (the session cookie is httpOnly and unreadable here).
+export default function DashboardClient({ mode = 'dashboard' }: { mode?: 'dashboard' | 'login' }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(mode === 'dashboard');
   const [credentials, setCredentials] = useState({
     email: '',
     password: '',
@@ -57,24 +60,6 @@ export default function DashboardClient() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
-  // Check if user is already authenticated on page load
-  useEffect(() => {
-    const checkAuthStatus = () => {
-      // Check if auth token cookie exists
-      const cookies = document.cookie.split(';');
-      const authCookie = cookies.find(cookie => cookie.trim().startsWith('auth-token='));
-
-      if (authCookie) {
-        // Token exists, assume user is logged in
-        setIsLoggedIn(true);
-      }
-
-      setIsCheckingAuth(false);
-    };
-
-    checkAuthStatus();
-  }, []);
-
   const handleLogin = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -91,7 +76,8 @@ export default function DashboardClient() {
         });
 
         if (response.ok) {
-          setIsLoggedIn(true);
+          // Hard navigation so the new cookie is sent and middleware lets /dashboard through.
+          window.location.assign('/dashboard');
         } else {
           const data = await response.json();
           setLoginError(data.error || 'Login failed');
@@ -115,13 +101,13 @@ export default function DashboardClient() {
         },
       });
     } catch {
-      // Ignore logout API errors, just clear the cookie
-      console.log('Logout API call failed, clearing cookie anyway');
+      // The cookie is httpOnly, so only the logout API can clear it; the next request to
+      // /dashboard bounces to the login screen if it is no longer valid.
+      console.log('Logout API call failed');
     } finally {
-      // Clear the auth token cookie
-      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       setIsLoggedIn(false);
       setCredentials({ email: '', password: '' });
+      window.location.assign('/dashboard/login');
     }
   }, []);
 
@@ -364,18 +350,6 @@ export default function DashboardClient() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
-
-  // Show loading spinner while checking authentication
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-poppins">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Login Page
   if (!isLoggedIn) {
