@@ -122,3 +122,33 @@ export const getAvailableCategories = (products: Product[]): ProductCategory[] =
   });
   return Array.from(categories).sort();
 };
+
+/**
+ * Photographed garments lead; the rest keep their order behind them.
+ *
+ * `ProductTile` renders an honest labelled frame for a product with no photos, and that is
+ * right — but a 660px-wide empty frame cannot carry the opening moment of an editorial
+ * sequence, and the live catalogue's newest product happens to have no photos at all. A
+ * stable partition is the whole rule: nothing is hidden, nothing is reordered within a
+ * group, and a sequence simply opens with a garment it can actually show.
+ */
+export const photographedFirst = (products: Product[]): Product[] => [
+  ...products.filter(product => product.photos.length > 0),
+  ...products.filter(product => product.photos.length === 0),
+];
+
+/**
+ * Whether a set of products can carry a photography-led band at all.
+ *
+ * The homepage's two product movements compose around photographs, and the live catalogue
+ * holds one product in `shopByStyle` with no photos whatsoever. Testing `products.length === 0`
+ * before standing the composed placeholder tier up therefore rendered a single empty "image
+ * coming soon" frame under a display heading, while the composed tier sat behind a condition
+ * only a genuinely empty catalogue could satisfy — a half-empty grid, which spec §5 forbids.
+ *
+ * The frame itself stays right: a garment with no picture must say so rather than borrow a
+ * stock one. This is the section-level question, which is a different one — is there anything
+ * here to photograph a movement with?
+ */
+export const hasPhotographed = (products: Product[]): boolean =>
+  products.some(product => product.photos.length > 0);

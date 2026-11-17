@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
 
 export async function POST(request: Request) {
+  // First statement, before the body is read or storage is touched. It sits outside the main
+  // try/catch below so a refusal can never be rewritten into that block's 500.
+  try {
+    await requireAdmin(request);
+  } catch {
+    return unauthorizedResponse();
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

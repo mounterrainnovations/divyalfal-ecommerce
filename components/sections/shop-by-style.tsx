@@ -1,217 +1,151 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { HomepageProduct } from '@/lib/common/product-interfaces';
+import type { ReactNode } from 'react';
+import DisplayHeading from '@/components/primitives/DisplayHeading';
+import HairlineRule from '@/components/primitives/HairlineRule';
+import ProductTile from '@/components/primitives/ProductTile';
+import Reveal from '@/components/primitives/Reveal';
+import { siteCopy } from '@/lib/content/site-copy';
+import { useHomepageSections } from '@/lib/hooks/useHomepageSections';
+import { cn } from '@/lib/utils';
+import { hasPhotographed, photographedFirst } from '@/lib/utils/product-utils';
 
-interface HomepageSectionsResponse {
-  shopByStyle?: Array<HomepageProduct & { photos?: string[] }>;
-}
-
-// Mock fallback data
-const mockStyleProducts: HomepageProduct[] = [
-  {
-    id: 'mock-1',
-    name: 'Raw Silk Off White Printed with Sequence Detailing',
-    frontImage: '/shop by style/f1.png',
-    backImage: '/shop by style/b1.png',
-    image: '/shop by style/f1.png',
-    price: 0,
-    isMock: true,
-  },
-  {
-    id: 'mock-2',
-    name: 'Pure Cotton Block Print Ajragh Bagh',
-    frontImage: '/shop by style/f2.png',
-    backImage: '/shop by style/b2.png',
-    image: '/shop by style/f2.png',
-    price: 0,
-    isMock: true,
-  },
-  {
-    id: 'mock-3',
-    name: 'Banarasi Anarkali Suit',
-    frontImage: '/shop by style/f3.png',
-    backImage: '/shop by style/b3.png',
-    image: '/shop by style/f3.png',
-    price: 0,
-    isMock: true,
-  },
-  {
-    id: 'mock-4',
-    name: 'Peach and off white Banarasi Angrakha Anarkarli',
-    frontImage: '/shop by style/f4.png',
-    backImage: '/shop by style/b4.png',
-    image: '/shop by style/f4.png',
-    price: 0,
-    isMock: true,
-  },
+/**
+ * Six slots, two per row, each row a different asymmetry: a wide tile with a narrower one
+ * dropped below its shoulder, then the mirror. `/api/homepage-sections` returns at most one
+ * product per category, so six is the ceiling and the cycle never repeats on one page.
+ *
+ * **The drops came down in the density pass** (32/24/40 -> 20/14/24) and the spans did not.
+ * The offsets were never what made this movement tall — a row is as tall as its five-column
+ * tile, and every drop here is shorter than the difference between a five-column tile and a
+ * four-column one — but at 160px of drop they opened bands of bare paper beside the smaller
+ * tile, which is what the page was being judged for. Shortening the drop closes the paper and
+ * costs no photograph a pixel. **The spans stayed deliberately**: the only way to make this
+ * movement materially shorter is to shrink the garments, and on a couture storefront that is
+ * the one trade not worth making. The arithmetic is in the density-pass report.
+ */
+const TILE_PLACEMENT = [
+  'col-span-12 md:col-span-5 md:col-start-2',
+  'col-span-12 mt-10 md:col-span-4 md:col-start-8 md:mt-20',
+  'col-span-12 mt-10 md:col-span-4 md:col-start-2 md:mt-14',
+  'col-span-12 mt-10 md:col-span-5 md:col-start-7 md:mt-0',
+  'col-span-12 mt-10 md:col-span-5 md:col-start-2 md:mt-14',
+  'col-span-12 mt-10 md:col-span-4 md:col-start-8 md:mt-24',
 ];
 
-const StyleCard = ({ product }: { product: HomepageProduct }) => {
-  const [isHovered, setIsHovered] = useState(false);
+/**
+ * The widest a tile gets here, measured at both edges of every band rather than at one sample
+ * inside it. `TILE_PLACEMENT` alternates five and four columns, so the hint covers the
+ * five-column case: 719px at 767 (the full content width, where one-up peaks), 392px at 1023,
+ * 532px at 1439, and a fixed 532px from 1440 up, where the editorial grid stops growing.
+ *
+ * One constant for both kinds of tile: the real `ProductTile` and the `StyleFallbackTile` sit
+ * in the same `TILE_PLACEMENT` slots, so they render at identical widths and there is no
+ * reason for them to disagree about it.
+ */
+const TILE_SIZES =
+  '(min-width: 1440px) 532px, (min-width: 1024px) 38vw, (min-width: 768px) 39vw, calc(100vw - 48px)';
 
-  const cardContent = (
-    <div
-      className={`relative shrink-0 w-64 sm:w-72 xl:w-96 group ${product.isMock ? 'cursor-default opacity-70' : 'cursor-pointer'}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="rounded-2xl overflow-hidden bg-gray-100 h-96 xl:h-146 relative">
-        {/* Front Image */}
-        <Image
-          src={product.frontImage || product.image}
-          alt={product.name}
-          fill
-          className={`object-cover object-center transition-opacity duration-300 ${
-            isHovered ? 'opacity-0' : 'opacity-100'
-          }`}
-          sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 384px"
-        />
-        {/* Back Image (shown on hover) */}
-        {product.backImage && (
-          <Image
-            src={product.backImage}
-            alt={`${product.name} - back view`}
-            fill
-            className={`object-cover object-center transition-opacity duration-300 ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            }`}
-            sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 384px"
-          />
-        )}
-      </div>
+const TILES_PER_ROW = 2;
 
-      {/* Product Name - Center Aligned */}
-      <h3 className="text-sm sm:text-base xl:text-lg font-medium text-gray-900 mt-4 leading-snug text-center px-2">
-        {product.name}
-      </h3>
-    </div>
-  );
-
-  // Wrap in Link only if not a mock item
-  if (product.isMock) {
-    return cardContent;
+function rowsOf<T>(items: T[]): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += TILES_PER_ROW) {
+    rows.push(items.slice(i, i + TILES_PER_ROW));
   }
+  return rows;
+}
 
-  return <Link href={`/product/${product.id}`}>{cardContent}</Link>;
-};
-
-const SkeletonCard = () => (
-  <div className="relative shrink-0 w-64 sm:w-72 xl:w-96">
-    <div className="rounded-2xl overflow-hidden bg-gray-200 h-96 xl:h-146 animate-pulse" />
-    <div className="mt-4 h-5 bg-gray-200 rounded animate-pulse w-3/4 mx-auto" />
-  </div>
-);
-
+/**
+ * Movement 4 — Shop by Style.
+ *
+ * The pre-revamp section was a horizontal snap-scroller of four fixed-width cards with two
+ * floating circular chevron buttons laid over them, centred under a centred heading. All of
+ * that apparatus is gone: the tiles sit on the editorial grid at varied spans, two to a row,
+ * each row offset differently, so a category reads as a chosen placement rather than as the
+ * next slide. With one product live the single tile simply holds the left five columns and
+ * the rest of the row is air — the asymmetry is the composition, so a short row is not a
+ * gap.
+ *
+ * Real stock comes from `sections.shopByStyle` and uses `ProductTile`, so photo-less
+ * products get the honest "image coming soon" frame and prices come from `resolvePrice`.
+ * `photographedFirst` gives the wider leading slots to the categories that have a
+ * photograph; nothing is dropped, and a photo-less garment simply follows the ones that can
+ * carry a picture.
+ *
+ * The fallback tier is the client's decision, kept: the four looks in `siteCopy.home.style`
+ * render in the same placements at 70% opacity with their names and nothing else — no link,
+ * no price, no hover swap.
+ *
+ * **It stands in when no *photographed* garment exists, not when the array is empty**
+ * (`hasPhotographed`). That is the live catalogue's own state and the one this section got
+ * wrong: `shopByStyle` returns exactly one product and it has zero photos, so the old
+ * `products.length === 0` test kept the composed tier hidden and rendered one real tile whose
+ * entire content was the "image coming soon" frame — Movement 4 as a single empty grey box
+ * under a display heading. The frame stays correct inside `ProductTile`; it was the
+ * section-level condition that was wrong.
+ *
+ * `{}`, `{ error }`, empty arrays and a rejected fetch are one branch (`readSections` in
+ * `collection.tsx`), and the request itself is shared with Movement 3: one
+ * `GET /api/homepage-sections` serves both movements.
+ */
 export default function ShopByStyle() {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [products, setProducts] = useState<HomepageProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { status, sections } = useHomepageSections();
+  const products = photographedFirst(sections.shopByStyle).slice(0, TILE_PLACEMENT.length);
+  const showFallback = status === 'ready' && !hasPhotographed(products);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/homepage-sections');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch homepage sections');
-        }
-
-        const data: HomepageSectionsResponse = await response.json();
-
-        // Transform database products and add frontImage/backImage
-        const dbProducts = (data.shopByStyle || []).map(p => ({
-          ...p,
-          frontImage: p.image,
-          backImage: p.photos?.[1] || p.image, // Use second photo as back image if available
-          isMock: false,
-        }));
-
-        // Fill with mock data if we have fewer than 4 items
-        const remaining = 4 - dbProducts.length;
-        if (remaining > 0) {
-          setProducts([...dbProducts, ...mockStyleProducts.slice(0, remaining)]);
-        } else {
-          setProducts(dbProducts.slice(0, 6)); // Show up to 6 items (one per category)
-        }
-      } catch (error) {
-        console.error('Error fetching shop by style:', error);
-        // Use all mock data on error
-        setProducts(mockStyleProducts);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = direction === 'left' ? -400 : 400;
-      scrollContainerRef.current.scrollBy({
-        left: scrollAmount,
-        behavior: 'smooth',
-      });
-    }
-  };
+  const tiles: ReactNode[] = showFallback
+    ? siteCopy.home.style.items.map(item => <StyleFallbackTile key={item.name} item={item} />)
+    : products.map(product => <ProductTile key={product.id} product={product} headingLevel={3} sizes={TILE_SIZES} />);
 
   return (
-    <section className="bg-white py-12 xl:py-20">
-      <div className="w-full">
-        {/* Section Header */}
-        <div className="mb-8 xl:mb-12 px-4">
-          <h2 className="text-3xl sm:text-4xl xl:text-5xl font-serif font-light text-center text-black">
-            Shop By Style
-          </h2>
-        </div>
-
-        {/* Scroll Container with Navigation Buttons */}
-        <div className="relative w-full">
-          {/* Left Scroll Button */}
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-2 sm:left-4 xl:left-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 sm:p-3 transition-all hover:scale-110"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
-          </button>
-
-          {/* Right Scroll Button */}
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-2 sm:right-4 xl:right-8 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 sm:p-3 transition-all hover:scale-110"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
-          </button>
-
-          {/* Horizontal Scrolling Container */}
-          <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide">
-            {isLoading ? (
-              <div className="flex gap-4 sm:gap-6 xl:gap-8 pb-4 px-6 sm:px-8 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="snap-center">
-                    <SkeletonCard />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex gap-4 sm:gap-6 xl:gap-8 pb-4 px-6 sm:px-8 xl:px-20 snap-x snap-mandatory w-fit mx-auto">
-                {products.map(product => (
-                  <div key={product.id} className="snap-center">
-                    <StyleCard product={product} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+    <section className="section-rhythm bg-paper">
+      <div className="grid-editorial">
+        <Reveal className="col-span-12 md:col-span-6 md:col-start-2">
+          <DisplayHeading level={2} size={2}>
+            {siteCopy.home.style.heading}
+          </DisplayHeading>
+        </Reveal>
       </div>
+
+      {rowsOf(tiles).map((row, rowIndex) => (
+        <div key={rowIndex} className={cn('grid-editorial', rowIndex === 0 ? 'mt-4 md:mt-12' : '')}>
+          {row.map((tile, tileIndex) => {
+            const index = rowIndex * TILES_PER_ROW + tileIndex;
+            return (
+              <Reveal key={index} className={TILE_PLACEMENT[index]} delay={tileIndex * 60}>
+                {tile}
+              </Reveal>
+            );
+          })}
+        </div>
+      ))}
+
+      <Reveal className="grid-editorial mt-12 md:mt-20" delay={Math.max(tiles.length - 1, 0) * 60}>
+        <HairlineRule className="col-span-12 md:col-span-10 md:col-start-2" />
+      </Reveal>
     </section>
+  );
+}
+
+/**
+ * A look from `siteCopy.home.style`, inert. The text block matches `ProductTile`'s so the two
+ * tiers share one silhouette, minus the price line — these garments are archive, not stock,
+ * and must never read as purchasable.
+ *
+ * The dim sits on the photograph, not on the tile: `opacity` applies to a subtree, and
+ * dimming the name with it costs contrast the accessibility gate measures. The pale plate
+ * carries the archive reading on its own.
+ */
+function StyleFallbackTile({ item }: { item: (typeof siteCopy.home.style.items)[number] }) {
+  return (
+    <div data-tier="fallback">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-paper-deep opacity-70">
+        {/* Decorative: the name below is the accessible label for this tile. */}
+        <Image src={item.frontImage} alt="" fill sizes={TILE_SIZES} className="object-cover" />
+      </div>
+      <h3 className="mt-4 font-display text-body font-light text-ink">{item.name}</h3>
+    </div>
   );
 }

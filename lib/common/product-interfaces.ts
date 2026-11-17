@@ -15,11 +15,9 @@ export interface CategoryItem {
   href?: string;
 }
 
-// Utility function to format price consistently across components
-export const formatPrice = (price: number | string): string => {
-  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return `₹${numericPrice.toLocaleString('en-IN')}`;
-};
+// Price formatting lives in lib/utils/price.ts, the single implementation. Re-exported
+// here so existing importers keep working.
+export { formatPrice } from '@/lib/utils/price';
 
 // Utility function to format display price (for mock data)
 export const formatDisplayPrice = (price: string | number): string => {
@@ -34,12 +32,12 @@ export const DEFAULT_IMAGE_FALLBACK = '/mocks/mock_mostRecommended_common.jpg';
 
 // Standard category definitions
 export const CATEGORY_CONFIG: CategoryItem[] = [
-  { name: 'Sarees', image: '/categories/saree.jpg' },
-  { name: 'Indo-Western', image: '/categories/indo_western.jpg' },
-  { name: 'Lehengas', image: '/categories/lehenge.webp' },
-  { name: 'Suits', image: '/categories/suits.jpg' },
-  { name: 'Kurta Pant', image: '/categories/kurta.jpg' },
-  { name: 'Western', image: '/categories/western.png' },
+  { name: 'Sarees', image: '/samples/categories/category-sarees-embroidered-stole.webp' },
+  { name: 'Indo-Western', image: '/samples/categories/category-indo-western-gold-silk-daylight.webp' },
+  { name: 'Lehengas', image: '/samples/categories/category-lehengas-hung-on-the-door.webp' },
+  { name: 'Suits', image: '/samples/categories/category-suits-ivory-on-wooden-hangers.webp' },
+  { name: 'Kurta Pant', image: '/samples/categories/category-kurta-pant-hung-set.webp' },
+  { name: 'Western', image: '/samples/categories/category-western-pale-rail.webp' },
 ];
 
 // Homepage product interface with mock fallback support

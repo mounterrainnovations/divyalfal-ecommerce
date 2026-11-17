@@ -8,6 +8,7 @@ import {
 } from '@/lib/utils/product-utils';
 import type { ProductCategory, ProductType } from '@/types';
 import { retryDatabaseOperation } from '@/lib/utils/database';
+import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
 
 export async function GET(request: Request) {
   try {
@@ -119,6 +120,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(req: Request) {
+  // Admin-only write. First statement, outside the try/catch so a refusal is never rewritten.
+  try {
+    await requireAdmin(req);
+  } catch {
+    return unauthorizedResponse();
+  }
+
   try {
     const data = await req.json();
 

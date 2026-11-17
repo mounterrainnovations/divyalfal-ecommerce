@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rendered coverage of the copy module > checks a meaningful share of the module, so it cannot pass vacuously 1`] = `
+{
+  "exempt": 78,
+  "required": 292,
+  "total": 370,
+}
+`;

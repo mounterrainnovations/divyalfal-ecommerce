@@ -1,23 +1,70 @@
 'use client';
 
 import { useState } from 'react';
-import { GraduationCap, CheckCircle2 } from 'lucide-react';
-import Navbar from '@/components/layout/navbar';
 import Footer from '@/components/layout/footer';
+import { FIELD_CLASS, LABEL_CLASS } from '@/components/features/forms/field-styles';
+import Button from '@/components/primitives/Button';
+import DisplayHeading from '@/components/primitives/DisplayHeading';
+import HairlineRule from '@/components/primitives/HairlineRule';
+import Reveal from '@/components/primitives/Reveal';
+import { siteCopy } from '@/lib/content/site-copy';
+import { handoverEnquiry } from '@/components/features/forms/whatsapp-enquiry';
+
+// `siteCopy.academy.success` is deliberately not destructured here. Submit hands the
+// application to WhatsApp (see `handleSubmit`), which is not the same as an application
+// arriving -- the applicant may never press send -- so printing a confirmation would still be
+// a lie. The copy stays in the module because Phase 2 Task 8 renders it on a real response
+// from the enquiry endpoint.
+const { hero, form } = siteCopy.academy;
+const [
+  fullNameField,
+  dobField,
+  phoneField,
+  cityField,
+  stateField,
+  countryField,
+  genderField,
+  commentsField,
+] = form.fields;
+
+const initialFormData = {
+  fullName: '',
+  dob: '',
+  phone: '',
+  city: '',
+  state: '',
+  country: form.defaultCountry as string,
+  gender: '',
+  comments: '',
+};
+
+/** The label, with a visible mark for the fields the form requires. */
+function FieldLabel({
+  htmlFor,
+  children,
+  required = false,
+}: {
+  htmlFor: string;
+  children: string;
+  required?: boolean;
+}) {
+  return (
+    <label htmlFor={htmlFor} className={LABEL_CLASS}>
+      {children}
+      {required ? (
+        <>
+          {' '}
+          <span aria-hidden="true" className="text-sale">
+            *
+          </span>
+        </>
+      ) : null}
+    </label>
+  );
+}
 
 export default function VirasatAcademyPage() {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    dob: '',
-    phone: '',
-    city: '',
-    state: '',
-    country: 'India',
-    gender: '',
-    comments: '',
-  });
-
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [formData, setFormData] = useState(initialFormData);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -28,85 +75,90 @@ export default function VirasatAcademyPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Show success notification
-    setShowSuccess(true);
-
-    // Clear form
-    setFormData({
-      fullName: '',
-      dob: '',
-      phone: '',
-      city: '',
-      state: '',
-      country: 'India',
-      gender: '',
-      comments: '',
-    });
-
-    // Hide success notification after 5 seconds
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 5000);
+  /**
+   * Submit hands the application to WhatsApp, pre-filled.
+   *
+   * The owner's decision, taken explicitly. Before it, this handler was `preventDefault()` and
+   * nothing else: an applicant filled in eight fields, including a date of birth, pressed
+   * Submit, and every answer was discarded in silence. There is still no enquiry endpoint --
+   * **Phase 2 Task 8 replaces this hand-over with a real one** (`POST /api/enquiries`) -- so
+   * until then the application travels on the number the footer already prints.
+   *
+   * The message is the stored field labels and the applicant's own values, nothing else: no
+   * greeting and no sign-off, because the boutique does not put words in an applicant's mouth
+   * and every storefront word lives in `siteCopy`. The gender is sent as the option's visible
+   * label rather than its value, so the applicant reads back what they chose. See
+   * `components/features/forms/whatsapp-enquiry.ts` for the rest of the reasoning.
+   *
+   * What does **not** change: the markup, the `required` attributes and the browser's own
+   * validation still gate the submission; the typed values stay in the fields, because the
+   * hand-over opens in a new tab; and nothing on the page claims the application was received,
+   * since opening WhatsApp is not the same as pressing send.
+   */
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    handoverEnquiry(e, [
+      { label: fullNameField.label, value: formData.fullName },
+      { label: dobField.label, value: formData.dob },
+      { label: phoneField.label, value: formData.phone },
+      { label: cityField.label, value: formData.city },
+      { label: stateField.label, value: formData.state },
+      { label: countryField.label, value: formData.country },
+      {
+        label: genderField.label,
+        // The label the applicant read, not the `value` the markup carries.
+        value: form.genderOptions.find(option => option.value === formData.gender)?.label ?? '',
+      },
+      { label: commentsField.label, value: formData.comments },
+    ]);
   };
 
   return (
     <>
-      <Navbar />
-      <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-br from-amber-100 via-orange-100 to-rose-100 py-16 sm:py-20 xl:py-24">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 xl:px-8 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm mb-6">
-              <GraduationCap className="w-11 h-11 text-amber-600" />
-            </div>
-            <h1 className="text-4xl sm:text-5xl xl:text-6xl font-serif font-light text-gray-900 mb-6">
-              Virasat Academy
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-              Embark on a journey to master the art of traditional Indian fashion design. Apply now
-              to join our esteemed academy.
-            </p>
-          </div>
+      <header className="grid-editorial pt-16 pb-12 md:pt-24 md:pb-16">
+        <div className="col-span-12 md:col-span-9">
+          <DisplayHeading level={1} size={1} className="reveal-text text-balance">
+            {hero.heading}
+          </DisplayHeading>
+          <p className="measure reveal-text mt-8 font-display text-body font-light text-ink">
+            {hero.body}
+          </p>
         </div>
+      </header>
 
-        {/* Form Section */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 xl:px-8 py-12 sm:py-16">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-100 to-rose-100 p-6 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-serif font-light text-gray-900 text-center">
-                Application Form
-              </h2>
-              <p className="text-center text-gray-700 mt-2">
-                Fill in your details to apply for Virasat Academy
-              </p>
-            </div>
+      <section aria-labelledby="academy-form-heading">
+        <div className="grid-editorial">
+          <HairlineRule className="col-span-12" />
+        </div>
+        <div className="grid-editorial gap-y-10 py-12 md:py-16">
+          <Reveal className="col-span-12 md:col-span-4">
+            <DisplayHeading level={2} size={3} className="text-balance">
+              <span id="academy-form-heading">{form.heading}</span>
+            </DisplayHeading>
+            <p className="mt-4 font-ui text-body text-ink-soft">{form.subheading}</p>
+          </Reveal>
 
-            <form onSubmit={handleSubmit} className="p-6 sm:p-8 xl:p-12 space-y-6">
-              {/* Full Name */}
+          <Reveal delay={60} className="col-span-12 md:col-span-6 md:col-start-7">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
+                <FieldLabel htmlFor="fullName" required>
+                  {fullNameField.label}
+                </FieldLabel>
                 <input
                   type="text"
                   id="fullName"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
+                  placeholder={fullNameField.placeholder}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
               </div>
 
-              {/* Date of Birth */}
               <div>
-                <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-2">
-                  Date of Birth <span className="text-red-500">*</span>
-                </label>
+                <FieldLabel htmlFor="dob" required>
+                  {dobField.label}
+                </FieldLabel>
                 <input
                   type="date"
                   id="dob"
@@ -114,150 +166,124 @@ export default function VirasatAcademyPage() {
                   value={formData.dob}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
               </div>
 
-              {/* Phone Number */}
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
+                <FieldLabel htmlFor="phone" required>
+                  {phoneField.label}
+                </FieldLabel>
                 <input
                   type="tel"
                   id="phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="+91 XXXXX XXXXX"
+                  placeholder={phoneField.placeholder}
                   required
                   pattern="[0-9+\s-]+"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
               </div>
 
-              {/* Location - City and State */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
+                  <FieldLabel htmlFor="city" required>
+                    {cityField.label}
+                  </FieldLabel>
                   <input
                     type="text"
                     id="city"
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    placeholder="Enter your city"
+                    placeholder={cityField.placeholder}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div>
-                  <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
-                    State <span className="text-red-500">*</span>
-                  </label>
+                  <FieldLabel htmlFor="state" required>
+                    {stateField.label}
+                  </FieldLabel>
                   <input
                     type="text"
                     id="state"
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
-                    placeholder="Enter your state"
+                    placeholder={stateField.placeholder}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
 
-              {/* Country */}
               <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  Country <span className="text-red-500">*</span>
-                </label>
+                <FieldLabel htmlFor="country" required>
+                  {countryField.label}
+                </FieldLabel>
                 <input
                   type="text"
                   id="country"
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
-                  placeholder="Country"
+                  placeholder={countryField.placeholder}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
               </div>
 
-              {/* Gender */}
               <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
-                  Gender <span className="text-red-500">*</span>
-                </label>
+                <FieldLabel htmlFor="gender" required>
+                  {genderField.label}
+                </FieldLabel>
                 <select
                   id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="non-binary">Non-Binary</option>
-                  <option value="prefer-not-to-say">Prefer not to say</option>
+                  {form.genderOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Additional Comments */}
               <div>
-                <label htmlFor="comments" className="block text-sm font-medium text-gray-700 mb-2">
-                  Additional Comments
-                </label>
+                <FieldLabel htmlFor="comments">{commentsField.label}</FieldLabel>
                 <textarea
                   id="comments"
                   name="comments"
                   value={formData.comments}
                   onChange={handleChange}
-                  placeholder="Tell us more about yourself and why you want to join Virasat Academy..."
+                  placeholder={commentsField.placeholder}
                   rows={5}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition resize-none"
+                  className={`${FIELD_CLASS} resize-none`}
                 />
               </div>
 
-              {/* Submit Button */}
-              <div className="flex justify-center pt-4">
-                <button
-                  type="submit"
-                  className="px-12 py-4 bg-gradient-to-r from-amber-600 to-rose-600 text-white rounded-full font-semibold hover:from-amber-700 hover:to-rose-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                >
-                  Submit Application
-                </button>
+              <div className="pt-4">
+                <Button type="submit">{form.submit}</Button>
               </div>
             </form>
-          </div>
+          </Reveal>
         </div>
+      </section>
 
-        {/* Success Notification */}
-        {showSuccess && (
-          <div className="fixed bottom-8 right-8 bg-white rounded-2xl shadow-2xl p-6 max-w-md animate-in slide-in-from-bottom-5 z-50">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <CheckCircle2 className="w-8 h-8 text-green-500" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  Submission Successful!
-                </h3>
-                <p className="text-gray-600">
-                  Thank you! Stay tuned while we look into your application.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+      {/* No live region. Opening WhatsApp is not an application arriving, so there is still
+          nothing truthful to announce: an always-mounted `role="status"` was how the false
+          confirmation reached assistive technology, and an empty one would only be waiting to
+          do it again. Phase 2 Task 8's endpoint is what gives this page a real outcome to
+          report. */}
+
       <Footer />
     </>
   );
 }
-
