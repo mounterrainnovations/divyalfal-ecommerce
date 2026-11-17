@@ -1,12 +1,31 @@
-import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 import { transformDbProductsToProducts } from '@/lib/utils/product-utils';
 import { retryDatabaseOperation } from '@/lib/utils/database';
+import { resolveSectionProducts } from '@/lib/repositories/homepage';
 
 /**
  * GET /api/homepage-sections
- * Returns all homepage section data in a single request
+ * Returns all homepage section data in a single request.
+ *
+ * **The response shape is fixed** — `bestSellers`, `freshArrivals`, `exploreCollection`,
+ * `shopByStyle`, each an array of frontend products. The storefront reads it and
+ * `lib/hooks/useHomepageSections` parses it, so all four keys stay even though two of them have
+ * no consumer today: dropping an unused key is a breaking change nobody would notice until the
+ * homepage rendered its placeholder tier.
+ *
+ * What changed: each array now comes from `resolveSectionProducts`, so a hand-picked
+ * `HomepageSection.productIds` list wins over the automatic query. With no curation — the state
+ * of every section until the client picks something — the automatic queries are the same ones
+ * this route has always run, so the response is byte-identical to before.
+ *
+ * The movement-to-key mapping: `collection` feeds `freshArrivals` and `exploreCollection` (one
+ * movement, and today both arrays ran the same "4 newest" query), `shopByStyle` feeds
+ * `shopByStyle`, and `bestSellers` keeps its own price-banded query under its own key.
+ *
+ * `HomepageSection.visible` is deliberately **not** applied here. The storefront decides whether
+ * to render a movement, and an empty array makes it render its placeholder tier — so honouring
+ * `visible` at this layer would replace a hidden section with fake garments rather than nothing.
+ * The flag is served by `GET /api/admin/homepage` and belongs to the storefront flip.
  */
 export async function GET() {
   try {
@@ -16,75 +35,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Database configuration error' }, { status: 500 });
     }
 
-    const [bestSellers, freshArrivals, exploreCollection, shopByStyle] =
-      await retryDatabaseOperation(async () =>
-        Promise.all([
-          // Best Sellers: 4 items priced between ₹10,000 - ₹20,000
-          prisma.product.findMany({
-            where: {
-              price: {
-                gte: new Prisma.Decimal(5000),
-                lte: new Prisma.Decimal(10000),
-              },
-            },
-            orderBy: {
-              createdAt: 'desc',
-            },
-            take: 4,
-          }),
+    const [bestSellers, collection, shopByStyle] = await retryDatabaseOperation(async () =>
+      Promise.all([
+        resolveSectionProducts('bestSellers'),
+        resolveSectionProducts('collection'),
+        resolveSectionProducts('shopByStyle'),
+      ])
+    );
 
-          // Fresh Arrivals: 4 latest items
-          prisma.product.findMany({
-            orderBy: {
-              createdAt: 'desc',
-            },
-            take: 4,
-          }),
-
-          // Explore Collection: 4 items (any category)
-          prisma.product.findMany({
-            orderBy: {
-              createdAt: 'desc',
-            },
-            take: 4,
-          }),
-
-          // Shop by Style: 1 item per category
-          Promise.all([
-            prisma.product.findFirst({
-              where: { category: 'SAREE' },
-              orderBy: { createdAt: 'desc' },
-            }),
-            prisma.product.findFirst({
-              where: { category: 'INDO_WESTERN' },
-              orderBy: { createdAt: 'desc' },
-            }),
-            prisma.product.findFirst({
-              where: { category: 'LEHENGA' },
-              orderBy: { createdAt: 'desc' },
-            }),
-            prisma.product.findFirst({
-              where: { category: 'SUIT' },
-              orderBy: { createdAt: 'desc' },
-            }),
-            prisma.product.findFirst({
-              where: { category: 'KURTA_PANT' },
-              orderBy: { createdAt: 'desc' },
-            }),
-            prisma.product.findFirst({
-              where: { category: 'WESTERN' },
-              orderBy: { createdAt: 'desc' },
-            }),
-          ]).then(results =>
-            results.filter((item): item is NonNullable<typeof item> => item !== null)
-          ),
-        ])
-      );
+    const collectionProducts = transformDbProductsToProducts(collection);
 
     return NextResponse.json({
       bestSellers: transformDbProductsToProducts(bestSellers),
-      freshArrivals: transformDbProductsToProducts(freshArrivals),
-      exploreCollection: transformDbProductsToProducts(exploreCollection),
+      freshArrivals: collectionProducts,
+      exploreCollection: collectionProducts,
       shopByStyle: transformDbProductsToProducts(shopByStyle),
     });
   } catch (error) {
