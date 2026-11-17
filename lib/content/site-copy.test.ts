@@ -91,7 +91,8 @@ describe('siteCopy', () => {
     // The brand's own spelling, not an uppercased presentation of it: Task 5 applies
     // `text-transform: uppercase` and the eyebrow tracking in CSS.
     expect(siteCopy.home.hero.wordmark).toBe('Divyafal');
-    expect(siteCopy.home.hero.desktopImage).toBe('/mocks/mock_hero_desktop_2.webp');
+    // PLACEHOLDER sample (public/samples/README.md), not launch content.
+    expect(siteCopy.home.hero.desktopImage).toBe('/samples/hero/hero-black-silk-drape.webp');
     expect(siteCopy.home.hero.mobileVideo).toBe(
       'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm'
     );

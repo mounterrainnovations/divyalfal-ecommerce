@@ -55,8 +55,9 @@ describe('Hero', () => {
     expect(useMedia).toHaveBeenCalledWith('(max-width: 768px)');
     const img = container.querySelector('img');
     expect(img).not.toBeNull();
-    expect(img?.getAttribute('src')).toContain('mock_hero_desktop_2.webp');
-    expect(desktopImage).toBe('/mocks/mock_hero_desktop_2.webp');
+    // PLACEHOLDER: an interim licensed sample, see public/samples/README.md.
+    expect(img?.getAttribute('src')).toContain('hero-black-silk-drape.webp');
+    expect(desktopImage).toBe('/samples/hero/hero-black-silk-drape.webp');
     // The wordmark names the hero; the photograph is decoration, not an alternative to it.
     expect(img).toHaveAttribute('alt', '');
     expect(container.querySelector('video')).toBeNull();
@@ -96,7 +97,8 @@ describe('Hero', () => {
    * over the wordmark's whole bounding box -- a bright pixel in a letter gap is not behind
    * any type):
    *
-   *  - desktop still, 1280/1440/1920: 35% clears 3:1 against paper everywhere.
+   *  - desktop still: needs none. The placeholder black-silk still measures 9.26:1 (1440) and
+   *    9.55:1 (1920) at its worst stroke pixel with no wash; the previous photograph needed 35%.
    *  - mobile `bg_video.webm` at 390, and the same footage at portrait tablet 768x1024 where
    *    `object-cover` crops it differently: 35% does NOT. Sampled across 11 frames, the worst
    *    stroke pixel sat at 2.15:1 (390) and 2.28:1 (768), and in one frame 18% of the
@@ -105,14 +107,14 @@ describe('Hero', () => {
    *
    * Numbers and per-frame tables: `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
    */
-  it('washes the desktop still at the measured 35%', () => {
+  it('puts no wash over the desktop still, whose measured floor is 0%', () => {
+    // Measured on the placeholder black-silk still: the worst glyph-stroke pixel is 9.26:1 at
+    // 1440x900 and 9.55:1 at 1920x1080 with no wash at all, so the lowest flat opacity holding
+    // 3:1 is 0% and no element is rendered. The previous photograph needed 35%. Real
+    // photography will need re-measuring -- see the component comment.
     const { container } = render(<Hero />);
-    const wash = container.querySelector('[class~="bg-ink/35"]');
-    expect(wash).not.toBeNull();
-    expect(wash).toHaveAttribute('aria-hidden', 'true');
-    expect(wash?.className).toMatch(/\babsolute\b/);
-    expect(wash?.className).toMatch(/\binset-0\b/);
-    expect(container.querySelector('[class~="bg-ink/50"]')).toBeNull();
+    expect(container.querySelector('[class*="bg-ink/"]')).toBeNull();
+    expect(container.querySelector('section > div[aria-hidden="true"]')).toBeNull();
   });
 
   it('washes the mobile and portrait-tablet video at the measured 50%', () => {
@@ -122,6 +124,8 @@ describe('Hero', () => {
     expect(wash).not.toBeNull();
     expect(wash).toHaveAttribute('aria-hidden', 'true');
     expect(container.querySelector('[class~="bg-ink/35"]')).toBeNull();
+    expect(wash?.className).toMatch(/\babsolute\b/);
+    expect(wash?.className).toMatch(/\binset-0\b/);
     // Driven by the same `useMedia` answer that picks the media, not by a `md:` variant:
     // `md:` is min-width 768 while the video is max-width 768, so at exactly 768 a variant
     // would put the still's wash over the video.
@@ -146,18 +150,34 @@ describe('Hero', () => {
     expect(container.innerHTML).not.toMatch(/\bpriority\b/);
   });
 
-  it('centres the wordmark clear of the headline burned into the hero asset', () => {
-    // mock_hero_desktop_2.webp is a 1100x550 composite carrying its own headline from 74.5%
-    // of its height down. It is wider than any hero frame, so object-cover always scales it
-    // by height and that headline always occupies the bottom quarter. A baseline-aligned
-    // wordmark collides with it; this pins the clearance until the asset is replaced.
+  it('sets the wordmark on the baseline, columns 2-7, bottom-aligned', () => {
+    // The previous still carried a headline burned into its bottom quarter, which forced the
+    // wordmark to the vertical centre. The stand-in has no text, so it is back on the baseline.
     const { container } = render(<Hero />);
     const overlay = overlayOf(container);
     expect(overlay).not.toBeNull();
-    expect(overlay?.contains(screen.getByRole('heading', { level: 1 }))).toBe(true);
-    expect(overlay?.className).toMatch(/items-center/);
-    expect(overlay?.className).not.toMatch(/\bitems-end\b|\bbottom-0\b/);
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(overlay?.contains(heading)).toBe(true);
+    expect(overlay?.className).toMatch(/(?:^|\s)items-end(?:\s|$)/);
+    expect(overlay?.className).not.toMatch(/(?:^|\s)items-center(?:\s|$)/);
     expect(container.querySelector('.grid-editorial')).not.toBeNull();
+    expect(heading).toHaveClass('md:col-span-6');
+    expect(heading).toHaveClass('md:col-start-2');
+  });
+
+  it('keeps the wordmark centred at the video breakpoint, in CSS rather than state', () => {
+    // The 50% video wash was measured with the word centred, so at max-width 768px it stays
+    // there. It is a CSS variant on the same 768 boundary `useMedia` answers for: `useMedia`
+    // is false on the server and first client render, so state-driven alignment would paint
+    // the phone's wordmark at the bottom and then jump it on hydration (a measured CLS).
+    for (const mobile of [false, true]) {
+      useMedia.mockReturnValue(mobile);
+      const { container, unmount } = render(<Hero />);
+      const overlay = overlayOf(container);
+      expect(overlay?.className).toMatch(/max-\[768px\]:items-center/);
+      expect(overlay?.className).toMatch(/max-\[768px\]:pb-0/);
+      unmount();
+    }
   });
 
   it('uses the CSS-only load reveal on the media, not the scroll-triggered Reveal primitive', () => {
@@ -201,7 +221,7 @@ describe('Hero', () => {
     expect(container.innerHTML).not.toMatch(
       /rounded-full|rounded-3xl|gradient|shadow|(?:text|bg)-gray-/
     );
-    // Opacity never goes on type. The wash is `bg-ink/35`; the wordmark is a flat `text-paper`.
+    // Opacity never goes on type. The video's wash is `bg-ink/50`; the wordmark is a flat `text-paper`.
     expect(container.innerHTML).not.toMatch(/\btext-[A-Za-z0-9_-]+\/\d/);
   });
 

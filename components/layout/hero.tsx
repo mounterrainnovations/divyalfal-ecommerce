@@ -4,7 +4,6 @@ import Image from 'next/image';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
 import { siteCopy } from '@/lib/content/site-copy';
 import { useMedia } from '@/lib/hooks/useMedia';
-import { cn } from '@/lib/utils';
 
 const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
 
@@ -20,43 +19,55 @@ const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
  * hero copy that exists in the repo is the wordmark (`siteCopy.home.hero` has exactly three
  * keys), and a tagline or est. mark would be invented.
  *
- * The word is centred vertically rather than set on the baseline, and that is forced, not
- * preferred. `mock_hero_desktop_2.webp` is a 1100×550 composite with its own headline
- * ("Grace in Every Look / A Story in Every Thread") burned into the pixels, starting at
- * 74.5% of the image height. Because the image is wider than any plausible hero frame,
- * `object-cover` always scales it by height, so that burned-in headline always lands in the
- * bottom quarter of the frame at every viewport. A bottom-left wordmark collides with it
- * outright. Centring clears it by the whole middle band at every ratio, and the middle band
- * is also the one place the fixed paper navbar cannot reach: the bar is solid now, not the
- * transparent overlay this comment used to describe, and it occupies the top 64–80px.
- * Replace that asset with a clean photograph and this should move back down to the baseline.
+ * On the desktop still the word sits on the baseline -- columns 2-7, bottom-aligned, 64px
+ * clear of the frame's foot -- and on the phone video it stays vertically centred. The still
+ * used to force a centred wordmark: `mock_hero_desktop_2.webp` was a 1100x550 composite with
+ * its own headline burned into the bottom quarter, which a baseline wordmark landed on top
+ * of. The stand-in that replaces it (`public/samples/hero/hero-black-silk-drape.webp`, a
+ * placeholder -- see `public/samples/README.md`) carries no text, so the baseline is free
+ * again. The video keeps its centred word because that is the position its wash was measured
+ * at (below); moving it would void the 50% figure. The alignment is CSS, `max-[768px]:`,
+ * the same boundary `useMedia` answers for, and not the `isMobile` state: `useMedia` is false
+ * on the server and on the first client render, so a JS-driven alignment paints the phone's
+ * wordmark on the baseline and then jumps it to the centre on hydration -- measured as a
+ * 0.052 layout shift on mobile `/`, the page's only one.
  *
- * Legibility comes from a single flat ink wash — not a gradient (forbidden), not a black
- * scrim — and its opacity is per medium, because the two media are not equally bright:
+ * Legibility comes from a flat ink wash where the media needs one -- not a gradient
+ * (forbidden), not a black scrim -- and whether it is needed is per medium, because the two
+ * media are not equally bright:
  *
- *   - **Desktop still, 35%.** The spec's figure, and it holds: on `mock_hero_desktop_2.webp`
- *     at 1280, 1440 and 1920 wide the brightest pixel behind the wordmark still clears 3:1
- *     against paper (large-text AA), and the photograph keeps a ~6.9:1 mean.
+ *   - **Desktop still, none.** The old photograph was bright enough to need a flat 35%: at
+ *     that wash the brightest pixel under the wordmark's glyph strokes measured 3.58:1 at
+ *     1440x900 and 4.20:1 at 1920x1080. The stand-in is a black silk drape, and with no wash
+ *     at all the worst stroke pixel measures **9.26:1 at 1440 and 9.55:1 at 1920** (no stroke
+ *     pixel under 3:1; stroke mean ~17.9:1). 0% is therefore the lowest flat opacity that
+ *     holds large-text AA, and no element is rendered. Measured on the real rendered frame
+ *     (Chrome, the wordmark's own glyph strokes isolated by diffing the frame with and
+ *     without the heading), at the baseline position. **This is a property of the placeholder,
+ *     not of the design:** real photography will almost certainly be brighter, and the
+ *     wordmark then needs a flat wash again, re-measured the same way -- 35% was the figure
+ *     for the previous photograph.
  *   - **Mobile / portrait-tablet video, 50%.** Task 13 measured what nobody had: the same
- *     35% over `bg_video.webm`, sampled at 11 frames across its 14.9s, at 390×844 and again
- *     at portrait tablet 768×1024 where `object-cover` crops it differently. Measured under
+ *     35% over `bg_video.webm`, sampled at 11 frames across its 14.9s, at 390x844 and again
+ *     at portrait tablet 768x1024 where `object-cover` crops it differently. Measured under
  *     the glyph strokes rather than over the wordmark's bounding box (a bright pixel in a
  *     letter gap is behind no type), the worst stroke pixel sat at **2.15:1** at 390 and
  *     **2.28:1** at 768, and in one frame **18%** of the wordmark's strokes were under 3:1.
  *     The footage carries near-white highlights (sRGB ~253) that 35% cannot hold down. At 50%
  *     the same sampling gives a worst stroke pixel of **3.34:1** at 390 and **3.51:1** at
  *     768, with **no** stroke pixel under 3:1 in any of the **11 sampled** frames (per-frame
- *     worst case 3.34:1 to 5.5:1) — sampled, not exhaustive: 11 frames of a 14.9s clip, so an
+ *     worst case 3.34:1 to 5.5:1) -- sampled, not exhaustive: 11 frames of a 14.9s clip, so an
  *     unsampled frame brighter than any of them is possible, if unlikely. It still reads as a
  *     wash over a photograph rather than a scrim: the stroke mean is 9.1:1 and 9.4:1.
  *     Per-frame tables are in
- *     `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
+ *     `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`. Not re-measured
+ *     since: the video and the wordmark's position over it are unchanged.
  *
- * The opacity follows the same `useMedia` answer that picks the media, not a `md:` variant:
+ * The wash follows the same `useMedia` answer that picks the media, not a `md:` variant:
  * `md:` is min-width 768 while the video is max-width 768, so at exactly 768 a variant would
- * put the still's wash over the video — which is the one width this measured.
+ * put the still's treatment over the video -- which is the one width this measured.
  *
- * Still unmeasured: widths between 390 and 1280 at unusual aspect ratios.
+ * Still unmeasured: the still at widths other than 1440 and 1920, and at unusual aspect ratios.
  *
  * Motion is CSS-only, because every pixel here is above the fold: `reveal-image` on the
  * media. `Reveal` is deliberately not used — it is scroll-triggered and is a no-op for
@@ -111,20 +122,16 @@ export default function Hero() {
         />
       )}
 
-      {/* Flat ink wash, one opacity, no gradient, no pure black. Each figure is the measured
-          floor for its own medium -- 35% over the still, 50% over the video, whose near-white
-          highlights leave the wordmark at 2.15:1 under a 35% wash. See the measurements in the
-          component comment above; do not lower either without re-measuring. */}
-      <div
-        aria-hidden="true"
-        className={cn('absolute inset-0', isMobile ? 'bg-ink/50' : 'bg-ink/35')}
-      />
+      {/* Flat ink wash over the video only, 50%, no gradient, no pure black. The desktop still
+          is dark enough to need none -- see the measurements in the component comment above.
+          Do not lower the video's figure, or give the still a wash, without re-measuring. */}
+      {isMobile && <div aria-hidden="true" className="absolute inset-0 bg-ink/50" />}
 
       {/* No reveal on the wordmark. It is the page's LCP element on mobile, and its 180ms
           stagger plus 700ms fade was the whole of the gap between 88 and the 90 target --
           see the component comment. The media's `reveal-image` still carries the entrance,
           and no `--reveal-delay` is set here because nothing beneath it reads one. */}
-      <div className="absolute inset-0 flex items-center">
+      <div className="absolute inset-0 flex items-end pb-16 max-[768px]:items-center max-[768px]:pb-0">
         <div className="grid-editorial">
           <DisplayHeading
             level={1}
