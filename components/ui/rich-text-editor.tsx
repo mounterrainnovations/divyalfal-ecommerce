@@ -26,6 +26,11 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
+    // TipTap v3 throws "SSR has been detected" whenever it sees `window.next` unless this is
+    // set explicitly -- it does not check whether this render is actually server-side. The
+    // editor only ever mounts inside a client-rendered panel, so rendering it on the first
+    // pass is what we want; saying so is what stops the throw.
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {
