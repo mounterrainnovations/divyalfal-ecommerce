@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { GraduationCap, CheckCircle2 } from 'lucide-react';
-import Navbar from '@/components/layout/navbar';
 import Footer from '@/components/layout/footer';
 
 export default function VirasatAcademyPage() {
@@ -54,7 +53,6 @@ export default function VirasatAcademyPage() {
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-amber-100 via-orange-100 to-rose-100 py-16 sm:py-20 xl:py-24">
