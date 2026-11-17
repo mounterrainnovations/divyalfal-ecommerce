@@ -302,6 +302,37 @@ describe('Collection', () => {
     );
   });
 
+  /**
+   * The lookbook pair's hint, measured rather than guessed.
+   *
+   * It claimed 830px from 1440 up, and `EditorialPair` renders its media at seven of twelve
+   * columns -- 764px at the 1440 content cap, never more. Measured in Chrome at both edges of
+   * every band with the browser resolving the hint (DPR 1, production build), rendered width
+   * then fetched candidate:
+   *
+   *   390 -> 327px;  767 -> 704px;  768 -> 401px;  1023 -> 550px;
+   *   1024 -> 512px; 1439 -> 755px; 1440 -> 755px; 1920 -> 764px
+   *
+   * The 755s are 1440 and 1439 with a 15px scrollbar; 1920 is the uncapped maximum, 764.
+   *
+   * At 830px the browser took `w=1080` from 1439 up, and `100vw` below 768 took `w=828` at
+   * 767 where the pair is 704px wide. The corrected hint takes `w=828` and `w=750`.
+   */
+  it('hints the lookbook pair at the width EditorialPair actually renders it', async () => {
+    mockFetch({ freshArrivals: [], shopByStyle: [] });
+    const { container } = render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+
+    const expected =
+      '(min-width: 1440px) 764px, (min-width: 1024px) 54vw, (min-width: 768px) 55vw, calc(100vw - 48px)';
+    const images = Array.from(container.querySelectorAll('[data-tier="fallback"] img'));
+    expect(images).toHaveLength(siteCopy.home.collection.length);
+    for (const image of images) expect(image).toHaveAttribute('sizes', expected);
+    // The two figures that cost a candidate step each.
+    expect(expected).not.toContain('830px');
+    expect(expected).not.toMatch(/,\s*100vw$/);
+  });
+
   it('leaves the fallback photographs decorative, so no name is announced twice', async () => {
     mockFetch({ freshArrivals: [], shopByStyle: [] });
     const { container } = render(<Collection />);

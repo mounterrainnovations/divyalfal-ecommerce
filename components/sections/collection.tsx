@@ -62,8 +62,25 @@ const STRAND_PLACEMENT = [
   'col-span-12 md:col-span-4 md:col-start-8',
 ] as const;
 
-/** Media width of a lookbook pair: seven of twelve columns, capped by the 1440 content max. */
-const PAIR_SIZES = '(min-width: 1440px) 830px, (min-width: 768px) 58vw, 100vw';
+/**
+ * Media width of a lookbook pair: `EditorialPair` gives it seven of twelve columns, capped by
+ * the 1440 content max. Measured in Chrome at both edges of every band, with the browser
+ * resolving the hint (production build, DPR 1) -- not derived from the class names:
+ *
+ *   390 -> 327px;  767 -> 704px;  768 -> 401px;  1023 -> 550px;
+ *   1024 -> 512px; 1439 -> 755px; 1440 -> 755px; 1920 -> 764px
+ *
+ * (1439 and 1440 measure 755 rather than 764 because a 15px scrollbar narrows the layout
+ * viewport; 764 is the uncapped maximum, which 1920 reaches.)
+ *
+ * The previous hint claimed **830px** from 1440 up and `100vw` below 768. Both cost a
+ * candidate step: at 1439–1920 the browser took `w=1080` for a 764px slot, and at 767 it took
+ * `w=828` for a 704px one — about 47KB and 13KB of extra bytes per photograph, on a tier that
+ * renders four of them. Each figure here is the widest point of its band, so the hint is
+ * generous by a few pixels and never by a candidate.
+ */
+const PAIR_SIZES =
+  '(min-width: 1440px) 764px, (min-width: 1024px) 54vw, (min-width: 768px) 55vw, calc(100vw - 48px)';
 
 /**
  * Movement 3 — the collection, as one sequence.
