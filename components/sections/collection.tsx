@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import type { Product } from '@/types';
 import Button from '@/components/primitives/Button';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
 import EditorialPair from '@/components/primitives/EditorialPair';
@@ -31,26 +32,46 @@ const DESKTOP = '(min-width: 768px)';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
 /**
- * One row per garment, drifting across the grid — never a four-up. The live catalogue holds
- * two products and the endpoint takes at most four, so this cycle is the whole sequence.
+ * The widest a product tile gets in the six-column slot, measured at both edges of every band:
+ * 719px at 767, 476px at 1023, 648px at 1439, and a fixed 648px from 1440 up. The shared
+ * fallback asked for 336px at 1440 -- a 1.9x upscale on the largest photograph on the homepage.
  */
-const PRODUCT_PLACEMENT = [
-  'col-span-12 md:col-span-6 md:col-start-2',
-  'col-span-12 md:col-span-5 md:col-start-7',
-  'col-span-12 md:col-span-5 md:col-start-3',
-  'col-span-12 md:col-span-6 md:col-start-6',
-];
-
-/**
- * The widest a product tile gets here, measured at both edges of every band. `PRODUCT_PLACEMENT`
- * alternates six and five columns, so the hint covers the six-column case: 719px at 767,
- * 476px at 1023, 648px at 1439, and a fixed 648px from 1440 up. The shared fallback asked for
- * 336px at 1440 -- a 1.9x upscale on the largest photograph on the homepage.
- */
-const TILE_SIZES =
+const TILE_SIZES_WIDE =
   '(min-width: 1440px) 648px, (min-width: 1024px) 46vw, (min-width: 768px) 47vw, calc(100vw - 48px)';
 
-const ROW_RHYTHM = 'mt-16 md:mt-28';
+/**
+ * The four-column slot, the smaller half of each pair, measured the same way: 719px at 767
+ * (where the pair stacks and each tile is full width), 224px at 768, 309px at 1023, 277px at
+ * 1024 (the gutter doubles there, so the band is widest at its top), 416px at 1439 and a fixed
+ * 416px from 1440 up. It is its own hint rather than borrowing the wide one, which would have
+ * asked the browser for a file half as wide again as the slot can show.
+ */
+const TILE_SIZES_NARROW =
+  '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw, calc(100vw - 48px)';
+
+/**
+ * **Asymmetric pairs, two to a row — not one garment per screen.**
+ *
+ * Each row held one garment before, which spent a screen and a half on two products and was
+ * the single largest cost on the page. The pair keeps the drift that made the sequence
+ * editorial rather than a grid: a six-column tile on the left with a four-column one dropped
+ * below its shoulder, then the mirror, so no two rows read the same way and nothing lines up
+ * into a catalogue. The second tile of each pair carries the offset, so the row is as tall as
+ * its wide tile and the smaller one hangs inside that height rather than adding to it.
+ *
+ * The endpoint caps Fresh Arrivals at four, so this cycle is the whole sequence at any
+ * inventory, and at two products it is exactly one row.
+ */
+const PRODUCT_SLOTS = [
+  { placement: 'col-span-12 md:col-span-6 md:col-start-2', sizes: TILE_SIZES_WIDE },
+  { placement: 'col-span-12 mt-12 md:col-span-4 md:col-start-9 md:mt-28', sizes: TILE_SIZES_NARROW },
+  { placement: 'col-span-12 mt-12 md:col-span-4 md:col-start-2 md:mt-24', sizes: TILE_SIZES_NARROW },
+  { placement: 'col-span-12 mt-12 md:col-span-6 md:col-start-7 md:mt-0', sizes: TILE_SIZES_WIDE },
+] as const;
+
+const PRODUCTS_PER_ROW = 2;
+
+const ROW_RHYTHM = 'mt-12 md:mt-20';
 
 /**
  * Where Most Recommended's surviving strand sits: columns 2–5, under the closing hairline and
@@ -92,11 +113,11 @@ const PAIR_SIZES =
  * heading, one lead, one request, and a vertical sequence of large portrait moments.
  *
  * The composition is sized for the stock that exists, not for the stock a template assumes.
- * Each garment gets its own row of the editorial grid at six or five columns — roughly
- * 660px and 550px wide at the content max — and the row placement drifts left, right, left,
- * so two products read as a deliberate diagonal rather than as a half-empty grid. Nothing
- * here gets denser as stock grows: the endpoint caps Fresh Arrivals at four, so the sequence
- * is at most four rows at any inventory.
+ * Garments go two to a row as asymmetric pairs — a six-column tile with a four-column one
+ * dropped below its shoulder, then the mirror, so the sequence keeps its drift without
+ * spending a screen and a half on two products. (It was one garment per row until the density
+ * pass; see `PRODUCT_SLOTS`.) Nothing here gets denser as stock grows: the endpoint caps Fresh
+ * Arrivals at four, so the sequence is at most two rows at any inventory.
  *
  * **The fallback tier.** With two products live, the placeholder tier is on screen often, so
  * it is composed rather than tolerated: the four named looks in `siteCopy.home.collection`
@@ -129,18 +150,29 @@ const PAIR_SIZES =
  */
 export default function Collection() {
   const { status, sections } = useHomepageSections();
-  const products = photographedFirst(sections.freshArrivals).slice(0, PRODUCT_PLACEMENT.length);
+  const products = photographedFirst(sections.freshArrivals).slice(0, PRODUCT_SLOTS.length);
   const showFallback = status === 'ready' && !hasPhotographed(products);
+
+  const pairs: Product[][] = [];
+  for (let i = 0; i < products.length; i += PRODUCTS_PER_ROW) {
+    pairs.push(products.slice(i, i + PRODUCTS_PER_ROW));
+  }
 
   const rows: ReactNode[] = showFallback
     ? siteCopy.home.collection.map((entry, index) => (
         <LookbookRow key={entry.title} entry={entry} index={index} />
       ))
-    : products.map((product, index) => (
-        <div key={product.id} className={cn('grid-editorial', ROW_RHYTHM)}>
-          <Reveal className={PRODUCT_PLACEMENT[index]} delay={index * 60}>
-            <ProductTile product={product} headingLevel={3} sizes={TILE_SIZES} />
-          </Reveal>
+    : pairs.map((pair, rowIndex) => (
+        <div key={pair[0].id} className={cn('grid-editorial', ROW_RHYTHM)}>
+          {pair.map((product, inPair) => {
+            const index = rowIndex * PRODUCTS_PER_ROW + inPair;
+            const slot = PRODUCT_SLOTS[index];
+            return (
+              <Reveal key={product.id} className={slot.placement} delay={inPair * 60}>
+                <ProductTile product={product} headingLevel={3} sizes={slot.sizes} />
+              </Reveal>
+            );
+          })}
         </div>
       ));
 

@@ -261,6 +261,68 @@ describe('Collection', () => {
     expect(sizes).not.toContain('336px');
   });
 
+  /**
+   * **Two to a row, offset — not one garment per screen.**
+   *
+   * One row per garment spent a screen and a half on the two products the catalogue holds and
+   * was the single largest cost on the homepage. The pair keeps the drift that made the
+   * sequence editorial: a six-column tile with a four-column one dropped below its shoulder.
+   * The offset is on the second tile, so the row is as tall as its wide tile and the smaller
+   * one hangs inside that height rather than adding to it.
+   */
+  it('runs the garments as asymmetric pairs, two to a grid row', async () => {
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    const { container } = render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+
+    const tiles = Array.from(container.querySelectorAll('a[href^="/product/"]'));
+    expect(tiles).toHaveLength(2);
+
+    const slots = tiles.map(tile => tile.closest<HTMLElement>('[class*="md:col-span-"]')!);
+    const rows = slots.map(slot => slot.parentElement);
+    // Both in the same editorial row, which is what makes it a pair.
+    expect(rows[0]).toBe(rows[1]);
+    expect(rows[0]!.className).toMatch(/grid-editorial/);
+
+    // Asymmetric: different spans, different starts, and only the second one offset.
+    expect(slots[0].className).toMatch(/\bmd:col-span-6\b/);
+    expect(slots[1].className).toMatch(/\bmd:col-span-4\b/);
+    expect(slots[0].className).toMatch(/\bmd:col-start-2\b/);
+    expect(slots[1].className).toMatch(/\bmd:col-start-9\b/);
+    expect(slots[0].className).not.toMatch(/\bmd:mt-\d/);
+    expect(slots[1].className).toMatch(/\bmd:mt-\d/);
+    // They stack full-width on a phone, where an offset pair would be a column of fragments.
+    for (const slot of slots) expect(slot.className).toMatch(/\bcol-span-12\b/);
+  });
+
+  /**
+   * The smaller half of a pair gets its own hint rather than borrowing the wide one, which
+   * would ask the browser for a file half as wide again as the slot can show. Measured at
+   * both edges of every band: 719px at 767 (stacked one-up), 224px at 768, 309px at 1023,
+   * 277px at 1024, 416px at 1439, and a fixed 416px from 1440 up.
+   */
+  it('hints the narrow half of the pair at its own measured width', async () => {
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    const { container } = render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+
+    const wide =
+      '(min-width: 1440px) 648px, (min-width: 1024px) 46vw, (min-width: 768px) 47vw, calc(100vw - 48px)';
+    const narrow =
+      '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw, calc(100vw - 48px)';
+    expect(wide).not.toBe(narrow);
+
+    const tiles = Array.from(container.querySelectorAll('a[href^="/product/"]'));
+    // The first product is the photographed one; the second has no photos, so it renders the
+    // honest empty frame and carries no `img` to hint. The wide slot is the one to check.
+    const hinted = tiles
+      .map(tile => tile.querySelector('img')?.getAttribute('sizes'))
+      .filter((value): value is string => typeof value === 'string');
+    expect(hinted.length).toBeGreaterThan(0);
+    for (const value of hinted) expect([wide, narrow]).toContain(value);
+    expect(hinted[0]).toBe(wide);
+  });
+
   it('prices real products through resolvePrice and keeps the photo-less frame honest', async () => {
     mockFetch({ freshArrivals: products, shopByStyle: [] });
     const { container } = render(<Collection />);
