@@ -20,16 +20,24 @@ import Reveal from '@/components/primitives/Reveal';
 import { SortDropdown } from '@/components/ui/sort-dropdown';
 import { siteCopy } from '@/lib/content/site-copy';
 import { sortOptions as productSortOptions } from '@/lib/data/mock-products';
-import { parseCategoriesParam, useDebouncedValue, useProductListing } from '@/lib/hooks/useProductListing';
-import { resolvePrice } from '@/lib/utils/price';
+import {
+  parseCategoriesParam,
+  useDebouncedValue,
+  useProductListing,
+} from '@/lib/hooks/useProductListing';
+import { amountPayable, discountPercent, resolvePrice } from '@/lib/utils/price';
 import type { Product } from '@/types';
 
 type Variant = 'products' | 'sale';
 
 const navLabel = (href: string) => siteCopy.nav.items.find(item => item.href === href)?.label ?? '';
 
-/** Sale sorting happens in the browser (the route has no discount sort); the default leads with the deepest cut. */
+/**
+ * Sale sorting happens in the browser (the route has no discount sort). `default` is the order
+ * the API returned, as it always was; the discount sorts are offered, not imposed.
+ */
 const SALE_SORT_OPTIONS = [
+  { value: 'default', label: 'Default' },
   { value: 'discount-high', label: 'Highest Discount' },
   { value: 'discount-low', label: 'Lowest Discount' },
   { value: 'price-low', label: 'Price: Low to High' },
@@ -41,72 +49,85 @@ const CONFIG: Record<
   Variant,
   {
     title: string;
+    subtitle?: string;
     searchLabel: string;
+    searchPlaceholder: string;
     sortOptions: { value: string; label: string }[];
     defaultSort: string;
     range: RangeGroup;
     count: (n: number) => string;
     emptyHeading: string;
+    emptyBody: string;
+    loadingHeading: string;
+    loadingBody: string;
   }
 > = {
   products: {
     title: navLabel('/products'),
     searchLabel: 'Search products',
+    searchPlaceholder: 'Search products...',
     sortOptions: productSortOptions,
     defaultSort: 'default',
     range: PRICE_GROUP,
     count: n => `${n} ${n === 1 ? 'product' : 'products'} found`,
     emptyHeading: 'No products found',
+    emptyBody: siteCopy.products.empty.body,
+    loadingHeading: siteCopy.products.loading.heading,
+    loadingBody: siteCopy.products.loading.body,
   },
   sale: {
     title: navLabel('/sale'),
+    subtitle: siteCopy.sale.hero.subheading,
     searchLabel: 'Search sale products',
+    searchPlaceholder: 'Search sale products...',
     sortOptions: SALE_SORT_OPTIONS,
-    defaultSort: 'discount-high',
+    defaultSort: 'default',
     range: DISCOUNT_GROUP,
     count: n => `${n} ${n === 1 ? 'product' : 'products'} on sale`,
     emptyHeading: 'No sale products found',
+    emptyBody: siteCopy.sale.empty.body,
+    loadingHeading: siteCopy.sale.loading.heading,
+    loadingBody: siteCopy.sale.loading.body,
   },
 };
 
-/** Whole-number percentage off, for a product whose sale is genuinely active. */
-function discountPercent(product: Product): number {
-  const { onSale } = resolvePrice(product);
-  if (!onSale || product.salePrice === undefined) return 0;
-  return Math.round(((product.price - product.salePrice) / product.price) * 100);
-}
-
 /** What /sale shows: only products whose sale is active, narrowed and ordered in the browser. */
 function shapeSale(products: Product[], range: FilterRailValue['range'], sortBy: string) {
-  const result = products.filter(product => resolvePrice(product).onSale);
+  const onSale = products.filter(product => resolvePrice(product).onSale);
   const banded = range
-    ? result.filter(product => {
+    ? onSale.filter(product => {
         const percent = discountPercent(product);
         return percent >= range.min && percent <= range.max;
       })
-    : result;
-  const salePrice = (product: Product) => product.salePrice ?? product.price;
+    : onSale;
   switch (sortBy) {
     case 'discount-high':
       return [...banded].sort((a, b) => discountPercent(b) - discountPercent(a));
     case 'discount-low':
       return [...banded].sort((a, b) => discountPercent(a) - discountPercent(b));
     case 'price-low':
-      return [...banded].sort((a, b) => salePrice(a) - salePrice(b));
+      return [...banded].sort((a, b) => amountPayable(a) - amountPayable(b));
     case 'price-high':
-      return [...banded].sort((a, b) => salePrice(b) - salePrice(a));
+      return [...banded].sort((a, b) => amountPayable(b) - amountPayable(a));
     default:
       return banded;
   }
 }
 
-/** Two tracks from `md`, one on a phone; every item keeps its tile whole across the break. */
-const COLUMNS = 'm-0 list-none columns-1 p-0 md:columns-2 md:gap-x-16';
-const ITEM = 'mb-12 break-inside-avoid md:mb-20';
+/**
+ * Two tracks from `md`, one on a phone, as a grid rather than CSS columns: columns fill down
+ * the first track before the second, so a ranked sort would read down-then-across and a
+ * visitor scanning "highest discount" would misread the rank. A grid reads left to right in
+ * DOM order. The even cells sit 96px lower, at every count, which is what makes two products
+ * read as a composition and not as a plain pair.
+ */
+const GRID =
+  'm-0 grid list-none grid-cols-1 items-start p-0 md:grid-cols-2 md:gap-x-16 md:[&>li:nth-child(even)]:mt-24';
+const ITEM = 'mb-12 md:mb-20';
 
-function SkeletonTiles() {
+function SkeletonTiles({ className }: { className?: string }) {
   return (
-    <ul aria-hidden="true" className={COLUMNS}>
+    <ul aria-hidden="true" className={`${GRID} ${className ?? ''}`}>
       {[0, 1, 2, 3].map(index => (
         <li key={index} className={ITEM}>
           <div className="aspect-[3/4] w-full bg-paper-deep" />
@@ -119,10 +140,10 @@ function SkeletonTiles() {
 }
 
 /**
- * The empty page, set as a page rather than reported as a failure: a display heading, one
- * line of what happened, the way out, and the six collections as the typographic index the
- * homepage uses. With two products live this is the normal state of a filtered view, and it
- * has to look decided.
+ * The empty page, set as a page rather than reported as a failure: a display heading, the
+ * page's own line, the collection copy, the way out, and the six collections as the
+ * typographic index the homepage uses. With two products live this is the normal state of a
+ * filtered view, and it has to look decided.
  */
 function EmptyState({
   variant,
@@ -133,7 +154,7 @@ function EmptyState({
   filtersActive: boolean;
   onReset: () => void;
 }) {
-  const { emptyHeading } = CONFIG[variant];
+  const { emptyHeading, emptyBody } = CONFIG[variant];
   return (
     <div>
       <HairlineRule />
@@ -141,18 +162,10 @@ function EmptyState({
         <DisplayHeading level={2} size={2}>
           {emptyHeading}
         </DisplayHeading>
-        {filtersActive && (
-          <p className="font-ui text-caption text-ink-soft">
-            Nothing matches the current search or filters.
-          </p>
-        )}
+        <p className="font-ui text-caption text-ink-soft">{emptyBody}</p>
         <p className="font-display text-body font-light text-ink">{siteCopy.home.explore.body}</p>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-          {filtersActive && (
-            <Button onClick={onReset}>
-              {variant === 'sale' ? 'Show all sale products' : 'Show all products'}
-            </Button>
-          )}
+          {filtersActive && <Button onClick={onReset}>Clear Filters</Button>}
           {variant === 'sale' && (
             <Button href="/products" variant={filtersActive ? 'quiet' : 'primary'}>
               {siteCopy.home.explore.cta}
@@ -202,8 +215,8 @@ function ListingBody({ variant }: { variant: Variant }) {
     setCategories(parseCategoriesParam(rawCategories));
   }
 
-  const debouncedSearch = useDebouncedValue(search);
-  const { products, loading, error, retry } = useProductListing(
+  const [debouncedSearch, setSearchNow] = useDebouncedValue(search);
+  const { products, loading, initialLoad, error, retry } = useProductListing(
     variant === 'products'
       ? { search: debouncedSearch, categories, priceRange: range, sortBy }
       : { search: debouncedSearch, categories }
@@ -218,7 +231,10 @@ function ListingBody({ variant }: { variant: Variant }) {
   const activeFilters = categories.length + (range ? 1 : 0);
   const filtersActive = activeFilters > 0 || search !== '';
   const resetAll = () => {
+    // The debounced copy is reset in the same batch, so the cleared query is requested once
+    // rather than after a stale search has fired first.
     setSearch('');
+    setSearchNow('');
     setCategories([]);
     setRange(null);
     setSortBy(config.defaultSort);
@@ -228,13 +244,17 @@ function ListingBody({ variant }: { variant: Variant }) {
     setRange(next.range);
   };
 
-  const status = loading ? 'Loading products' : error ? '' : config.count(visible.length);
+  const empty = !loading && !error && visible.length === 0;
+  const status = loading ? config.loadingHeading : error ? '' : config.count(visible.length);
 
   return (
     <section className="grid-editorial gap-y-10 pb-24 pt-10 md:pb-32">
       <HairlineRule className="col-span-12" />
 
-      <aside aria-label="Product filters" className="hidden lg:sticky lg:top-28 lg:col-span-3 lg:col-start-2 lg:block lg:self-start">
+      <aside
+        aria-label="Product filters"
+        className="hidden lg:sticky lg:top-28 lg:col-span-3 lg:col-start-2 lg:block lg:self-start"
+      >
         <FilterRail value={filterValue} onChange={applyRail} range={config.range} />
       </aside>
 
@@ -249,7 +269,7 @@ function ListingBody({ variant }: { variant: Variant }) {
               type="search"
               value={search}
               onChange={event => setSearch(event.target.value)}
-              placeholder={config.searchLabel}
+              placeholder={config.searchPlaceholder}
               autoComplete="off"
               className="w-full rounded-none border-0 border-b border-ink bg-transparent py-2 font-ui text-caption text-ink placeholder:text-ink-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
             />
@@ -258,17 +278,20 @@ function ListingBody({ variant }: { variant: Variant }) {
         </div>
 
         <div className="mt-8 flex items-center justify-between gap-6">
-          {/* With nothing to count, the empty state speaks for itself; keep the status for assistive tech. */}
-          <p
-            role="status"
-            className={
-              !loading && !error && visible.length === 0
-                ? 'sr-only'
-                : 'm-0 font-ui text-caption text-ink-soft'
-            }
-          >
-            {status}
-          </p>
+          {/* On a first load the loading block below is the status. With nothing to count, the
+              empty state speaks for itself; the status stays for assistive technology. */}
+          {!initialLoad && (
+            <p
+              role="status"
+              className={
+                empty || error
+                  ? 'sr-only'
+                  : 'm-0 font-ui text-caption text-ink-soft'
+              }
+            >
+              {status}
+            </p>
+          )}
           <button
             ref={toggleRef}
             type="button"
@@ -276,7 +299,7 @@ function ListingBody({ variant }: { variant: Variant }) {
             aria-expanded={drawerOpen}
             aria-controls="listing-filters"
             onClick={() => setDrawerOpen(true)}
-            className="inline-flex min-h-11 items-center gap-2 font-ui text-eyebrow uppercase text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink lg:hidden"
+            className="ml-auto inline-flex min-h-11 items-center gap-2 font-ui text-eyebrow uppercase text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink lg:hidden"
           >
             <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" />
             {activeFilters > 0 ? `Filters (${activeFilters})` : 'Filters'}
@@ -284,20 +307,30 @@ function ListingBody({ variant }: { variant: Variant }) {
         </div>
 
         <div className="mt-10 md:mt-14">
-          {loading ? (
-            <SkeletonTiles />
+          {initialLoad ? (
+            <>
+              <div role="status" className="measure flex flex-col items-start gap-3">
+                <DisplayHeading level={2} size={3}>
+                  {config.loadingHeading}
+                </DisplayHeading>
+                <p className="font-ui text-caption text-ink-soft">{config.loadingBody}</p>
+              </div>
+              <SkeletonTiles className="mt-12" />
+            </>
           ) : error ? (
             <div role="alert" className="measure flex flex-col items-start gap-6 pt-6">
               <DisplayHeading level={2} size={2}>
                 Something went wrong
               </DisplayHeading>
               <p className="font-ui text-caption text-ink-soft">{error}</p>
-              <Button onClick={retry}>Try again</Button>
+              <Button onClick={retry}>Try Again</Button>
             </div>
           ) : visible.length === 0 ? (
             <EmptyState variant={variant} filtersActive={filtersActive} onReset={resetAll} />
           ) : (
-            <ul className={COLUMNS}>
+            // While a new query loads the previous tiles stay put, so the page keeps its
+            // height; nothing is dimmed, because the type must stay at full contrast.
+            <ul aria-busy={loading} className={GRID}>
               {visible.map((product, index) => (
                 <Reveal as="li" key={product.id} delay={(index % 2) * 60} className={ITEM}>
                   <ProductTile product={product} priority={index < 2} headingLevel={2} />
@@ -313,7 +346,7 @@ function ListingBody({ variant }: { variant: Variant }) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         returnFocusRef={toggleRef}
-        doneLabel="Show results"
+        doneLabel="Apply Filters"
       >
         <FilterRail value={filterValue} onChange={applyRail} range={config.range} />
       </FilterDrawer>
@@ -327,13 +360,19 @@ function ListingBody({ variant }: { variant: Variant }) {
  * HTML. Tiles are `h2`s beneath it.
  */
 export default function ProductListing({ variant }: { variant: Variant }) {
+  const { title, subtitle } = CONFIG[variant];
   return (
     <>
       <header className="grid-editorial pt-14 md:pt-24">
         <div className="col-span-12 md:col-span-9 md:col-start-2">
           <DisplayHeading level={1} size={1} className="reveal-text">
-            {CONFIG[variant].title}
+            {title}
           </DisplayHeading>
+          {subtitle && (
+            <p className="measure reveal-text mt-6 font-display text-body font-light text-ink">
+              {subtitle}
+            </p>
+          )}
         </div>
       </header>
       <Suspense

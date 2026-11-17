@@ -215,6 +215,16 @@ describe('siteCopy', () => {
     expect(siteCopy.contact.store.directionsCta).toBe('Get Directions');
   });
 
+  it('preserves the listing page copy', () => {
+    expect(siteCopy.products.loading.heading).toBe('Loading Products...');
+    expect(siteCopy.products.loading.body).toBe('Please wait while we fetch the latest collection.');
+    expect(siteCopy.products.empty.body).toBe('Stay Tuned! What you want might be on its way!');
+    expect(siteCopy.sale.hero.subheading).toBe('Exclusive deals and discounts on premium products');
+    expect(siteCopy.sale.loading.heading).toBe('Loading Sale Products...');
+    expect(siteCopy.sale.loading.body).toBe('Finding the best deals for you!');
+    expect(siteCopy.sale.empty.body).toBe('Check back soon for amazing deals and discounts!');
+  });
+
   it('preserves the refund policy copy', () => {
     expect(siteCopy.refundPolicy.hero.heading).toBe('Refund Policy');
     expect(siteCopy.refundPolicy.hero.subheading).toBe('Your satisfaction is our priority');
@@ -294,7 +304,7 @@ describe('siteCopy snapshot', () => {
   it('has not gained or lost a single leaf', () => {
     // Explicit, so an added or removed key is a loud failure rather than a quiet
     // snapshot update. Change this number only together with an approved copy change.
-    expect(Object.keys(flat)).toHaveLength(335);
+    expect(Object.keys(flat)).toHaveLength(342);
   });
 
   it('matches the committed copy, string for string', () => {

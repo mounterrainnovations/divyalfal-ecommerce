@@ -294,6 +294,9 @@ exports[`siteCopy snapshot > matches the committed copy, string for string 1`] =
   "nav.items[4].label": "Contact",
   "nav.logo.alt": "DivyaFal Logo",
   "nav.logo.src": "/DivyafalLogo.png",
+  "products.empty.body": "Stay Tuned! What you want might be on its way!",
+  "products.loading.body": "Please wait while we fetch the latest collection.",
+  "products.loading.heading": "Loading Products...",
   "refundPolicy.damaged.body": "If you receive a damaged or defective item, please contact us immediately at divyafalthecreations@gmail.com with photos of the item. We will arrange for a replacement or full refund, including return shipping costs.",
   "refundPolicy.damaged.heading": "Damaged or Defective Items",
   "refundPolicy.exchanges.body": "We gladly accept exchanges for size or color variations. If you need to exchange an item, please contact us at divyafalthecreations@gmail.com and we will guide you through the process. Exchanges are subject to availability.",
@@ -337,5 +340,9 @@ exports[`siteCopy snapshot > matches the committed copy, string for string 1`] =
   "refundPolicy.returnWindow.items[2]": "Accompanied by the original receipt or proof of purchase",
   "refundPolicy.shippingCosts.body": "Return shipping costs are the responsibility of the customer unless the item received was defective or incorrect. In such cases, we will provide a prepaid return label.",
   "refundPolicy.shippingCosts.heading": "Return Shipping Costs",
+  "sale.empty.body": "Check back soon for amazing deals and discounts!",
+  "sale.hero.subheading": "Exclusive deals and discounts on premium products",
+  "sale.loading.body": "Finding the best deals for you!",
+  "sale.loading.heading": "Loading Sale Products...",
 }
 `;

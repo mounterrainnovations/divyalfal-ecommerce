@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPrice, resolvePrice } from './price';
+import { amountPayable, discountPercent, formatPrice, resolvePrice } from './price';
 import { formatPrice as legacyFormatPrice } from '@/lib/common/product-interfaces';
 import type { Product } from '@/types';
 
@@ -76,5 +76,24 @@ describe('resolvePrice', () => {
 
   it('does not treat a negative salePrice as a sale', () => {
     expect(resolvePrice({ ...base, sale: true, salePrice: -100 }).onSale).toBe(false);
+  });
+});
+
+describe('discountPercent and amountPayable', () => {
+  it('rounds the cut to a whole percentage when a sale is genuinely active', () => {
+    expect(discountPercent({ ...base, sale: true, salePrice: 6000 })).toBe(25);
+    expect(discountPercent({ ...base, price: 10000, sale: true, salePrice: 6667 })).toBe(33);
+    expect(amountPayable({ ...base, sale: true, salePrice: 6000 })).toBe(6000);
+  });
+
+  it('agrees with resolvePrice about what is a sale: anything else is no discount', () => {
+    for (const salePrice of [0, -5, 8000, 9000, undefined]) {
+      const product = { ...base, sale: true, salePrice };
+      expect(resolvePrice(product).onSale).toBe(false);
+      expect(discountPercent(product)).toBe(0);
+      expect(amountPayable(product)).toBe(8000);
+    }
+    expect(discountPercent({ ...base, sale: false, salePrice: 4000 })).toBe(0);
+    expect(amountPayable({ ...base, sale: false, salePrice: 4000 })).toBe(8000);
   });
 });

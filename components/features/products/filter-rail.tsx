@@ -29,7 +29,7 @@ export interface RangeGroup {
 }
 
 export const PRICE_GROUP: RangeGroup = {
-  legend: 'Price',
+  legend: 'Price Range',
   allLabel: 'All Prices',
   options: priceRanges,
 };
@@ -169,7 +169,7 @@ export function FilterRail({
       {activeCount > 0 && (
         <div>
           <Button variant="quiet" onClick={() => onChange({ categories: [], range: null })}>
-            Clear filters
+            Clear all filters ({activeCount})
           </Button>
         </div>
       )}

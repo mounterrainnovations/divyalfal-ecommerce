@@ -41,3 +41,22 @@ export function resolvePrice(
   }
   return { display: formatPrice(price), compareAt: null, onSale: false };
 }
+
+/**
+ * The amount actually charged, as a number: the sale price when `resolvePrice` says a sale
+ * is active, the regular price otherwise. For sorting; display always goes through
+ * `resolvePrice`.
+ */
+export function amountPayable(
+  product: Pick<Product, 'price' | 'sale'> & { salePrice?: number | null },
+): number {
+  return resolvePrice(product).onSale ? (product.salePrice as number) : product.price;
+}
+
+/** Whole-number percentage off; 0 unless `resolvePrice` says a sale is genuinely active. */
+export function discountPercent(
+  product: Pick<Product, 'price' | 'sale'> & { salePrice?: number | null },
+): number {
+  if (!resolvePrice(product).onSale) return 0;
+  return Math.round(((product.price - (product.salePrice as number)) / product.price) * 100);
+}

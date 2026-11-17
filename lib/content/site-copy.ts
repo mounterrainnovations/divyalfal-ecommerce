@@ -375,6 +375,32 @@ export const siteCopy = {
     },
   },
 
+  // The two listing pages, from `app/products/page.tsx` and `app/sale/page.tsx` as they stood
+  // before the revamp. Only the brand-voice sentences live here; interface labels (buttons,
+  // filter legends, counts) stay in the components.
+  products: {
+    loading: {
+      heading: 'Loading Products...',
+      body: 'Please wait while we fetch the latest collection.',
+    },
+    empty: {
+      body: 'Stay Tuned! What you want might be on its way!',
+    },
+  },
+
+  sale: {
+    hero: {
+      subheading: 'Exclusive deals and discounts on premium products',
+    },
+    loading: {
+      heading: 'Loading Sale Products...',
+      body: 'Finding the best deals for you!',
+    },
+    empty: {
+      body: 'Check back soon for amazing deals and discounts!',
+    },
+  },
+
   academy: {
     hero: {
       heading: 'Virasat Academy',

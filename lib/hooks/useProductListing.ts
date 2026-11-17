@@ -74,14 +74,18 @@ export function parseCategoriesParam(raw: string | null): string[] {
     .filter(Boolean);
 }
 
-/** The value, trailing the input by `delay` ms; the typing is immediate, the request is not. */
-export function useDebouncedValue<T>(value: T, delay = SEARCH_DEBOUNCE_MS): T {
+/**
+ * The value, trailing the input by `delay` ms: typing is immediate, the request is not.
+ * Returns `[debounced, flush]`; `flush(next)` applies a value at once (the pending timer is
+ * dropped by the value change), for a reset that must not wait out the delay.
+ */
+export function useDebouncedValue<T>(value: T, delay = SEARCH_DEBOUNCE_MS) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(value), delay);
     return () => clearTimeout(timer);
   }, [value, delay]);
-  return debounced;
+  return [debounced, setDebounced] as const;
 }
 
 interface Settled {
@@ -155,6 +159,11 @@ async function fetchProducts(queryString: string, outer: Cancellation): Promise<
  * query — so it is already true on the very first render. Server markup therefore says
  * "loading" and the browser agrees, instead of the server printing an empty catalogue that
  * the first effect then contradicts. Superseded requests are aborted and never write.
+ *
+ * While a *new* query loads, `products` and `error` keep showing the last settled answer, so
+ * a page that had results does not collapse to a skeleton and lose the visitor's scroll
+ * position. `initialLoad` is true only when there is nothing worth keeping on screen (the
+ * first load, a retry, or a refetch after a failure), which is when a skeleton is right.
  */
 export function useProductListing(query: ProductsQuery) {
   const queryString = buildProductsQuery(query);
@@ -184,13 +193,19 @@ export function useProductListing(query: ProductsQuery) {
     };
   }, [queryString, key]);
 
-  const retry = useCallback(() => setAttempt(n => n + 1), []);
+  const retry = useCallback(() => {
+    setSettled(null);
+    setAttempt(n => n + 1);
+  }, []);
+
   const current = settled?.key === key ? settled : null;
+  const shown = current ?? settled;
 
   return {
     loading: current === null,
-    error: current?.error ?? null,
-    products: current?.products ?? [],
+    initialLoad: shown === null || (current === null && shown.error !== null),
+    error: shown?.error ?? null,
+    products: shown?.products ?? [],
     retry,
   };
 }
