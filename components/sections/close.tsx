@@ -11,10 +11,15 @@ const academy = siteCopy.home.academy;
  * Where each of the two invitations sits on the grid. They are deliberately not mirrored:
  * the first runs wide on the left, the second is narrower, starts further right and drops
  * below it, so the pair reads as a page being turned rather than two matched tiles.
+ *
+ * The drop halved in the density pass (40 -> 20). Unlike Movement 4's, this one *does* add to
+ * the section's height, because the two invitations are near enough the same height that the
+ * offset is pure addition — 160px of bare paper in the one movement on the page that carries
+ * no photograph at all.
  */
 const INVITATION_PLACEMENT = [
   'col-span-12 md:col-span-5 md:col-start-2',
-  'col-span-12 mt-20 md:col-span-4 md:col-start-8 md:mt-40',
+  'col-span-12 mt-12 md:col-span-4 md:col-start-8 md:mt-20',
 ] as const;
 
 /**
@@ -65,7 +70,7 @@ export default function Close() {
                 <Reveal delay={base + 60}>
                   <p className="measure mt-6 font-ui text-body text-ink-soft">{card.body}</p>
                 </Reveal>
-                <Reveal delay={base + 120} className="mt-10">
+                <Reveal delay={base + 120} className="mt-8">
                   <Button href={card.href}>{card.cta}</Button>
                 </Reveal>
               </div>
@@ -78,19 +83,19 @@ export default function Close() {
         <div className="grid-editorial">
           <Reveal className="col-span-12 md:col-span-10 md:col-start-2">
             <HairlineRule />
-            <DisplayHeading level={2} size={1} className="mt-10 text-paper md:mt-16">
+            <DisplayHeading level={2} size={1} className="mt-8 text-paper md:mt-10">
               {academy.heading}
             </DisplayHeading>
           </Reveal>
 
           <Reveal
             delay={60}
-            className="col-span-12 mt-10 md:col-span-5 md:col-start-7 md:mt-16"
+            className="col-span-12 mt-8 md:col-span-5 md:col-start-7 md:mt-12"
           >
             <p className="measure font-ui text-body text-paper">{academy.body}</p>
           </Reveal>
 
-          <Reveal delay={120} className="col-span-12 mt-10 md:col-span-5 md:col-start-7">
+          <Reveal delay={120} className="col-span-12 mt-8 md:col-span-5 md:col-start-7">
             <Button
               href={academy.href}
               className="text-paper hover:border-paper focus-visible:outline-paper"
