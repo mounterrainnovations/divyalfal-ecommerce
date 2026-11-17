@@ -73,6 +73,34 @@ describe('contact form', () => {
     expect(fireEvent.submit(form)).toBe(false);
   });
 
+  /**
+   * **Only the fields the page says are mandatory may block a submit.**
+   *
+   * The stored labels mark exactly one field: `'Email *'`. `'Name'`, `'Phone'` and
+   * `'Your message'` carry no marker, and the asterisk is how this form tells a visitor which
+   * answer it cannot do without. While Submit did nothing, a `required` on the Name input cost
+   * nothing; once Submit began actually validating (the WhatsApp hand-over calls
+   * `reportValidity`), it started blocking a visitor on an obligation the page never stated —
+   * the browser refuses the submit and points at a field whose label looks optional.
+   *
+   * The label is stored copy and may not change, so the markup yields: `required` lives on the
+   * one input whose label carries the marker. This test is the pairing made explicit — the
+   * marker and the attribute must agree, field by field — so neither can drift alone.
+   */
+  it('requires exactly the fields whose stored label carries the marker', () => {
+    render(<ContactForm />);
+    const marked = fields.filter(f => /\*$/.test(f.label)).map(f => f.label);
+    expect(marked).toEqual(['Email *']);
+
+    for (const { label } of fields) {
+      const control = screen.getByLabelText(label);
+      expect(
+        control.hasAttribute('required'),
+        `${label}: required must match the stored label's marker`
+      ).toBe(/\*$/.test(label));
+    }
+  });
+
   it('shows the copy on the page and no contact overlay text on the photograph', () => {
     render(<ContactForm />);
     expect(screen.getByRole('heading', { level: 2, name: siteCopy.contact.form.heading })).toBeVisible();
@@ -152,6 +180,21 @@ describe('contact form — Submit opens WhatsApp pre-filled', () => {
     expect(message).toBe(['Name: Asha Verma', 'Email: asha@example.com'].join('\n'));
     expect(message).not.toContain('Phone');
     expect(message).not.toContain('Your message');
+  });
+
+  /**
+   * The behavioural half of "only the marked field is mandatory": a visitor who gives an
+   * email address and nothing else gets through. Before the `required` came off the Name
+   * input, this submit was refused by the browser over a field the page never marked.
+   */
+  it('hands over an enquiry that answers only the one marked field', () => {
+    const opened = captureOpened();
+    render(<ContactForm />);
+    fill('Email', 'asha@example.com');
+    fireEvent.submit(screen.getByRole('button', { name: siteCopy.contact.form.submit }).closest('form')!);
+
+    expect(opened).toHaveLength(1);
+    expect(messageOf(opened[0])).toBe('Email: asha@example.com');
   });
 
   it('sends nothing at all while a required field is empty', () => {

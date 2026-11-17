@@ -57,7 +57,8 @@ const ContactForm = () => {
    * already prints.
    *
    * The message is the stored field labels and the visitor's own values and nothing else --
-   * see `whatsapp-enquiry.ts`. The markup and the `required` attributes are untouched, the
+   * see `whatsapp-enquiry.ts`. The one `required` attribute left is the Email field's, the only
+   * label the copy marks with an asterisk; the
    * typed values stay in the fields, and nothing here claims the enquiry arrived: opening
    * WhatsApp is not the same as pressing send, and the page cannot know which happened.
    */
@@ -130,7 +131,12 @@ const ContactForm = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder={nameField.placeholder}
-                  required
+                  /* No `required`: the stored label is plain `'Name'`. Only `'Email *'` carries
+                     the marker, and the marker is how this form tells a visitor which answer it
+                     cannot do without. While Submit did nothing the attribute cost nothing;
+                     since the WhatsApp hand-over began calling `reportValidity`, it blocked a
+                     visitor on an obligation the page never stated. The label is stored copy
+                     and cannot change, so the markup is what yields. */
                   className={FIELD_CLASS}
                 />
               </div>

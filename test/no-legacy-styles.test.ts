@@ -398,13 +398,52 @@ describe('.scrollbar-hide', () => {
     expect(stripComments(hero)).toContain('scrollbar-hide');
   });
 
+  /**
+   * **`lastIndexOf`, and then `stripComments`.** This assertion guarded 603 characters for
+   * three commits and nobody noticed, because the phrase `END OF THE DEPRECATED BLOCK`
+   * occurs **twice**: once in the deprecation comment's own WHAT TO DELETE paragraph
+   * (`app/globals.css:285`, naming the marker it points at) and once as the real marker
+   * (`:415`). `indexOf` found the self-reference, so the slice stopped seven lines in, inside
+   * the comment, and `.scrollbar-hide` was absent from it for the wrong reason — the rule
+   * could have moved back below `@layer base` and this test would still have passed.
+   *
+   * `lastIndexOf` alone does not fix it either: it takes the real marker, the region grows to
+   * ~5,950 characters, and it now contains the comment prose that *names* `.scrollbar-hide`
+   * while explaining why it was moved out. So the region is stripped of comments first — the
+   * same `stripComments` the whole file's sweep uses, for the same reason: prose about a rule
+   * is not the rule.
+   *
+   * One detail that bit on the way: **`stripComments` reads its argument from the `code`
+   * state**, so a slice that *begins* inside a comment is parsed as code and the comment's
+   * prose survives it. Slicing from the `DEPRECATED` word therefore still leaked the
+   * `.scrollbar-hide` mention. So the region begins where that comment *ends* — which is also
+   * the right boundary on its own terms: the deprecation note is not part of what gets
+   * deleted, the CSS after it is.
+   *
+   * The length assertion is the part that cannot rot: it fails if the region ever collapses
+   * back to a few hundred characters, whatever the reason.
+   */
   it('leaves the deprecated region with an explicit end, so a deletion cannot overrun it', () => {
-    const start = css.search(/DEPRECATED[^\n]*legacy shadcn token/);
-    const end = css.indexOf('END OF THE DEPRECATED BLOCK');
-    expect(end).toBeGreaterThan(start);
-    // Nothing the storefront needs may be written between the two markers.
-    const deprecated = css.slice(start, end);
+    const marker = css.search(/DEPRECATED[^\n]*legacy shadcn token/);
+    const end = css.lastIndexOf('END OF THE DEPRECATED BLOCK');
+    expect(marker).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(marker);
+    // The phrase appears twice; this must be the later one, not the self-reference inside the
+    // deprecation note's own WHAT TO DELETE paragraph.
+    expect(css.indexOf('END OF THE DEPRECATED BLOCK')).toBeLessThan(end);
+
+    // The CSS between the two markers: from the end of the deprecation comment to the start
+    // of the end marker's. Comments inside it are then stripped, so prose about a rule is not
+    // read as the rule.
+    const start = css.indexOf('*/', marker) + 2;
+    expect(start).toBeGreaterThan(marker);
+    expect(end - start).toBeGreaterThan(4000); // the real region; `indexOf` gave 603
+
+    const deprecated = stripComments(css.slice(start, end));
     expect(deprecated).not.toContain('.scrollbar-hide');
+    // ...and the region really is the legacy block, so this cannot pass on an empty slice.
+    expect(deprecated).toContain('--color-muted');
+    expect(deprecated).toContain('@layer base');
   });
 });
 
