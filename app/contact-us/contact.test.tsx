@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { siteCopy } from '@/lib/content/site-copy';
@@ -197,7 +199,8 @@ describe.each([
     );
     expect(printed.length).toBeGreaterThan(25);
     for (const [key, value] of printed) {
-      expect(text, key).toContain(value);
+      // The dialled form is shown as the page's display form everywhere it is printed.
+      expect(text, key).toContain(value.replaceAll(REAL_PHONE, contact.phoneDisplay));
     }
   });
 
@@ -262,5 +265,66 @@ describe('policy pages, individually', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(
       siteCopy.refundPolicy.process.steps.length
     );
+  });
+});
+
+describe('review fixes', () => {
+  it('sets the callouts as notes, not complementary landmarks inside main', () => {
+    const { container } = render(<CancellationPolicyPage />);
+    expect(container.querySelector('aside')).toBeNull();
+    expect(screen.queryByRole('complementary')).toBeNull();
+    const notes = screen.getAllByRole('note');
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toHaveTextContent(siteCopy.cancellationPolicy.window.tip.heading);
+    expect(notes[1]).toHaveTextContent(siteCopy.cancellationPolicy.modification.note.heading);
+  });
+
+  it.each([
+    ['refund', RefundPolicyPage],
+    ['cancellation', CancellationPolicyPage],
+  ] as const)('prints the phone one way only on the %s page', (_name, Page) => {
+    const { container } = render(<Page />);
+    const display = siteCopy.refundPolicy.questions.phoneDisplay;
+    const tel = Array.from(container.querySelectorAll('a[href^="tel:"]'));
+    expect(tel.length).toBeGreaterThan(0);
+    for (const a of tel) {
+      expect(a).toHaveAttribute('href', `tel:${REAL_PHONE}`);
+      expect(a.textContent).toBe(display);
+    }
+    // The bare dialled form is never printed as text.
+    expect(container.textContent).not.toContain(REAL_PHONE);
+  });
+
+  it('keeps the stored strings as they were: the dialled form is still in the copy', () => {
+    expect(siteCopy.cancellationPolicy.howTo.steps[0].body).toContain(REAL_PHONE);
+  });
+
+  it('renders every emphasised phrase as bold and the cross-reference as a link', () => {
+    const refund = render(<RefundPolicyPage />);
+    const strongs = (el: HTMLElement) =>
+      Array.from(el.querySelectorAll('strong')).map((s) => s.textContent);
+    expect(strongs(refund.container)).toContain('7 days');
+    refund.unmount();
+
+    const cancel = render(<CancellationPolicyPage />);
+    expect(strongs(cancel.container)).toEqual(expect.arrayContaining(['24 hours', '12 hours']));
+    const link = cancel.container.querySelector('section a[href="/refund-policy"]');
+    expect(link).toHaveTextContent('Refund Policy');
+  });
+
+  it('caps the reading measure at 68ch in the stylesheet the pages use', () => {
+    const css = readFileSync(path.resolve(__dirname, '../globals.css'), 'utf8');
+    expect(css).toMatch(/--measure:\s*68ch\s*;/);
+    expect(css).toMatch(/@utility measure\s*\{[^}]*max-width:\s*var\(--measure\)/);
+  });
+
+  it('announces the email field as Email, with the asterisk hidden from assistive tech', () => {
+    render(<ContactForm />);
+    expect(screen.getByRole('textbox', { name: 'Email' })).toBeInTheDocument();
+    // The stored label is untouched and still reads "Email *" on screen.
+    expect(siteCopy.contact.form.fields[1].label).toBe('Email *');
+    const label = document.querySelector('label[for="email"]')!;
+    expect(label.textContent).toBe('Email *');
+    expect(label.querySelector('[aria-hidden="true"]')).toHaveTextContent('*');
   });
 });

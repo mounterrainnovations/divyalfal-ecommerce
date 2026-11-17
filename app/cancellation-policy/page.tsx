@@ -44,7 +44,7 @@ export default function CancellationPolicyPage() {
         <PolicySteps>
           {copy.howTo.steps.map((step) => (
             <li key={step.label}>
-              <strong className="font-medium">{step.label}</strong> <RichText>{step.body}</RichText>
+              <strong className="font-medium">{step.label}</strong> <RichText phoneDisplay={help.phoneDisplay}>{step.body}</RichText>
             </li>
           ))}
         </PolicySteps>

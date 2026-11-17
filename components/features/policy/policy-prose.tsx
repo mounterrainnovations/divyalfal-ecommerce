@@ -22,17 +22,21 @@ const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 /**
  * Sets a string from the copy module, turning what is already inside it into marks: an
  * email address becomes a `mailto:` link, a `+91` number a `tel:` link, each phrase in
- * `strong` is emboldened and each key of `links` becomes a link to its value. Nothing is
- * added to the text, so the rendered characters are the stored characters.
+ * `strong` is emboldened and each key of `links` becomes a link to its value. A `+91` number is
+ * printed as `phoneDisplay` when one is given, so a document shows its phone one way only.
+ * Nothing else is added to the text, so the rendered characters are the stored characters.
  */
 export function RichText({
   children,
   strong = [],
   links = {},
+  phoneDisplay,
 }: {
   children: string;
   strong?: string[];
   links?: Record<string, string>;
+  /** How a `+91` number is printed; the number itself stays the `tel:` target. */
+  phoneDisplay?: string;
 }) {
   const phrases = [...strong, ...Object.keys(links)].map(escape);
   const splitter = new RegExp(`(${[...phrases, EMAIL, PHONE].join('|')})`);
@@ -67,7 +71,7 @@ export function RichText({
         if (phone.test(part)) {
           return (
             <a key={index} href={`tel:${part}`} className={LINK}>
-              {part}
+              {phoneDisplay ?? part}
             </a>
           );
         }
@@ -131,7 +135,11 @@ export function PolicySteps({ children }: { children: ReactNode }) {
   return <ol className="list-decimal space-y-4 pl-6 marker:text-ink-soft">{children}</ol>;
 }
 
-/** A labelled aside: a gold hairline down its left edge, never a coloured box. */
+/**
+ * A labelled note: a gold hairline down its left edge, never a coloured box. A `note`, not an
+ * `aside`: it is inline to its section, not complementary page content, and an `aside` inside
+ * `main` is a landmark.
+ */
 export function Callout({
   emoji,
   heading,
@@ -142,12 +150,12 @@ export function Callout({
   children: ReactNode;
 }) {
   return (
-    <aside className="border-l border-gold py-1 pl-6">
+    <div role="note" className="border-l border-gold py-1 pl-6">
       <p className="mb-2 font-medium">
         <span aria-hidden="true">{emoji}</span> {heading}
       </p>
       <p>{children}</p>
-    </aside>
+    </div>
   );
 }
 

@@ -11,6 +11,21 @@ import { FIELD_CLASS, LABEL_CLASS } from './field-styles';
 const { info, form } = siteCopy.contact;
 const [nameField, emailField, phoneField, messageField] = form.fields;
 
+/**
+ * A stored label that ends in ` *` is set with the asterisk hidden from assistive tech, so the
+ * field is announced as "Email" and `required` carries the obligation. The text on screen is the
+ * stored text.
+ */
+function LabelText({ text }: { text: string }) {
+  const marked = text.match(/^(.*\S)\s*\*$/);
+  if (!marked) return <>{text}</>;
+  return (
+    <>
+      {marked[1]} <span aria-hidden="true">*</span>
+    </>
+  );
+}
+
 const INFO_LINK =
   'text-ink underline decoration-gold underline-offset-4 transition-colors duration-300 ' +
   'hover:decoration-ink motion-reduce:transition-none break-words ' +
@@ -88,7 +103,7 @@ const ContactForm = () => {
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <div>
                 <label htmlFor="name" className={LABEL_CLASS}>
-                  {nameField.label}
+                  <LabelText text={nameField.label} />
                 </label>
                 <input
                   type="text"
@@ -103,7 +118,7 @@ const ContactForm = () => {
               </div>
               <div>
                 <label htmlFor="email" className={LABEL_CLASS}>
-                  {emailField.label}
+                  <LabelText text={emailField.label} />
                 </label>
                 <input
                   type="email"
@@ -120,7 +135,7 @@ const ContactForm = () => {
 
             <div>
               <label htmlFor="phone" className={LABEL_CLASS}>
-                {phoneField.label}
+                <LabelText text={phoneField.label} />
               </label>
               <input
                 type="tel"
@@ -135,7 +150,7 @@ const ContactForm = () => {
 
             <div>
               <label htmlFor="message" className={LABEL_CLASS}>
-                {messageField.label}
+                <LabelText text={messageField.label} />
               </label>
               <textarea
                 id="message"
