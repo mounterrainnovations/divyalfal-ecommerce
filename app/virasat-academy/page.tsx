@@ -8,10 +8,13 @@ import DisplayHeading from '@/components/primitives/DisplayHeading';
 import HairlineRule from '@/components/primitives/HairlineRule';
 import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
+import { handoverEnquiry } from '@/components/features/forms/whatsapp-enquiry';
 
-// `siteCopy.academy.success` is deliberately not destructured here. The form is not wired to
-// anything yet (see `handleSubmit`), so printing a confirmation would be a lie; the copy stays
-// in the module because Phase 2 renders it on a real response from the enquiry endpoint.
+// `siteCopy.academy.success` is deliberately not destructured here. Submit hands the
+// application to WhatsApp (see `handleSubmit`), which is not the same as an application
+// arriving -- the applicant may never press send -- so printing a confirmation would still be
+// a lie. The copy stays in the module because Phase 2 Task 8 renders it on a real response
+// from the enquiry endpoint.
 const { hero, form } = siteCopy.academy;
 const [
   fullNameField,
@@ -73,22 +76,40 @@ export default function VirasatAcademyPage() {
   };
 
   /**
-   * Inert, on purpose, and that is the honest state of this form.
+   * Submit hands the application to WhatsApp, pre-filled.
    *
-   * Nothing here posts anywhere: there is no enquiry endpoint yet, and Phase 2 wires this form
-   * and the contact form to the same one. Until then the page must neither invent a success nor
-   * invent a failure. It used to do the first -- it set a confirmation, cleared all eight fields
-   * and started a 5s timer it never cleared -- which told the applicant, and told screen-reader
-   * users out loud through an `aria-live` region, that an application had been received when not
-   * a byte had left the browser. The typed values are kept, so that when the endpoint exists the
-   * applicant's work is still on the page.
+   * The owner's decision, taken explicitly. Before it, this handler was `preventDefault()` and
+   * nothing else: an applicant filled in eight fields, including a date of birth, pressed
+   * Submit, and every answer was discarded in silence. There is still no enquiry endpoint --
+   * **Phase 2 Task 8 replaces this hand-over with a real one** (`POST /api/enquiries`) -- so
+   * until then the application travels on the number the footer already prints.
    *
-   * `preventDefault` is the one thing that must happen: a form with no `action` otherwise
-   * navigates on submit and writes every answer, including the date of birth and phone number,
-   * into the URL and the browser history.
+   * The message is the stored field labels and the applicant's own values, nothing else: no
+   * greeting and no sign-off, because the boutique does not put words in an applicant's mouth
+   * and every storefront word lives in `siteCopy`. The gender is sent as the option's visible
+   * label rather than its value, so the applicant reads back what they chose. See
+   * `components/features/forms/whatsapp-enquiry.ts` for the rest of the reasoning.
+   *
+   * What does **not** change: the markup, the `required` attributes and the browser's own
+   * validation still gate the submission; the typed values stay in the fields, because the
+   * hand-over opens in a new tab; and nothing on the page claims the application was received,
+   * since opening WhatsApp is not the same as pressing send.
    */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    handoverEnquiry(e, [
+      { label: fullNameField.label, value: formData.fullName },
+      { label: dobField.label, value: formData.dob },
+      { label: phoneField.label, value: formData.phone },
+      { label: cityField.label, value: formData.city },
+      { label: stateField.label, value: formData.state },
+      { label: countryField.label, value: formData.country },
+      {
+        label: genderField.label,
+        // The label the applicant read, not the `value` the markup carries.
+        value: form.genderOptions.find(option => option.value === formData.gender)?.label ?? '',
+      },
+      { label: commentsField.label, value: formData.comments },
+    ]);
   };
 
   return (
@@ -256,9 +277,11 @@ export default function VirasatAcademyPage() {
         </div>
       </section>
 
-      {/* No live region. There is nothing truthful to announce until the form posts somewhere;
-          an always-mounted `role="status"` was how the false confirmation reached assistive
-          technology, and an empty one would only be waiting to do it again. */}
+      {/* No live region. Opening WhatsApp is not an application arriving, so there is still
+          nothing truthful to announce: an always-mounted `role="status"` was how the false
+          confirmation reached assistive technology, and an empty one would only be waiting to
+          do it again. Phase 2 Task 8's endpoint is what gives this page a real outcome to
+          report. */}
 
       <Footer />
     </>

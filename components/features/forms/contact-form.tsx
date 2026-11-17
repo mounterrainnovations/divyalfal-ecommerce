@@ -7,6 +7,7 @@ import DisplayHeading from '@/components/primitives/DisplayHeading';
 import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
 import { FIELD_CLASS, LABEL_CLASS } from './field-styles';
+import { handoverEnquiry } from './whatsapp-enquiry';
 
 const { info, form } = siteCopy.contact;
 const [nameField, emailField, phoneField, messageField] = form.fields;
@@ -46,10 +47,27 @@ const ContactForm = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement form submission logic (e.g., API call)
-    // For now, form data is captured in formData state
+  /**
+   * Submit hands the enquiry to WhatsApp, pre-filled.
+   *
+   * The owner's decision, taken explicitly. Before it this handler was `preventDefault()` plus
+   * a `TODO`: a visitor filled in four fields, pressed Submit, and the enquiry was discarded
+   * in silence. **Phase 2 Task 8 replaces the hand-over with a real enquiry endpoint**
+   * (`POST /api/enquiries`, spec §11); until then the enquiry travels on the number the footer
+   * already prints.
+   *
+   * The message is the stored field labels and the visitor's own values and nothing else --
+   * see `whatsapp-enquiry.ts`. The markup and the `required` attributes are untouched, the
+   * typed values stay in the fields, and nothing here claims the enquiry arrived: opening
+   * WhatsApp is not the same as pressing send, and the page cannot know which happened.
+   */
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    handoverEnquiry(e, [
+      { label: nameField.label, value: formData.name },
+      { label: emailField.label, value: formData.email },
+      { label: phoneField.label, value: formData.phone },
+      { label: messageField.label, value: formData.message },
+    ]);
   };
 
   return (

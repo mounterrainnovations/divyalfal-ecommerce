@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { siteCopy } from '@/lib/content/site-copy';
 import ContactUsPage from './page';
@@ -63,12 +63,13 @@ describe('contact form', () => {
     }
   });
 
-  it('keeps the submit behaviour untouched: it still just swallows the event', () => {
+  it('never lets the browser navigate on submit, which would put the answers in the URL', () => {
     render(<ContactForm />);
     const button = screen.getByRole('button', { name: submit });
     expect(button).toHaveAttribute('type', 'submit');
     const form = button.closest('form')!;
-    // fireEvent returns false when a handler called preventDefault.
+    // fireEvent returns false when a handler called preventDefault. A form with no `action`
+    // otherwise navigates and writes every answer into the URL and the browser history.
     expect(fireEvent.submit(form)).toBe(false);
   });
 
@@ -76,6 +77,112 @@ describe('contact form', () => {
     render(<ContactForm />);
     expect(screen.getByRole('heading', { level: 2, name: siteCopy.contact.form.heading })).toBeVisible();
     expect(screen.getByAltText(siteCopy.contact.info.imageAlt)).toBeInTheDocument();
+  });
+});
+
+/**
+ * Submit hands the enquiry to WhatsApp, pre-filled. The owner's decision, taken after the
+ * whole-branch review found a `handleSubmit` that was `preventDefault()` plus a `TODO` — a
+ * visitor filled in four fields, pressed Submit, and the enquiry was discarded in silence.
+ *
+ * The message carries no new prose: only the stored field labels and the visitor's own values,
+ * URL-encoded. Required-field validation still gates the submission, and nothing on the page
+ * claims the enquiry arrived, because the page cannot know whether the visitor pressed send.
+ *
+ * Phase 2 Task 8 replaces this with a real enquiry endpoint.
+ */
+describe('contact form — Submit opens WhatsApp pre-filled', () => {
+  /** Every link the form opens in a new tab, by href. */
+  function captureOpened() {
+    const opened: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      opened.push(this.href);
+    });
+    return opened;
+  }
+
+  const messageOf = (href: string) =>
+    decodeURIComponent(new URL(href).searchParams.get('text') ?? '');
+
+  /**
+   * By accessible name rather than label text: the stored label is `'Email *'` and the
+   * asterisk is `aria-hidden`, so the field is announced — and addressed here — as "Email".
+   */
+  const field = (name: string) => screen.getByRole('textbox', { name });
+
+  const fill = (name: string, value: string) =>
+    fireEvent.change(field(name), { target: { value } });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('opens the boutique’s own WhatsApp number with every answered field in the message', () => {
+    const opened = captureOpened();
+    render(<ContactForm />);
+    fill('Name', 'Asha Verma');
+    fill('Email', 'asha@example.com');
+    fill('Phone', '+91 90000 00000');
+    fill('Your message', 'Do you take commissions for a September wedding?');
+    fireEvent.submit(screen.getByRole('button', { name: siteCopy.contact.form.submit }).closest('form')!);
+
+    expect(opened).toHaveLength(1);
+    const url = new URL(opened[0]);
+    expect(url.origin + url.pathname).toBe('https://wa.me/919977057045');
+    expect(siteCopy.footer.contact.phone).toBe('+919977057045');
+    expect(messageOf(opened[0])).toBe(
+      [
+        'Name: Asha Verma',
+        // The stored label is "Email *"; the required marker is presentation, not a label.
+        'Email: asha@example.com',
+        'Phone: +91 90000 00000',
+        'Your message: Do you take commissions for a September wedding?',
+      ].join('\n')
+    );
+  });
+
+  it('leaves the two optional fields out when they are blank', () => {
+    const opened = captureOpened();
+    render(<ContactForm />);
+    fill('Name', 'Asha Verma');
+    fill('Email', 'asha@example.com');
+    fireEvent.submit(screen.getByRole('button', { name: siteCopy.contact.form.submit }).closest('form')!);
+
+    const message = messageOf(opened[0]);
+    expect(message).toBe(['Name: Asha Verma', 'Email: asha@example.com'].join('\n'));
+    expect(message).not.toContain('Phone');
+    expect(message).not.toContain('Your message');
+  });
+
+  it('sends nothing at all while a required field is empty', () => {
+    const opened = captureOpened();
+    render(<ContactForm />);
+    // Name is filled; the required email is not.
+    fill('Name', 'Asha Verma');
+    fireEvent.submit(screen.getByRole('button', { name: siteCopy.contact.form.submit }).closest('form')!);
+    expect(opened).toEqual([]);
+  });
+
+  it('keeps the enquiry on the page and claims nothing about it', () => {
+    const anchors: HTMLAnchorElement[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      anchors.push(this);
+    });
+    render(<ContactForm />);
+    fill('Name', 'Asha Verma');
+    fill('Email', 'asha@example.com');
+    fireEvent.submit(screen.getByRole('button', { name: siteCopy.contact.form.submit }).closest('form')!);
+
+    expect(anchors[0].target).toBe('_blank');
+    expect(anchors[0].rel).toBe('noopener noreferrer');
+    expect(field('Name')).toHaveValue('Asha Verma');
+    expect(field('Email')).toHaveValue('asha@example.com');
+    // Opening WhatsApp is not the same as an enquiry arriving.
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(document.querySelector('[aria-live]')).toBeNull();
+    expect(document.querySelectorAll('a[href^="https://wa.me/"]')).toHaveLength(0);
   });
 });
 
