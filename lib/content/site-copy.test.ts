@@ -225,6 +225,26 @@ describe('siteCopy', () => {
     expect(siteCopy.sale.empty.body).toBe('Check back soon for amazing deals and discounts!');
   });
 
+  it('preserves the product-detail prose, with the entity decoded', () => {
+    expect(siteCopy.product.description.heading).toBe('Description');
+    expect(siteCopy.product.shipping.heading).toBe('Shipping Information');
+    expect(siteCopy.product.care.heading).toBe('Care Instruction');
+    expect(siteCopy.product.disclaimer.heading).toBe('Disclaimer');
+    expect(siteCopy.product.related.heading).toBe('You may also like');
+    expect(siteCopy.product.shipping.items).toHaveLength(4);
+    expect(siteCopy.product.care.items).toHaveLength(5);
+    expect(siteCopy.product.disclaimer.items).toHaveLength(5);
+    expect(siteCopy.product.shipping.items).toContain(
+      'Standard delivery takes 5-7 business days across India.'
+    );
+    expect(siteCopy.product.shipping.items).toContain(
+      'Express shipping options are available at checkout for faster delivery.'
+    );
+    expect(siteCopy.product.care.items[0]).toBe(
+      "Dry clean only to maintain the fabric's quality and embellishments."
+    );
+  });
+
   it('preserves the refund policy copy', () => {
     expect(siteCopy.refundPolicy.hero.heading).toBe('Refund Policy');
     expect(siteCopy.refundPolicy.hero.subheading).toBe('Your satisfaction is our priority');
@@ -304,7 +324,7 @@ describe('siteCopy snapshot', () => {
   it('has not gained or lost a single leaf', () => {
     // Explicit, so an added or removed key is a loud failure rather than a quiet
     // snapshot update. Change this number only together with an approved copy change.
-    expect(Object.keys(flat)).toHaveLength(342);
+    expect(Object.keys(flat)).toHaveLength(361);
   });
 
   it('matches the committed copy, string for string', () => {

@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import ProductHero from '@/components/features/products/product-hero';
 import ProductDetails from '@/components/features/products/product-details';
 import YouMayAlsoLike from '@/components/features/products/you-may-also-like';
 import Footer from '@/components/layout/footer';
+import { siteCopy } from '@/lib/content/site-copy';
 import { prisma } from '@/lib/db';
 import { transformDbProductToProduct } from '@/lib/utils/product-utils';
 import type { Product, DbProduct } from '@/types';
@@ -57,37 +57,45 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const { product, dbProduct } = productData;
 
+  const navLabel = (href: string) =>
+    siteCopy.nav.items.find(item => item.href === href)?.label ?? '';
+  const crumb =
+    'font-ui text-caption text-ink-soft transition-colors duration-300 hover:text-ink motion-reduce:transition-none ' +
+    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink';
+
   return (
     <>
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <nav className="mb-6 sm:mb-8">
-          <ol className="flex items-center gap-2 text-xs sm:text-sm md:text-base font-serif text-gray-600 flex-wrap">
-            <li>
-              <Link href="/" className="hover:text-black transition">
-                Home
-              </Link>
-            </li>
-            <li>
-              <ChevronRight className="w-4 h-4" />
-            </li>
-            <li>
-              <Link href="/products" className="hover:text-black transition">
-                All Product
-              </Link>
-            </li>
-            <li>
-              <ChevronRight className="w-4 h-4" />
-            </li>
-            <li className="text-black font-medium">{product.name}</li>
-          </ol>
-        </nav>
+      <nav aria-label="Breadcrumb" className="grid-editorial pt-6 md:pt-8">
+        <ol className="col-span-12 flex flex-wrap items-center gap-x-3 gap-y-1 font-ui text-caption text-ink-soft">
+          <li>
+            <Link href="/" className={crumb}>
+              {navLabel('/')}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link href="/products" className={crumb}>
+              {navLabel('/products')}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="text-ink">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-12 sm:mb-16 lg:items-start">
+      {/* Photographs scroll through the left seven columns while the details stay in view in
+          the right four; one empty column holds them apart. Below lg it is one column. */}
+      <div className="grid-editorial gap-y-12 pb-24 pt-8 md:pb-32 lg:items-start">
+        <div className="col-span-12 lg:col-span-7">
           <ProductHero photos={dbProduct.photos} productName={product.name} />
+        </div>
+        <div className="col-span-12 lg:sticky lg:top-28 lg:col-span-4 lg:col-start-9">
           <ProductDetails product={product} />
         </div>
       </div>
+
       <YouMayAlsoLike currentProductId={product.id} />
       <Footer />
     </>

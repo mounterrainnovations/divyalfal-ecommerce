@@ -401,6 +401,47 @@ export const siteCopy = {
     },
   },
 
+  // The product detail page, from `product-details.tsx` and `you-may-also-like.tsx` as they stood
+  // before the revamp. Interface labels (image controls, size letters, the enquiry button) stay in
+  // the components; these are the brand-voice sentences and the section headings above them.
+  product: {
+    description: {
+      heading: 'Description',
+    },
+    shipping: {
+      heading: 'Shipping Information',
+      items: [
+        'We offer free shipping on all orders above Rs. 5,000. Orders are typically processed within 2-3 business days.',
+        'Standard delivery takes 5-7 business days across India.',
+        'For international orders, shipping time varies between 10-15 business days depending on the destination.',
+        'Express shipping options are available at checkout for faster delivery.',
+      ],
+    },
+    care: {
+      heading: 'Care Instruction',
+      items: [
+        "Dry clean only to maintain the fabric's quality and embellishments.",
+        'Store in a cool, dry place away from direct sunlight.',
+        'Avoid contact with perfumes, deodorants, and other chemicals.',
+        'For silk sarees, wrap in a muslin cloth to prevent damage from moisture and insects.',
+        'Iron on low heat with a cotton cloth between the iron and the fabric.',
+      ],
+    },
+    disclaimer: {
+      heading: 'Disclaimer',
+      items: [
+        'Colors may vary slightly from the images due to different screen resolutions and lighting conditions.',
+        'Each piece is handcrafted, so minor variations in embroidery and weave are natural and add to the uniqueness of the product.',
+        'Custom orders and Made-to-Order pieces are non-returnable and non-exchangeable.',
+        'Please check the size chart carefully before placing an order. Alterations may be charged separately.',
+        'We do not accept returns on sale items or final sale merchandise.',
+      ],
+    },
+    related: {
+      heading: 'You may also like',
+    },
+  },
+
   academy: {
     hero: {
       heading: 'Virasat Academy',

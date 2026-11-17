@@ -1,57 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import type { Product } from '@/types';
-import ProductCard from './product-card';
+import { useId } from 'react';
+import HairlineRule from '@/components/primitives/HairlineRule';
+import ProductTile from '@/components/primitives/ProductTile';
+import Reveal from '@/components/primitives/Reveal';
+import { siteCopy } from '@/lib/content/site-copy';
+import { useRelatedProducts } from '@/lib/hooks/useRelatedProducts';
 
 interface YouMayAlsoLikeProps {
   currentProductId: string;
 }
 
+/**
+ * A quiet four-up strip under a hairline rule: no card, no fill, just the same portrait tiles
+ * the listings use. Renders nothing until there is something to show, so the page never
+ * flashes an empty heading.
+ */
 const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRelatedProducts = async () => {
-      try {
-        const response = await fetch(`/api/products?limit=4`);
-        if (response.ok) {
-          const data = await response.json();
-          // Filter out current product
-          const relatedProducts = data.products
-            .filter((p: Product) => p.id !== currentProductId)
-            .slice(0, 4);
-          setProducts(relatedProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching related products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRelatedProducts();
-  }, [currentProductId]);
+  const headingId = useId();
+  const { products, loading } = useRelatedProducts(currentProductId);
 
   if (loading || products.length === 0) {
     return null;
   }
 
   return (
-    <section className="pb-16 font-poppins">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-center mb-12">
-          You may also like
-        </h2>
-
-        {/* Grid of 4 cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {products.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+    <section aria-labelledby={headingId} className="grid-editorial gap-y-10 pb-24 md:pb-32">
+      <HairlineRule className="col-span-12" />
+      <h2
+        id={headingId}
+        className="col-span-12 font-ui text-eyebrow font-normal uppercase text-ink-soft"
+      >
+        {siteCopy.product.related.heading}
+      </h2>
+      {products.map((product, index) => (
+        <div key={product.id} className="col-span-6 lg:col-span-3">
+          <Reveal delay={(index % 4) * 60}>
+            <ProductTile product={product} />
+          </Reveal>
         </div>
-      </div>
+      ))}
     </section>
   );
 };
