@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
 import { siteCopy } from '@/lib/content/site-copy';
 import { useMedia } from '@/lib/hooks/useMedia';
+import { cn } from '@/lib/utils';
 
 const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
 
@@ -26,14 +27,34 @@ const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
  * 74.5% of the image height. Because the image is wider than any plausible hero frame,
  * `object-cover` always scales it by height, so that burned-in headline always lands in the
  * bottom quarter of the frame at every viewport. A bottom-left wordmark collides with it
- * outright. Centring clears it by the whole middle band at every ratio while still leaving
- * the top clear for the transparent nav. Replace that asset with a clean photograph and
- * this should move back down to the baseline.
+ * outright. Centring clears it by the whole middle band at every ratio, and the middle band
+ * is also the one place the fixed paper navbar cannot reach: the bar is solid now, not the
+ * transparent overlay this comment used to describe, and it occupies the top 64–80px.
+ * Replace that asset with a clean photograph and this should move back down to the baseline.
  *
- * Legibility comes from a single flat 35% ink wash — not a gradient (forbidden), not a
- * black scrim. That figure was measured, not guessed: at 35% the brightest pixel anywhere
- * behind the wordmark still clears 3:1 against paper (large-text AA) at 1280, 1440 and
- * 1920 wide, while the photograph keeps a ~6.9:1 mean and stays a photograph.
+ * Legibility comes from a single flat ink wash — not a gradient (forbidden), not a black
+ * scrim — and its opacity is per medium, because the two media are not equally bright:
+ *
+ *   - **Desktop still, 35%.** The spec's figure, and it holds: on `mock_hero_desktop_2.webp`
+ *     at 1280, 1440 and 1920 wide the brightest pixel behind the wordmark still clears 3:1
+ *     against paper (large-text AA), and the photograph keeps a ~6.9:1 mean.
+ *   - **Mobile / portrait-tablet video, 50%.** Task 13 measured what nobody had: the same
+ *     35% over `bg_video.webm`, sampled at 11 frames across its 14.9s, at 390×844 and again
+ *     at portrait tablet 768×1024 where `object-cover` crops it differently. Measured under
+ *     the glyph strokes rather than over the wordmark's bounding box (a bright pixel in a
+ *     letter gap is behind no type), the worst stroke pixel sat at **2.15:1** at 390 and
+ *     **2.28:1** at 768, and in one frame **18%** of the wordmark's strokes were under 3:1.
+ *     The footage carries near-white highlights (sRGB ~253) that 35% cannot hold down. At 50%
+ *     the same sampling gives a worst stroke pixel of **3.34:1** at 390 and **3.51:1** at
+ *     768, with **no** stroke pixel under 3:1 in any frame, and it still reads as a wash over
+ *     a photograph rather than a scrim: the stroke mean is 9.1:1 and 9.4:1. Per-frame tables
+ *     are in `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
+ *
+ * The opacity follows the same `useMedia` answer that picks the media, not a `md:` variant:
+ * `md:` is min-width 768 while the video is max-width 768, so at exactly 768 a variant would
+ * put the still's wash over the video — which is the one width this measured.
+ *
+ * Still unmeasured: widths between 390 and 1280 at unusual aspect ratios.
  *
  * Motion is CSS-only, because every pixel here is above the fold: `reveal-image` on the
  * media and `reveal-text` on the wordmark, staggered three steps of `--stagger` behind it
@@ -42,7 +63,15 @@ const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
  *
  * The desktop/mobile media split stays `useMedia`, unchanged: a desktop still frame, a
  * portrait `webm` on a phone. The photograph carries `alt=""` and the video `aria-hidden`
- * — the wordmark is the hero's accessible content, the media is its ground.
+ * — the wordmark is the hero's accessible content, the media is its ground. The video needs
+ * no `tabIndex={-1}`: a `<video>` without `controls` is not focusable, and an `aria-hidden`
+ * element that *were* focusable would be an axe `aria-hidden-focus` violation rather than
+ * something to patch over.
+ *
+ * The wordmark's letter-spacing is `tracking-(--tracking-wordmark)`, not a magic
+ * `tracking-[0.14em]`: 0.14em is declared beside `--tracking-eyebrow` in `app/globals.css`,
+ * so the one piece of display type the system sets open — wider than body, tighter than the
+ * eyebrow's 0.18em — cannot drift away from that scale.
  */
 export default function Hero() {
   const isMobile = useMedia('(max-width: 768px)');
@@ -57,7 +86,6 @@ export default function Hero() {
           loop
           playsInline
           aria-hidden="true"
-          tabIndex={-1}
           className="reveal-image absolute inset-0 h-full w-full object-cover"
         />
       ) : (
@@ -71,10 +99,14 @@ export default function Hero() {
         />
       )}
 
-      {/* Flat ink wash, one opacity, no gradient, no pure black. 35% is the measured floor:
-          below it the brightest pixels under the wordmark drop beneath 3:1 against paper
-          (large-text AA). The photograph keeps a ~6.9:1 mean, so it is a wash, not a scrim. */}
-      <div aria-hidden="true" className="absolute inset-0 bg-ink/35" />
+      {/* Flat ink wash, one opacity, no gradient, no pure black. Each figure is the measured
+          floor for its own medium -- 35% over the still, 50% over the video, whose near-white
+          highlights leave the wordmark at 2.15:1 under a 35% wash. See the measurements in the
+          component comment above; do not lower either without re-measuring. */}
+      <div
+        aria-hidden="true"
+        className={cn('absolute inset-0', isMobile ? 'bg-ink/50' : 'bg-ink/35')}
+      />
 
       <div
         className="absolute inset-0 flex items-center"
@@ -84,7 +116,7 @@ export default function Hero() {
           <DisplayHeading
             level={1}
             size={1}
-            className="reveal-text col-span-12 tracking-[0.14em] text-paper uppercase md:col-span-6 md:col-start-2"
+            className="reveal-text col-span-12 tracking-(--tracking-wordmark) text-paper uppercase md:col-span-6 md:col-start-2"
           >
             {wordmark}
           </DisplayHeading>

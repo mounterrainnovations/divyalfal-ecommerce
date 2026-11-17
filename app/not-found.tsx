@@ -1,41 +1,59 @@
 'use client';
 
-import Link from 'next/link';
-import { Home, ArrowLeft } from 'lucide-react';
+import Button from '@/components/primitives/Button';
+import DisplayHeading from '@/components/primitives/DisplayHeading';
+import Eyebrow from '@/components/primitives/Eyebrow';
+import HairlineRule from '@/components/primitives/HairlineRule';
+import { siteCopy } from '@/lib/content/site-copy';
 
+const copy = siteCopy.notFound;
+
+/**
+ * The site-wide 404, on the same editorial grid as every other route.
+ *
+ * The pre-revamp page was a centred grey card: `bg-gray-50` ground, a `text-9xl` numeral in
+ * `text-gray-900`, and two `rounded-lg` filled buttons. Every one of those is in the banned
+ * vocabulary `test/no-legacy-styles.test.ts` now guards, so the page is rebuilt from the
+ * tokens: paper ground, the numeral as a quiet eyebrow above the heading rather than the
+ * loudest thing on the page, and the two actions as `Button` text-plus-rule.
+ *
+ * Words are unchanged -- all five strings are `siteCopy.notFound`, transcribed verbatim.
+ *
+ * `'use client'` stays: "Go Back" calls `window.history.back()`, which needs the browser. It
+ * is a `<button>`, not a link, because there is no href for "wherever you came from".
+ *
+ * No `Footer`, as before the revamp, and that is a measured decision rather than an omission.
+ * The footer's three columns are `h3`s, which read correctly on every route that has `h2`
+ * sections above them; this page has only its own `h1`, so a footer here skips a level and
+ * axe reports `heading-order` (it did, at 1440, 768 and 390, before the footer came out).
+ * There is no second heading to add without inventing copy, and the two ways out are the
+ * whole job of a dead end. If the footer is ever wanted here, give it a `headingLevel` prop
+ * rather than adding a heading to this page.
+ */
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-lg w-full text-center">
-        {/* 404 Icon */}
-        <div className="mb-8">
-          <h1 className="text-9xl font-bold text-gray-900">404</h1>
+    <>
+      <header className="grid-editorial pt-16 pb-12 md:pt-24 md:pb-16">
+        <div className="col-span-12 md:col-span-7 md:col-start-2">
+          <Eyebrow className="reveal-text">{copy.code}</Eyebrow>
+          <DisplayHeading level={1} size={1} className="reveal-text mt-6 text-balance">
+            {copy.heading}
+          </DisplayHeading>
+          <p className="measure reveal-text mt-8 font-display text-body font-light text-ink">
+            {copy.body}
+          </p>
+          <div className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-6">
+            <Button href="/">{copy.homeCta}</Button>
+            <Button variant="quiet" onClick={() => window.history.back()}>
+              {copy.backCta}
+            </Button>
+          </div>
         </div>
+      </header>
 
-        {/* Message */}
-        <h2 className="text-3xl md:text-4xl font-serif text-gray-900 mb-4">Page Not Found</h2>
-        <p className="text-lg text-gray-600 mb-8">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <Home className="w-5 h-5" />
-            Go Home
-          </Link>
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Go Back
-          </button>
-        </div>
+      <div className="grid-editorial">
+        <HairlineRule className="col-span-12" />
       </div>
-    </div>
+    </>
   );
 }

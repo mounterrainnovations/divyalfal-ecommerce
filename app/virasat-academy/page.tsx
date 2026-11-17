@@ -9,7 +9,10 @@ import HairlineRule from '@/components/primitives/HairlineRule';
 import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
 
-const { hero, form, success } = siteCopy.academy;
+// `siteCopy.academy.success` is deliberately not destructured here. The form is not wired to
+// anything yet (see `handleSubmit`), so printing a confirmation would be a lie; the copy stays
+// in the module because Phase 2 renders it on a real response from the enquiry endpoint.
+const { hero, form } = siteCopy.academy;
 const [
   fullNameField,
   dobField,
@@ -60,8 +63,6 @@ function FieldLabel({
 export default function VirasatAcademyPage() {
   const [formData, setFormData] = useState(initialFormData);
 
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -71,19 +72,23 @@ export default function VirasatAcademyPage() {
     });
   };
 
+  /**
+   * Inert, on purpose, and that is the honest state of this form.
+   *
+   * Nothing here posts anywhere: there is no enquiry endpoint yet, and Phase 2 wires this form
+   * and the contact form to the same one. Until then the page must neither invent a success nor
+   * invent a failure. It used to do the first -- it set a confirmation, cleared all eight fields
+   * and started a 5s timer it never cleared -- which told the applicant, and told screen-reader
+   * users out loud through an `aria-live` region, that an application had been received when not
+   * a byte had left the browser. The typed values are kept, so that when the endpoint exists the
+   * applicant's work is still on the page.
+   *
+   * `preventDefault` is the one thing that must happen: a form with no `action` otherwise
+   * navigates on submit and writes every answer, including the date of birth and phone number,
+   * into the URL and the browser history.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Show success notification
-    setShowSuccess(true);
-
-    // Clear form
-    setFormData(initialFormData);
-
-    // Hide success notification after 5 seconds
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 5000);
   };
 
   return (
@@ -251,19 +256,9 @@ export default function VirasatAcademyPage() {
         </div>
       </section>
 
-      {/* Success notification. The live region is always mounted so the message is announced. */}
-      <div
-        role="status"
-        aria-live="polite"
-        className="pointer-events-none fixed right-4 bottom-4 left-4 z-50 md:right-8 md:bottom-8 md:left-auto md:max-w-md"
-      >
-        {showSuccess ? (
-          <div className="pointer-events-auto border border-gold bg-paper p-6 font-ui text-ink">
-            <p className="m-0 font-display text-display-3 font-light">{success.heading}</p>
-            <p className="m-0 mt-2 text-body text-ink-soft">{success.body}</p>
-          </div>
-        ) : null}
-      </div>
+      {/* No live region. There is nothing truthful to announce until the form posts somewhere;
+          an always-mounted `role="status"` was how the false confirmation reached assistive
+          technology, and an empty one would only be waiting to do it again. */}
 
       <Footer />
     </>

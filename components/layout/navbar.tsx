@@ -33,10 +33,12 @@ const NAV_HEIGHT_VARS =
 
 /**
  * The wordmark, used in the header and again in the menu. The type scale has nothing between
- * the 11px eyebrow and the 28px display-3, so the 22/26px size is arbitrary here, once.
+ * the 11px eyebrow and the 28px display-3, so the 22/26px size is arbitrary here, once. The
+ * letter-spacing is not: `--tracking-wordmark` is the same token the hero wordmark uses, so
+ * the brand name is set open by the same amount wherever it appears.
  */
 const WORDMARK =
-  'font-display text-[22px] uppercase tracking-[0.14em] text-ink md:text-[26px] ' +
+  'font-display text-[22px] uppercase tracking-(--tracking-wordmark) text-ink md:text-[26px] ' +
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold';
 
 /** True for the link's own page and anything nested beneath it. */

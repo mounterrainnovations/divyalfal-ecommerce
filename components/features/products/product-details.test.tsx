@@ -150,6 +150,32 @@ describe('ProductDetails', () => {
     expect(screen.queryByRole('button', { name: /clear size/i })).toBeNull();
   });
 
+  /**
+   * "Clear size" is the only control on the page that unmounts itself on activation. Without
+   * somewhere to send focus, the keyboard user who pressed it lands on `<body>` -- WCAG 2.4.3
+   * Focus Order -- and has to tab in from the top of the document again. Focus goes back to
+   * the control group whose state they just changed.
+   */
+  it('moves focus into the size group when Clear size unmounts itself', async () => {
+    const user = userEvent.setup();
+    render(<ProductDetails product={base} />);
+
+    await user.click(screen.getByRole('radio', { name: 'L' }));
+    const clear = screen.getByRole('button', { name: /clear size/i });
+    clear.focus();
+    expect(document.activeElement).toBe(clear);
+
+    await user.click(clear);
+
+    expect(document.activeElement).not.toBe(document.body);
+    const focused = document.activeElement as HTMLInputElement;
+    expect(focused.tagName).toBe('INPUT');
+    expect(focused.type).toBe('radio');
+    // The first of the group, which is where an unchecked radio group's tab stop is anyway.
+    expect(focused.value).toBe('XS');
+    expect(focused.checked).toBe(false);
+  });
+
   it('has no quantity selector and no link that leads nowhere', () => {
     const { container } = render(<ProductDetails product={base} />);
     expect(screen.queryByLabelText(/quantity/i)).toBeNull();
@@ -300,8 +326,19 @@ describe('YouMayAlsoLike', () => {
     // Tiles sit under the page's h2, so their names are h3.
     expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(3);
     for (const link of links) {
-      expect(link.closest('[class*="col-span"]')?.className).toContain('lg:col-span-4');
+      const cell = link.closest<HTMLElement>('[class*="col-span"]')!;
+      expect(cell.className).toContain('lg:col-span-4');
+      // Below lg the strip is one-up, not two-up. Three `col-span-6` tiles filled a row of
+      // two and left the third alone beside a blank half -- the only ragged row on the page.
+      expect(cell.className).toContain('col-span-12');
+      expect(cell.className).not.toMatch(/(?:^|\s)col-span-6(?:\s|$)/);
     }
+
+    // The stagger steps per visual column, and the strip is three-up, never four.
+    const delays = Array.from(
+      section.querySelectorAll<HTMLElement>('[style*="--reveal-delay"]')
+    ).map((node) => node.style.getPropertyValue('--reveal-delay'));
+    expect(delays).toEqual(['0ms', '60ms', '120ms']);
   });
 
   it('renders nothing when the request fails', async () => {
@@ -354,6 +391,10 @@ describe('product route', () => {
     expect(tokens).toContain('lg:max-h-[calc(100vh-7rem)]');
     expect(tokens).toContain('lg:overflow-y-auto');
     expect(tokens).toContain('overscroll-contain');
+    // On Windows the scrollbar is laid out, not overlaid, so it appears the moment a
+    // disclosure makes the column overflow and steals ~16px from a four-column measure --
+    // re-wrapping the prose under the reader's eyes. A stable gutter reserves the space.
+    expect(tokens).toContain('lg:[scrollbar-gutter:stable]');
 
     // Open a disclosure: its prose is then inside the capped column.
     await user.click(screen.getByRole('heading', { name: siteCopy.product.shipping.heading }));

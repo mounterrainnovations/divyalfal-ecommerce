@@ -83,6 +83,9 @@
   --leading-display: 1.05;
   --leading-body: 1.65;
   --tracking-eyebrow: 0.18em;
+  /* The hero wordmark, the one piece of display type the system sets open: wider than body
+     tracking, tighter than the eyebrow's 0.18em. Named so it cannot drift from that scale. */
+  --tracking-wordmark: 0.14em;
   --measure: 68ch;
 
   /* Layout — 12 columns, 1440 max, 24px mobile gutters, 96px mobile rhythm. */
@@ -250,7 +253,12 @@ body {
     transform: none !important;
   }
 }
-/* DEPRECATED: legacy shadcn tokens — removed in Task 13 once no storefront file references them. */
+/* DEPRECATED: the legacy shadcn token block (tokens, the `:root` / `.dark` palettes and
+   the `@layer base` reset below). Task 2 deferred its deletion to Task 13 on the condition
+   that no storefront file referenced it. The storefront is clean — `test/no-legacy-styles.test.ts`
+   holds that as a standing guard — but `app/dashboard/**`, `components/ui/button.tsx` and
+   `components/ui/rich-text-editor.tsx` still read these tokens, and Phase 2 Task 9 owns the
+   dashboard restyle. So the block stays until then: Phase 2 Task 9 removes it. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -456,117 +464,3 @@ body {
   font-style: italic;
 }
 
-/* Product Description HTML Rendering Styles */
-.product-description h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  margin-top: 1.5rem;
-  line-height: 1.2;
-  color: #111827;
-}
-
-@media (min-width: 768px) {
-  .product-description h1 {
-    font-size: 2rem;
-  }
-}
-
-.product-description h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-  margin-top: 1.25rem;
-  line-height: 1.3;
-  color: #1f2937;
-}
-
-@media (min-width: 768px) {
-  .product-description h2 {
-    font-size: 1.5rem;
-  }
-}
-
-.product-description h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  margin-top: 1rem;
-  line-height: 1.4;
-  color: #374151;
-}
-
-@media (min-width: 768px) {
-  .product-description h3 {
-    font-size: 1.25rem;
-  }
-}
-
-.product-description p {
-  margin-bottom: 1rem;
-  line-height: 1.75;
-  color: #4b5563;
-  font-size: 0.9375rem;
-}
-
-@media (min-width: 768px) {
-  .product-description p {
-    font-size: 1rem;
-  }
-}
-
-.product-description ul,
-.product-description ol {
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
-  line-height: 1.75;
-}
-
-.product-description ul {
-  list-style-type: disc;
-}
-
-.product-description ol {
-  list-style-type: decimal;
-}
-
-.product-description li {
-  margin-bottom: 0.5rem;
-  color: #4b5563;
-}
-
-.product-description a {
-  color: #3b82f6;
-  text-decoration: underline;
-  transition: color 0.2s;
-}
-
-.product-description a:hover {
-  color: #2563eb;
-}
-
-.product-description strong {
-  font-weight: 700;
-  color: #111827;
-}
-
-.product-description em {
-  font-style: italic;
-}
-
-.product-description u {
-  text-decoration: underline;
-}
-
-/* Text alignment */
-.product-description .ql-align-center {
-  text-align: center;
-}
-
-.product-description .ql-align-right {
-  text-align: right;
-}
-
-.product-description .ql-align-justify {
-  text-align: justify;
-}

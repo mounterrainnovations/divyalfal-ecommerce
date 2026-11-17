@@ -82,8 +82,39 @@ describe('Categories', () => {
   it('gives every entry a visible keyboard focus state', () => {
     render(<Categories />);
     for (const link of screen.getAllByRole('link')) {
-      expect(link.className).toMatch(/focus-visible:/);
+      // `/focus-visible:/` alone passed for any focus-visible utility at all, including a
+      // colour change nobody can see on a hairline. Pin the ring the system actually draws.
+      expect(link.className).toMatch(/\bfocus-visible:outline\b/);
+      expect(link.className).toMatch(/\bfocus-visible:outline-2\b/);
+      expect(link.className).toMatch(/\bfocus-visible:outline-ink\b/);
+      expect(link.className).toMatch(/\bfocus-visible:outline-offset-\d/);
     }
+  });
+
+  it('reveals the closing rule after the row it closes, not before', () => {
+    // Every row is a `Reveal` staggered by 60ms, so an unwrapped closing rule was painted on
+    // first frame while the six rows above it were still invisible -- a hairline floating
+    // alone under the heading. It shares the row stagger and comes one step after the last.
+    const { container } = render(<Categories />);
+    // `Reveal` renders its stagger as `--reveal-delay` and only arms itself from an effect, so
+    // the inline custom property is what identifies a wrapper in jsdom.
+    const wrappers = Array.from(
+      container.querySelectorAll<HTMLElement>('[style*="--reveal-delay"]')
+    );
+    const closing = Array.from(container.querySelectorAll('hr')).at(-1)!;
+    const wrapper = closing.closest<HTMLElement>('[style*="--reveal-delay"]');
+
+    expect(wrapper).not.toBeNull();
+    // One step past the last row, so it lands after the six it closes.
+    expect(wrapper!.style.getPropertyValue('--reveal-delay')).toBe(
+      `${CATEGORY_CONFIG.length * 60}ms`
+    );
+    expect(wrappers.at(-1)).toBe(wrapper);
+    expect(wrappers.map((w) => w.style.getPropertyValue('--reveal-delay'))).toEqual([
+      '0ms',
+      ...CATEGORY_CONFIG.map((_, index) => `${index * 60}ms`),
+      `${CATEGORY_CONFIG.length * 60}ms`,
+    ]);
   });
 
   it('sits on the paper ground and uses no pill, gradient, shadow or grey-scale classes', () => {

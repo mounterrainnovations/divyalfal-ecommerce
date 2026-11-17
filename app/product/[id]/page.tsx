@@ -7,6 +7,7 @@ import Footer from '@/components/layout/footer';
 import { siteCopy } from '@/lib/content/site-copy';
 import { prisma } from '@/lib/db';
 import { transformDbProductToProduct } from '@/lib/utils/product-utils';
+import { specificationsToDescription } from '@/lib/utils/specifications';
 import type { Product, DbProduct } from '@/types';
 
 // Configure dynamic rendering behavior for proper production routing
@@ -33,16 +34,22 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!productData) {
     return {
-      title: 'Product Not Found',
+      title: siteCopy.product.notFound.heading,
     };
   }
 
   const { product } = productData;
 
+  // `specifications` is rich-text HTML from the admin editor, and it used to go into the
+  // description verbatim: `<p><strong>…</strong></p>` in the `<meta>` tag, and so in every
+  // search result and share card. `specificationsToDescription` reuses the same parse the page
+  // body already runs, flattens it to a sentence and truncates on a word boundary at the 160
+  // characters search engines show. It returns '' when there is nothing to say, so a product
+  // with no specifications still gets the fallback sentence rather than an empty description.
   return {
     title: `${product.name} - Divyafal`,
     description:
-      product.specifications ||
+      specificationsToDescription(product.specifications, 160) ||
       `Buy ${product.name} at the best price. Explore our collection of ${product.category}.`,
   };
 }
@@ -96,8 +103,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         {/* Capped to the room below the header and scrollable, so a disclosure opened on a short
             screen can never push the Shipping / Care / Disclaimer prose below the pin where it
             could not be reached. The padding and matching negative margin keep the focus outlines
-            of the controls from being clipped by the scroll container. */}
-        <div className="col-span-12 lg:sticky lg:top-28 lg:col-span-4 lg:col-start-9 lg:-m-2 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:p-2 overscroll-contain">
+            of the controls from being clipped by the scroll container.
+
+            `scrollbar-gutter: stable` because that scrollbar appears mid-interaction: on Windows
+            it is laid out rather than overlaid, so opening a disclosure takes ~16px off a
+            four-column measure and re-wraps the prose while the reader is looking at it. The
+            gutter is reserved from the start, so opening one changes nothing but the height.
+
+            `lg:top-28` is 112px, measured against the real navbar rather than assumed: the bar
+            is `h-16` / `md:h-20`, so 80px at this breakpoint, leaving a 32px gap. It condenses
+            to 64px at md and above once scrolled, which only widens that gap. */}
+        <div className="col-span-12 lg:sticky lg:top-28 lg:col-span-4 lg:col-start-9 lg:-m-2 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:p-2 lg:[scrollbar-gutter:stable] overscroll-contain">
           <ProductDetails product={product} />
         </div>
       </div>

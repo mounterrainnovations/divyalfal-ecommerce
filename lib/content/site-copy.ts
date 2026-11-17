@@ -401,6 +401,17 @@ export const siteCopy = {
     },
   },
 
+  // The site-wide 404, transcribed from `app/not-found.tsx` as it stood before the revamp.
+  // `code` is the numeral the old page set at `text-9xl`; it is page content, not apparatus,
+  // so it lives here rather than in the component.
+  notFound: {
+    code: '404',
+    heading: 'Page Not Found',
+    body: "The page you're looking for doesn't exist or has been moved.",
+    homeCta: 'Go Home',
+    backCta: 'Go Back',
+  },
+
   // The product detail page, from `product-details.tsx` and `you-may-also-like.tsx` as they stood
   // before the revamp. Interface labels (image controls, size letters, the enquiry button) stay in
   // the components; these are the brand-voice sentences and the section headings above them.
@@ -439,6 +450,14 @@ export const siteCopy = {
     },
     related: {
       heading: 'You may also like',
+    },
+    // From `app/product/[id]/not-found.tsx`. `heading` is also the metadata title the route's
+    // `generateMetadata` returns for a product that does not resolve.
+    notFound: {
+      heading: 'Product Not Found',
+      body: "Sorry, the product you're looking for doesn't exist or has been removed from our collection.",
+      browseCta: 'Browse All Products',
+      homeCta: 'Go Home',
     },
   },
 

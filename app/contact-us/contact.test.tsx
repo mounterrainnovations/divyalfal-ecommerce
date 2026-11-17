@@ -234,6 +234,24 @@ describe.each([
     expect(container.innerHTML).not.toMatch(/\btext-(?:ink|ink-soft|gold|paper)\/\d+/);
     expect(container.innerHTML).not.toMatch(/\bopacity-\d+/);
   });
+
+  /**
+   * Measured at the gate: both policy pages scrolled sideways at 768 wide, 820px against a
+   * 768px viewport. The contact card is `md:flex` with a 160px `dt`, and
+   * `divyafalthecreations@gmail.com` is one 29-character token with nowhere to break -- so the
+   * `dd`'s min-content width was wider than the room left, and a flex item will not shrink
+   * below that without `min-w-0`. 1440 and 390 were always clean, which is why twelve tasks
+   * never saw it.
+   */
+  it('lets the contact card shrink and the long email wrap, so 768 does not scroll sideways', () => {
+    const { container } = render(<Page />);
+    const values = Array.from(container.querySelectorAll('dd'));
+    expect(values.length).toBeGreaterThan(2);
+    for (const value of values) {
+      expect(value.className).toMatch(/\bmin-w-0\b/);
+      expect(value.className).toMatch(/\bbreak-words\b/);
+    }
+  });
 });
 
 describe('policy pages, individually', () => {

@@ -65,7 +65,12 @@ export default function Categories() {
               </Reveal>
             ))}
           </ul>
-          <HairlineRule />
+          {/* One stagger step past the last row. Unwrapped, it painted on the first frame
+              while the six rows above it were still armed at opacity 0 -- a hairline hanging
+              on its own under the heading, closing nothing. */}
+          <Reveal delay={categories.length * 60}>
+            <HairlineRule />
+          </Reveal>
         </div>
       </div>
     </section>

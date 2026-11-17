@@ -14,6 +14,21 @@ import Hero from './hero';
 
 const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
 
+/** Every class token rendered anywhere inside a container, as tokens rather than substrings. */
+const classTokens = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll('[class]')).flatMap((node) =>
+    (node.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
+  );
+
+/**
+ * The overlay that holds the wordmark, found by what it is rather than by walking up from the
+ * heading. `closest('div')?.parentElement` pinned the exact nesting depth, so wrapping the
+ * heading in one more element would have broken the test without changing the behaviour it
+ * tests.
+ */
+const overlayOf = (container: HTMLElement) =>
+  container.querySelector('section > div[class~="absolute"][class~="inset-0"][class~="flex"]');
+
 describe('Hero', () => {
   beforeEach(() => {
     useMedia.mockReset();
@@ -67,7 +82,68 @@ describe('Hero', () => {
     expect(section?.className).toMatch(/h-\[100svh\]/);
     // The pre-revamp hero floated the media inside a `p-6 … rounded-md` card.
     expect(container.innerHTML).not.toMatch(/\brounded-/);
-    expect(container.querySelector('[class*="p-6"], [class*="p-8"], [class*="p-12"]')).toBeNull();
+    // Tokens, not substrings: `[class*="p-6"]` also matched `gap-6` and `top-6`, so it passed
+    // for reasons that had nothing to do with an inset frame. Any all-round padding would be
+    // the card coming back; the grid's own inline padding comes from `grid-editorial`.
+    expect(classTokens(container).filter((token) => /^p-\d/.test(token))).toEqual([]);
+  });
+
+  /**
+   * The two contrast-critical values in the hero, and the only ones worth pinning: deleting
+   * either left every other test in this file green.
+   *
+   * Both are measured, per medium, against the brightest pixel under the glyph strokes (not
+   * over the wordmark's whole bounding box -- a bright pixel in a letter gap is not behind
+   * any type):
+   *
+   *  - desktop still, 1280/1440/1920: 35% clears 3:1 against paper everywhere.
+   *  - mobile `bg_video.webm` at 390, and the same footage at portrait tablet 768x1024 where
+   *    `object-cover` crops it differently: 35% does NOT. Sampled across 11 frames, the worst
+   *    stroke pixel sat at 2.15:1 (390) and 2.28:1 (768), and in one frame 18% of the
+   *    wordmark's strokes were under 3:1 -- the footage carries near-white highlights (sRGB
+   *    ~253) that a 35% wash cannot hold down. 50% brings that worst pixel to 3.3:1.
+   *
+   * Numbers and per-frame tables: `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
+   */
+  it('washes the desktop still at the measured 35%', () => {
+    const { container } = render(<Hero />);
+    const wash = container.querySelector('[class~="bg-ink/35"]');
+    expect(wash).not.toBeNull();
+    expect(wash).toHaveAttribute('aria-hidden', 'true');
+    expect(wash?.className).toMatch(/\babsolute\b/);
+    expect(wash?.className).toMatch(/\binset-0\b/);
+    expect(container.querySelector('[class~="bg-ink/50"]')).toBeNull();
+  });
+
+  it('washes the mobile and portrait-tablet video at the measured 50%', () => {
+    useMedia.mockReturnValue(true);
+    const { container } = render(<Hero />);
+    const wash = container.querySelector('[class~="bg-ink/50"]');
+    expect(wash).not.toBeNull();
+    expect(wash).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('[class~="bg-ink/35"]')).toBeNull();
+    // Driven by the same `useMedia` answer that picks the media, not by a `md:` variant:
+    // `md:` is min-width 768 while the video is max-width 768, so at exactly 768 a variant
+    // would put the still's wash over the video.
+    expect(container.innerHTML).not.toMatch(/md:bg-ink/);
+  });
+
+  it('keeps the wash a wash: one flat ink opacity, never black and never a scrim', () => {
+    for (const mobile of [false, true]) {
+      useMedia.mockReturnValue(mobile);
+      const { container, unmount } = render(<Hero />);
+      expect(container.innerHTML).not.toMatch(/bg-black|bg-ink\/(?:[6-9]\d|100)\b/);
+      expect(container.innerHTML).not.toMatch(/gradient/);
+      unmount();
+    }
+  });
+
+  it('preloads the desktop still with `preload`, not the deprecated `priority` prop', () => {
+    const { container } = render(<Hero />);
+    // `preload` makes next/image skip lazy loading. `priority` is the Next 16 deprecation and
+    // must not come back; either way the above-the-fold still must never be lazy.
+    expect(container.querySelector('img')).not.toHaveAttribute('loading', 'lazy');
+    expect(container.innerHTML).not.toMatch(/\bpriority\b/);
   });
 
   it('centres the wordmark clear of the headline burned into the hero asset', () => {
@@ -76,7 +152,9 @@ describe('Hero', () => {
     // by height and that headline always occupies the bottom quarter. A baseline-aligned
     // wordmark collides with it; this pins the clearance until the asset is replaced.
     const { container } = render(<Hero />);
-    const overlay = screen.getByRole('heading', { level: 1 }).closest('div')?.parentElement;
+    const overlay = overlayOf(container);
+    expect(overlay).not.toBeNull();
+    expect(overlay?.contains(screen.getByRole('heading', { level: 1 }))).toBe(true);
     expect(overlay?.className).toMatch(/items-center/);
     expect(overlay?.className).not.toMatch(/\bitems-end\b|\bbottom-0\b/);
     expect(container.querySelector('.grid-editorial')).not.toBeNull();
@@ -95,5 +173,18 @@ describe('Hero', () => {
     expect(container.innerHTML).not.toMatch(
       /rounded-full|rounded-3xl|gradient|shadow|(?:text|bg)-gray-/
     );
+    // Opacity never goes on type. The wash is `bg-ink/35`; the wordmark is a flat `text-paper`.
+    expect(container.innerHTML).not.toMatch(/\btext-[A-Za-z0-9_-]+\/\d/);
+  });
+
+  it('leaves the decorative video out of the tab order without a redundant tabIndex', () => {
+    useMedia.mockReturnValue(true);
+    const { container } = render(<Hero />);
+    const video = container.querySelector('video');
+    // A <video> with no `controls` is not focusable, so `tabIndex={-1}` asserted nothing; an
+    // aria-hidden element that *were* focusable would be an axe aria-hidden-focus violation
+    // to fix rather than something to paper over.
+    expect(video?.hasAttribute('controls')).toBe(false);
+    expect(video?.hasAttribute('tabindex')).toBe(false);
   });
 });

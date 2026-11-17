@@ -124,3 +124,38 @@ export function parseSpecifications(html: string | null | undefined): SpecBlock[
   close();
   return blocks;
 }
+
+/**
+ * The same stored field as a plain-text meta description.
+ *
+ * `app/product/[id]/page.tsx` used to put `product.specifications` into the description
+ * verbatim, so a search result and every share card carried `<p><strong>…</strong></p>`.
+ * The blocks are already parsed to text above, so the description is built from them: a term
+ * reads `Term: first detail`, a plain block reads as itself, and blocks are joined with
+ * `. ` so the line scans as sentences rather than a run-on.
+ *
+ * Truncation cuts on a word boundary and marks the cut with an ellipsis, counted inside
+ * `maxLength` so the result never exceeds it. Returns `''` when there is nothing to say, so
+ * the caller can fall back to its own sentence rather than emit an empty description.
+ */
+export function specificationsToDescription(
+  html: string | null | undefined,
+  maxLength = 160
+): string {
+  const parts = parseSpecifications(html).map(block =>
+    block.type === 'group' ? [block.term, block.details.join('. ')].join(': ') : block.text
+  );
+
+  const text = parts
+    .join('. ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    // A block that already ended in punctuation would otherwise read "silk.. Lightweight".
+    .replace(/([.!?:;,])\.\s/g, '$1 ');
+
+  if (text.length <= maxLength) return text;
+
+  const head = text.slice(0, Math.max(0, maxLength - 1));
+  const lastSpace = head.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? head.slice(0, lastSpace) : head).replace(/[\s.,;:]+$/, '')}…`;
+}

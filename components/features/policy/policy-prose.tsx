@@ -170,7 +170,12 @@ export function ContactCard({
       {rows.map((row, index) => (
         <div key={row.label} className={cn('md:flex md:gap-4', index > 0 && 'mt-4')}>
           <dt className="font-medium md:w-40 md:shrink-0">{row.label}</dt>
-          <dd className="m-0">{row.value}</dd>
+          {/* `min-w-0` and `break-words` together: a flex item's floor is its min-content
+              width, and `divyafalthecreations@gmail.com` is one 29-character token, so at
+              768 the row measured 820px against a 768px viewport and the page scrolled
+              sideways. `min-w-0` lets the item shrink; `break-words` gives the address
+              somewhere to break once it has. */}
+          <dd className="m-0 min-w-0 break-words">{row.value}</dd>
         </div>
       ))}
     </dl>

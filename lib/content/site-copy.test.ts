@@ -245,6 +245,27 @@ describe('siteCopy', () => {
     );
   });
 
+  // Extracted in Task 13: the two 404 routes were the last storefront pages still carrying
+  // their prose inline, which is also how they kept their grey-scale styling out of sight.
+  it('preserves both not-found pages verbatim', () => {
+    expect(siteCopy.notFound.code).toBe('404');
+    expect(siteCopy.notFound.heading).toBe('Page Not Found');
+    expect(siteCopy.notFound.body).toBe(
+      "The page you're looking for doesn't exist or has been moved."
+    );
+    expect(siteCopy.notFound.homeCta).toBe('Go Home');
+    expect(siteCopy.notFound.backCta).toBe('Go Back');
+    expect(siteCopy.product.notFound.heading).toBe('Product Not Found');
+    expect(siteCopy.product.notFound.body).toBe(
+      "Sorry, the product you're looking for doesn't exist or has been removed from our collection."
+    );
+    expect(siteCopy.product.notFound.browseCta).toBe('Browse All Products');
+    expect(siteCopy.product.notFound.homeCta).toBe('Go Home');
+    // Straight apostrophes, as the old markup's `&apos;` rendered them -- not the U+2019 the
+    // testimonials carry. The decoding rule, not a tidy-up.
+    expect(siteCopy.notFound.body).not.toContain('’');
+  });
+
   it('preserves the refund policy copy', () => {
     expect(siteCopy.refundPolicy.hero.heading).toBe('Refund Policy');
     expect(siteCopy.refundPolicy.hero.subheading).toBe('Your satisfaction is our priority');
@@ -324,7 +345,7 @@ describe('siteCopy snapshot', () => {
   it('has not gained or lost a single leaf', () => {
     // Explicit, so an added or removed key is a loud failure rather than a quiet
     // snapshot update. Change this number only together with an approved copy change.
-    expect(Object.keys(flat)).toHaveLength(361);
+    expect(Object.keys(flat)).toHaveLength(370);
   });
 
   it('matches the committed copy, string for string', () => {

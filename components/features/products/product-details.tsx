@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Plus } from 'lucide-react';
 import Button from '@/components/primitives/Button';
@@ -102,6 +102,7 @@ interface ProductDetailsProps {
 const ProductDetails = ({ product }: ProductDetailsProps) => {
   const [size, setSize] = useState<string | null>(null);
   const sizeGroup = useId();
+  const sizeOptionsRef = useRef<HTMLDivElement>(null);
   const { display, compareAt, onSale } = resolvePrice(product);
   const percent = discountPercent(product);
   const blocks = useMemo(() => parseSpecifications(product.specifications), [product.specifications]);
@@ -135,7 +136,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
           <legend className="mb-3 p-0 font-ui text-eyebrow font-normal uppercase text-ink-soft">
             Size
           </legend>
-          <div className="flex flex-wrap gap-x-2 gap-y-1">
+          <div ref={sizeOptionsRef} className="flex flex-wrap gap-x-2 gap-y-1">
             {SIZES.map(option => (
               <label key={option} className="relative cursor-pointer">
                 <input
@@ -153,9 +154,23 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             ))}
           </div>
           {/* Radios cannot be unselected, so a chosen size needs its own way back. Positioned
-              over the legend row so it appearing never moves the controls below. */}
+              over the legend row so it appearing never moves the controls below.
+
+              This is the one control on the page that unmounts itself when activated, so it
+              has to hand focus somewhere first: without this, a keyboard or screen-reader user
+              who clears the size is dropped on `<body>` and has to tab in from the top of the
+              document again (WCAG 2.4.3). Focus goes to the first radio -- where an unchecked
+              group's tab stop sits anyway -- and `.focus()` runs before `setSize`, so the
+              focused element is already elsewhere by the time this button is removed. */}
           {size ? (
-            <Button variant="quiet" onClick={() => setSize(null)} className="absolute right-0 top-0">
+            <Button
+              variant="quiet"
+              onClick={() => {
+                sizeOptionsRef.current?.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
+                setSize(null);
+              }}
+              className="absolute right-0 top-0"
+            >
               Clear size
             </Button>
           ) : null}

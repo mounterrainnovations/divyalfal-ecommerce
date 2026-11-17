@@ -66,24 +66,50 @@ describe('Virasat Academy page', () => {
     );
   });
 
-  it('shows the success note after a submit, then clears the form and dismisses the note', () => {
+  /**
+   * The form sends nothing anywhere. Until Phase 2 wires it to the enquiry endpoint it must
+   * not say otherwise: the old `handleSubmit` unconditionally announced
+   * `academy.success` into a live region, so a screen-reader user was told in as many words
+   * that their application had been received. `siteCopy.academy.success` is still in the copy
+   * module -- it is a faithful extraction and Phase 2 will render it on a real response --
+   * so the guard is that the page does not print it.
+   */
+  it('never claims the application was received, because nothing is sent', () => {
     vi.useFakeTimers();
     render(<VirasatAcademyPage />);
     const name = screen.getByLabelText(/^Full Name/) as HTMLInputElement;
     fireEvent.change(name, { target: { value: 'Asha' } });
-    expect(name.value).toBe('Asha');
-    expect(screen.queryByText(success.heading)).toBeNull();
 
     fireEvent.submit(name.closest('form')!);
-    expect(screen.getByText(success.heading)).toBeInTheDocument();
-    expect(screen.getByText(success.body)).toBeInTheDocument();
-    expect(name.value).toBe('');
-    expect(screen.getByRole('status')).toHaveTextContent(success.heading);
 
+    expect(screen.queryByText(success.heading)).toBeNull();
+    expect(screen.queryByText(success.body)).toBeNull();
+    // No empty live region left behind to announce something later, either.
+    expect(screen.queryByRole('status')).toBeNull();
+
+    // And no deferred message on a timer: the old code set a 5s one it never cleared.
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(30_000);
     });
     expect(screen.queryByText(success.heading)).toBeNull();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('keeps every typed field after a submit, so nothing the applicant wrote is lost', () => {
+    render(<VirasatAcademyPage />);
+    const name = screen.getByLabelText(/^Full Name/) as HTMLInputElement;
+    const city = screen.getByLabelText(/^City/) as HTMLInputElement;
+    const comments = screen.getByLabelText(/^Additional Comments/) as HTMLTextAreaElement;
+    fireEvent.change(name, { target: { value: 'Asha' } });
+    fireEvent.change(city, { target: { value: 'Bhopal' } });
+    fireEvent.change(comments, { target: { value: 'I have sewn since I was nine.' } });
+
+    fireEvent.submit(name.closest('form')!);
+
+    expect(name.value).toBe('Asha');
+    expect(city.value).toBe('Bhopal');
+    expect(comments.value).toBe('I have sewn since I was nine.');
+    expect(screen.getByLabelText(/^Country/)).toHaveValue(form.defaultCountry);
   });
 
   it('uses no banned utility', () => {

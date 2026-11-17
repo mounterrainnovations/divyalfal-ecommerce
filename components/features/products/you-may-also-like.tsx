@@ -15,6 +15,14 @@ interface YouMayAlsoLikeProps {
  * A quiet three-up strip under a hairline rule: no card, no fill, just the same portrait tiles
  * the listings use. Renders nothing until there is something to show, so the page never
  * flashes an empty heading.
+ *
+ * `useRelatedProducts` can only ever return three, so the layout is sized for three and not
+ * for "however many": `col-span-4` at lg fills the twelve columns exactly. Below lg it is
+ * one-up (`col-span-12`), not two-up -- three tiles at `col-span-6` filled a row of two and
+ * stranded the third beside a blank half, the only ragged row on the page, and the one-up
+ * column is also the only width at which a portrait tile is worth looking at on a phone. The
+ * stagger steps per column of that three-up row, so it is `% 3`, not the `% 4` left over from
+ * a four-up strip that never existed here.
  */
 const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
   const headingId = useId();
@@ -34,8 +42,8 @@ const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
         {siteCopy.product.related.heading}
       </h2>
       {products.map((product, index) => (
-        <div key={product.id} className="col-span-6 lg:col-span-4">
-          <Reveal delay={(index % 4) * 60}>
+        <div key={product.id} className="col-span-12 lg:col-span-4">
+          <Reveal delay={(index % 3) * 60}>
             <ProductTile product={product} />
           </Reveal>
         </div>
