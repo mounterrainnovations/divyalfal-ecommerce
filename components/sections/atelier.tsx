@@ -17,7 +17,7 @@ const pad = (value: number) => String(value).padStart(2, '0');
 /**
  * Movement 5 — the atelier, as one full-bleed photograph at a time.
  *
- * The retired slideshow sat a rounded, drop-shadowed frame on a grey ground, a thousand
+ * The retired slideshow sat a boxed, corner-rounded frame on a grey ground, a thousand
  * pixels wide, and advanced itself every 3.5 seconds. This is edge to edge on the paper
  * ground, with the photograph as the whole of the movement and nothing laid over it.
  *
