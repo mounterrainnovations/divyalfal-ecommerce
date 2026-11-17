@@ -6,12 +6,16 @@ import { prisma } from '@/lib/db';
  *
  * Two shape decisions worth knowing about.
  *
- * **`source` is carried in the message, not in a column.** The CMS migration is written and
- * waiting to be applied to production; adding a column now would mean either editing a migration
- * the owner is about to run or shipping a second one, and neither is worth a label. So the source
- * is stored as a single machine-readable first line and stripped back out on read, which gives
- * the admin a `source` field and a clean message without touching the schema. If a column is
- * ever added, `parseStored` is the one place that changes.
+ * **`source` is a column.** It was briefly carried as a machine-readable first line of
+ * `message`, because the CMS migration was thought to be frozen. It was not — it is still
+ * unapplied — so `Enquiry.source` was added to that same migration, which keeps it one
+ * additive migration and leaves the message holding only what the visitor wrote. Tagging the
+ * message meant every read had to strip the tag back off and every consumer that forgot to
+ * (an export, a notification, a future reply form) would have shown the tag to a human.
+ *
+ * `parseStored` survives as a read fallback: a row written by the tagged build has a null
+ * column and a tagged message, and it costs four lines to keep reading it correctly. Nothing
+ * writes a tag any more.
  *
  * **The academy form has no email field.** `siteCopy.academy.form.fields` is eight fields and
  * none of them is an email address; its required contact detail is a phone number. So an email
@@ -67,9 +71,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const SOURCE_LINE = /^\[source:\s*([a-z]+)\]\n?/;
 
-const sourceLine = (source: EnquirySource) => `[source: ${source}]\n`;
-
-/** Split a stored message back into its source tag and the words the visitor typed. */
+/**
+ * Split a stored message back into its source tag and the words the visitor typed.
+ *
+ * Kept for rows written before `Enquiry.source` existed. Nothing writes this tag now.
+ */
 export function parseStored(message: string): { source: EnquirySource | null; message: string } {
   const match = message.match(SOURCE_LINE);
   if (!match) return { source: null, message };
@@ -136,7 +142,8 @@ export async function createEnquiry(input: CreateEnquiryInput): Promise<Enquiry>
       // empty string reads as "none given" rather than as a plausible-looking address.
       email,
       phone: phone || null,
-      message: source ? `${sourceLine(source)}${message}` : message,
+      message,
+      source: source ?? null,
       status: 'UNREAD',
     },
   });
@@ -199,14 +206,18 @@ export async function setEnquiryStatus(
 }
 
 function toRecord(enquiry: Enquiry): EnquiryRecord {
-  const { source, message } = parseStored(enquiry.message);
+  // The column is the source of truth. A row from the tagged build has none, so its message is
+  // parsed instead — see the note at the top of this file.
+  const stored = ENQUIRY_SOURCES.find(candidate => candidate === enquiry.source);
+  const tagged = stored ? null : parseStored(enquiry.message);
+
   return {
     id: enquiry.id,
     name: enquiry.name,
     email: enquiry.email,
     phone: enquiry.phone,
-    message,
-    source,
+    message: tagged ? tagged.message : enquiry.message,
+    source: stored ?? tagged?.source ?? null,
     status: enquiry.status,
     createdAt: enquiry.createdAt,
   };

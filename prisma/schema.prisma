@@ -111,6 +111,7 @@ model Enquiry {
   email     String
   phone     String?
   message   String
+  source    String? // "contact" | "academy"; which public form sent it
   status    EnquiryStatus @default(UNREAD)
   createdAt DateTime      @default(now())
 

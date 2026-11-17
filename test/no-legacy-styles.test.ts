@@ -21,12 +21,15 @@ import path from 'node:path';
  *     `components/layout/navbar.test.tsx`) and `lib/content/site-copy.test.ts` carries
  *     retired placeholder strings inside `not.toContain` assertions. A guard that fails
  *     on the tests guarding the same thing is noise.
- *   - `app/dashboard/**` is excluded: the admin surface is untouched Phase 1 work and
- *     the Phase 2 plan (Task 9) owns its restyle. Deleting its gradients now would be a
- *     redesign nobody reviewed.
- *   - `components/ui/button.tsx` and `components/ui/rich-text-editor.tsx` are excluded
- *     for the same reason: both are imported only by `app/dashboard/dashboard-client.tsx`
- *     (grep it), carry `shadow-xs` / `bg-gray-*`, and are deleted or restyled in Phase 2.
+ *   - `app/dashboard/**` is **no longer excluded.** It was, while the admin surface was
+ *     untouched Phase 1 work that Task 9 owned. Task 9 rebuilt it and Tasks 11-13 built the
+ *     five remaining screens in the token system, so the portal is held to the same guard as
+ *     the storefront — which is the point of having one. `components/ui/button.tsx` has gone
+ *     with the old dashboard and is not listed here any more.
+ *   - `components/ui/rich-text-editor.tsx` stays excluded: it is the Phase 1 TipTap editor,
+ *     still carries `bg-gray-*` chrome, and is restyled from the outside by
+ *     `components/admin/SpecEditor.tsx` rather than edited (read that file's header). It is
+ *     the one file in the three source trees the guard does not hold.
  *     `components/ui/sort-dropdown.tsx` IS storefront and IS scanned.
  *   - `.superpowers/` is not under `app/`, `components/` or `lib/`, so briefs and reports
  *     that quote banned utilities are out of scope by construction.
@@ -40,9 +43,9 @@ const ROOT = path.resolve(__dirname, '..');
 /** The source trees the storefront lives in. Everything outside them is out of scope. */
 const ROOTS = ['app', 'components', 'lib'];
 
-const EXCLUDED_DIRS = ['app/dashboard/'];
+const EXCLUDED_DIRS: string[] = [];
 
-const EXCLUDED_FILES = ['components/ui/button.tsx', 'components/ui/rich-text-editor.tsx'];
+const EXCLUDED_FILES = ['components/ui/rich-text-editor.tsx'];
 
 /** The single shadow the design system grants, on the condensed navbar header. */
 const ALLOWED_SHADOW = 'shadow-[0_1px_16px_rgba(20,18,16,0.08)]';
@@ -212,13 +215,15 @@ function sweep(): Offender[] {
 }
 
 describe('the banned visual vocabulary cannot return', () => {
-  it('scans the storefront and nothing else', () => {
+  it('scans the storefront and the portal, and nothing else', () => {
     const files = storefrontFiles();
     expect(files.length).toBeGreaterThan(30);
-    expect(files.some(f => f.startsWith('app/dashboard/'))).toBe(false);
     expect(files.some(f => f.endsWith('.test.ts') || f.endsWith('.test.tsx'))).toBe(false);
-    expect(files).not.toContain('components/ui/button.tsx');
     expect(files).not.toContain('components/ui/rich-text-editor.tsx');
+    // The portal is in scope now. Named explicitly so the exclusion cannot come back quietly.
+    expect(files).toContain('app/dashboard/layout.tsx');
+    expect(files).toContain('app/dashboard/products/page.tsx');
+    expect(files).toContain('components/admin/styles.ts');
     // The storefront files the dashboard exclusions must not take with them.
     expect(files).toContain('components/ui/sort-dropdown.tsx');
     expect(files).toContain('app/not-found.tsx');
@@ -323,13 +328,14 @@ describe('the guard itself', () => {
  * The legacy shadcn token block in `app/globals.css` (`--color-muted`, `--color-card`,
  * `--radius-*`, the Geist/Poppins font variables, the `.dark` palette) is NOT deleted in
  * this task, and Task 2 deferred that deletion here on the condition that nothing
- * references it. `app/dashboard/**`, `components/ui/button.tsx` and
- * `components/ui/rich-text-editor.tsx` still do, and Phase 2 Task 9 owns the dashboard
- * restyle, so the block stays and its deprecation comment now names that task.
+ * references it. With the portal now in scope, the only remaining referrer in these three
+ * trees is `components/ui/rich-text-editor.tsx` — which is why the block is still here and
+ * why `components/admin/SpecEditor.tsx` restyles that editor from the outside rather than
+ * editing it. Deleting the block is a job that starts by rebuilding that one editor.
  *
- * What this guard holds is the condition that makes the block safe to delete later: the
- * storefront must stay clean of it. If this fails, a storefront file has picked up a
- * shadcn token and the Phase 2 deletion would silently restyle it.
+ * What this guard holds is the condition that makes the block safe to delete later: every
+ * scanned file must stay clean of it. If this fails, a file has picked up a shadcn token and
+ * the deletion would silently restyle it.
  */
 const LEGACY_TOKEN_UTILITY =
   /\b(?:bg|text|border|ring|outline|fill|stroke|divide|from|via|to|placeholder|caret|accent|decoration|shadow)-(?:background|foreground|card|card-foreground|popover|popover-foreground|primary|primary-foreground|secondary|secondary-foreground|muted|muted-foreground|accent|accent-foreground|destructive|destructive-foreground|input|sidebar|sidebar-foreground|sidebar-primary|sidebar-accent|sidebar-border|sidebar-ring|chart-[1-5])\b|\bfont-(?:sans|mono|serif|poppins)\b|\brounded-(?:sm|md|lg|xl)\b/g;

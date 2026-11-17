@@ -78,6 +78,7 @@ CREATE TABLE "Enquiry" (
     "email" TEXT NOT NULL,
     "phone" TEXT,
     "message" TEXT NOT NULL,
+    "source" TEXT,
     "status" "EnquiryStatus" NOT NULL DEFAULT 'UNREAD',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

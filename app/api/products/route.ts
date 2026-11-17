@@ -135,11 +135,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 });
     }
 
-    // Transform data to match Prisma schema
+    // Transform data to match Prisma schema.
+    //
+    // `sale` and `salePrice` are written here as well as in PATCH. They used to be dropped on
+    // create — the admin form has always sent them, so a product added as on-sale came back
+    // at full price and had to be saved a second time before the discount existed. The rule is
+    // the form's own: a sale price only means anything while the sale is on, so it is stored
+    // only then and cleared otherwise rather than left to linger behind a false flag.
+    const sale = data.sale === true;
+    const hasSalePrice = sale && data.salePrice !== null && data.salePrice !== undefined && data.salePrice !== '';
+
     const productData = {
       id: data.id || crypto.randomUUID(),
       name: data.name,
       price: new Prisma.Decimal(data.price),
+      sale,
+      salePrice: hasSalePrice ? new Prisma.Decimal(data.salePrice) : null,
       specifications: data.specifications || '',
       category: (data.category as ProductType) || 'OTHER',
       photos: data.photos || [],

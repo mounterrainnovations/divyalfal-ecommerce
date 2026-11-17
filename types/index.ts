@@ -38,13 +38,19 @@ export type ProductType =
   | 'WESTERN'
   | 'OTHER';
 
+/**
+ * The six shop categories, plus 'Other' for the `OTHER` enum member — the schema default,
+ * which has no shop category of its own and must not be folded into one (see
+ * `CATEGORY_MAPPING_REVERSE`). No storefront filter offers 'Other'; the admin does.
+ */
 export type ProductCategory =
   | 'Sarees'
   | 'Indo-Western'
   | 'Lehengas'
   | 'Suits'
   | 'Kurta Pant'
-  | 'Western';
+  | 'Western'
+  | 'Other';
 
 // Filter state for frontend
 export interface FilterState {

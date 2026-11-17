@@ -8,8 +8,21 @@ export const CATEGORY_MAPPING: Record<ProductCategory, ProductType> = {
   Suits: 'SUIT',
   'Kurta Pant': 'KURTA_PANT',
   Western: 'WESTERN',
+  Other: 'OTHER',
 };
 
+/**
+ * `OTHER` maps to its own label, not to `Western`.
+ *
+ * It used to read 'Western', and the mapping is used in both directions: the admin product
+ * sheet turns a product's label back into the enum with `getDbCategory`, so opening an
+ * uncategorised garment showed "Western" and saving it — saving anything else about it —
+ * rewrote its category to WESTERN for good. `OTHER` is the schema default, so every product
+ * created without a category was one edit away from being silently filed under Western.
+ *
+ * 'Other' is not one of the six shop categories and no storefront filter offers it, which is
+ * correct: an uncategorised garment should not appear under a category that is not its own.
+ */
 export const CATEGORY_MAPPING_REVERSE: Record<ProductType, ProductCategory> = {
   SAREE: 'Sarees',
   INDO_WESTERN: 'Indo-Western',
@@ -17,7 +30,7 @@ export const CATEGORY_MAPPING_REVERSE: Record<ProductType, ProductCategory> = {
   SUIT: 'Suits',
   KURTA_PANT: 'Kurta Pant',
   WESTERN: 'Western',
-  OTHER: 'Western',
+  OTHER: 'Other',
 };
 
 // Transform database product to frontend product
