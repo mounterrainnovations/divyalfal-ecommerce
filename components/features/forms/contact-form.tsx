@@ -6,6 +6,7 @@ import Button from '@/components/primitives/Button';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
 import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
+import { postEnquiry, transcript, type Answer } from '@/lib/enquiries/submit';
 import { FIELD_CLASS, LABEL_CLASS } from './field-styles';
 import { handoverEnquiry } from './whatsapp-enquiry';
 
@@ -48,27 +49,48 @@ const ContactForm = () => {
   };
 
   /**
-   * Submit hands the enquiry to WhatsApp, pre-filled.
+   * Submit hands the enquiry to WhatsApp, pre-filled, **and** posts the same answers to
+   * `/api/enquiries`.
    *
-   * The owner's decision, taken explicitly. Before it this handler was `preventDefault()` plus
-   * a `TODO`: a visitor filled in four fields, pressed Submit, and the enquiry was discarded
-   * in silence. **Phase 2 Task 8 replaces the hand-over with a real enquiry endpoint**
-   * (`POST /api/enquiries`, spec §11); until then the enquiry travels on the number the footer
-   * already prints.
+   * WhatsApp stays the visible action — the owner's decision, taken explicitly, and the enquiry
+   * still travels on the number the footer already prints. What is new is that it is also
+   * stored, so an enquiry is no longer lost when the visitor closes the WhatsApp tab without
+   * pressing send. The POST is invisible: it is not awaited, it cannot block the hand-over, and
+   * it prints nothing, because opening WhatsApp is still not the same as an enquiry arriving and
+   * the page still cannot know which happened.
    *
    * The message is the stored field labels and the visitor's own values and nothing else --
    * see `whatsapp-enquiry.ts`. The one `required` attribute left is the Email field's, the only
-   * label the copy marks with an asterisk; the
-   * typed values stay in the fields, and nothing here claims the enquiry arrived: opening
-   * WhatsApp is not the same as pressing send, and the page cannot know which happened.
+   * label the copy marks with an asterisk; the typed values stay in the fields.
    */
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    handoverEnquiry(e, [
+    const answers: Answer[] = [
       { label: nameField.label, value: formData.name },
       { label: emailField.label, value: formData.email },
       { label: phoneField.label, value: formData.phone },
       { label: messageField.label, value: formData.message },
-    ]);
+    ];
+
+    // Read before the hand-over: `checkValidity` reports without showing the browser's own
+    // bubble, which `handoverEnquiry` is about to do once. Only a form the browser would have
+    // let through is stored.
+    const valid = e.currentTarget.checkValidity();
+
+    handoverEnquiry(e, answers);
+    if (!valid) return;
+
+    void postEnquiry({
+      // Only the Email field is `required` here, because only its stored label carries the
+      // asterisk. So the two columns the endpoint cannot do without are filled from what the
+      // form actually guarantees: the email address stands in for an unanswered name, and the
+      // message is the whole labelled transcript rather than the message field alone, which is
+      // optional on this form. Nothing is invented and nothing is dropped.
+      name: formData.name.trim() || formData.email.trim(),
+      email: formData.email,
+      phone: formData.phone,
+      message: transcript(answers),
+      source: 'contact',
+    });
   };
 
   return (

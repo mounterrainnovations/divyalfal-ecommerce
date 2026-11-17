@@ -9,6 +9,7 @@ import HairlineRule from '@/components/primitives/HairlineRule';
 import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
 import { handoverEnquiry } from '@/components/features/forms/whatsapp-enquiry';
+import { postEnquiry, transcript, type Answer } from '@/lib/enquiries/submit';
 
 // `siteCopy.academy.success` is deliberately not destructured here. Submit hands the
 // application to WhatsApp (see `handleSubmit`), which is not the same as an application
@@ -76,13 +77,15 @@ export default function VirasatAcademyPage() {
   };
 
   /**
-   * Submit hands the application to WhatsApp, pre-filled.
+   * Submit hands the application to WhatsApp, pre-filled, **and** posts the same answers to
+   * `/api/enquiries`.
    *
-   * The owner's decision, taken explicitly. Before it, this handler was `preventDefault()` and
-   * nothing else: an applicant filled in eight fields, including a date of birth, pressed
-   * Submit, and every answer was discarded in silence. There is still no enquiry endpoint --
-   * **Phase 2 Task 8 replaces this hand-over with a real one** (`POST /api/enquiries`) -- so
-   * until then the application travels on the number the footer already prints.
+   * WhatsApp stays the visible action -- the owner's decision, taken explicitly, on the number
+   * the footer already prints. What is new is that the eight answers, the date of birth
+   * included, are also stored, so an application is no longer lost when the applicant closes
+   * the WhatsApp tab without pressing send. The POST is invisible: not awaited, unable to block
+   * the hand-over, and silent, because opening WhatsApp is still not the same as an application
+   * arriving and the page still cannot know which happened.
    *
    * The message is the stored field labels and the applicant's own values, nothing else: no
    * greeting and no sign-off, because the boutique does not put words in an applicant's mouth
@@ -92,11 +95,10 @@ export default function VirasatAcademyPage() {
    *
    * What does **not** change: the markup, the `required` attributes and the browser's own
    * validation still gate the submission; the typed values stay in the fields, because the
-   * hand-over opens in a new tab; and nothing on the page claims the application was received,
-   * since opening WhatsApp is not the same as pressing send.
+   * hand-over opens in a new tab; and nothing on the page claims the application was received.
    */
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    handoverEnquiry(e, [
+    const answers: Answer[] = [
       { label: fullNameField.label, value: formData.fullName },
       { label: dobField.label, value: formData.dob },
       { label: phoneField.label, value: formData.phone },
@@ -109,7 +111,26 @@ export default function VirasatAcademyPage() {
         value: form.genderOptions.find(option => option.value === formData.gender)?.label ?? '',
       },
       { label: commentsField.label, value: formData.comments },
-    ]);
+    ];
+
+    // Read before the hand-over, with `checkValidity` rather than `reportValidity`, so the
+    // browser's bubble is shown once (by `handoverEnquiry`) and not twice.
+    const valid = e.currentTarget.checkValidity();
+
+    handoverEnquiry(e, answers);
+    if (!valid) return;
+
+    void postEnquiry({
+      name: formData.fullName,
+      // This form has no email field -- `siteCopy.academy.form.fields` is eight fields and none
+      // of them is an email address -- so the phone number is the contact detail, and
+      // `/api/enquiries` requires one or the other rather than an email for `source: 'academy'`.
+      phone: formData.phone,
+      // The whole application, labelled, including the fields with no column of their own: date
+      // of birth, city, state, country, gender and the comments.
+      message: transcript(answers),
+      source: 'academy',
+    });
   };
 
   return (
