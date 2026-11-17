@@ -45,9 +45,12 @@ const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
  *     **2.28:1** at 768, and in one frame **18%** of the wordmark's strokes were under 3:1.
  *     The footage carries near-white highlights (sRGB ~253) that 35% cannot hold down. At 50%
  *     the same sampling gives a worst stroke pixel of **3.34:1** at 390 and **3.51:1** at
- *     768, with **no** stroke pixel under 3:1 in any frame, and it still reads as a wash over
- *     a photograph rather than a scrim: the stroke mean is 9.1:1 and 9.4:1. Per-frame tables
- *     are in `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
+ *     768, with **no** stroke pixel under 3:1 in any of the **11 sampled** frames (per-frame
+ *     worst case 3.34:1 to 5.5:1) — sampled, not exhaustive: 11 frames of a 14.9s clip, so an
+ *     unsampled frame brighter than any of them is possible, if unlikely. It still reads as a
+ *     wash over a photograph rather than a scrim: the stroke mean is 9.1:1 and 9.4:1.
+ *     Per-frame tables are in
+ *     `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
  *
  * The opacity follows the same `useMedia` answer that picks the media, not a `md:` variant:
  * `md:` is min-width 768 while the video is max-width 768, so at exactly 768 a variant would

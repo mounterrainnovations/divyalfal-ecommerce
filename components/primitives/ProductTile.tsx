@@ -4,10 +4,18 @@ import type { Product } from '@/types';
 import { resolvePrice } from '@/lib/utils/price';
 
 /**
- * Tile widths follow the editorial grid: four across from lg (a quarter of the viewport,
- * capped by the 1440px content max), three from md, two on a phone.
+ * The default `sizes` hint: a four-up grid from lg, three from md, two on a phone.
+ *
+ * **It describes a layout, so a surface that lays tiles out differently must pass its own.**
+ * Four surfaces render this tile and no two place it alike -- the listings run one-up then
+ * two-up, the related strip one-up then three-up, and the two home bands drift across the
+ * grid at five and six columns -- so a single shared hint cannot be right for all of them. A
+ * hint narrower than the render makes the browser fetch a file it then has to upscale, which
+ * on a couture storefront is the one thing a photograph must not look like. `collection.tsx`
+ * already does this for its lookbook pair (`PAIR_SIZES`); `sizes` is the same idea, per tile.
  */
-const SIZES = '(min-width: 1440px) 336px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw';
+const DEFAULT_SIZES =
+  '(min-width: 1440px) 336px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw';
 
 /**
  * Portrait 3:4 product tile linking to `/product/[id]`.
@@ -50,10 +58,16 @@ export default function ProductTile({
   product,
   priority = false,
   headingLevel = 3,
+  sizes = DEFAULT_SIZES,
 }: {
   product: Product;
   /** Eager-loads and preloads the first photo; use for above-the-fold tiles. */
   priority?: boolean;
+  /**
+   * The `sizes` hint, which must describe the width this surface actually renders the tile
+   * at. Measure it in a browser rather than reading it off the class names.
+   */
+  sizes?: string;
   /** Heading element for the product name. Pick the level that follows the page's outline. */
   headingLevel?: 2 | 3 | 4;
 }) {
@@ -73,7 +87,7 @@ export default function ProductTile({
               src={first}
               alt=""
               fill
-              sizes={SIZES}
+              sizes={sizes}
               preload={priority}
               className="object-cover"
             />
@@ -82,7 +96,7 @@ export default function ProductTile({
                 src={second}
                 alt=""
                 fill
-                sizes={SIZES}
+                sizes={sizes}
                 className="object-cover opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
               />
             ) : null}

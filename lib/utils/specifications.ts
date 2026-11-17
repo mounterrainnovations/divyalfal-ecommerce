@@ -126,13 +126,30 @@ export function parseSpecifications(html: string | null | undefined): SpecBlock[
 }
 
 /**
+ * One parsed block as one sentence of prose.
+ *
+ * A group reads `Term: detail. detail` — **all** of its details, not only the first, because
+ * a meta description that drops the rest of a specification is a description of nothing. A
+ * plain block reads as itself.
+ *
+ * A group with no details reads as the bare term, with no dangling colon. `parseSpecifications`
+ * cannot produce one — a term with nothing under it comes back as a text block, and a test
+ * pins that — so this branch is defensive rather than live; it is here so the shape of a
+ * `SpecBlock` alone determines the output, without depending on an invariant held elsewhere.
+ */
+export function specBlockToSentence(block: SpecBlock): string {
+  if (block.type !== 'group') return block.text;
+  return block.details.length > 0 ? `${block.term}: ${block.details.join('. ')}` : block.term;
+}
+
+/**
  * The same stored field as a plain-text meta description.
  *
  * `app/product/[id]/page.tsx` used to put `product.specifications` into the description
  * verbatim, so a search result and every share card carried `<p><strong>…</strong></p>`.
- * The blocks are already parsed to text above, so the description is built from them: a term
- * reads `Term: first detail`, a plain block reads as itself, and blocks are joined with
- * `. ` so the line scans as sentences rather than a run-on.
+ * The blocks are already parsed to text above, so the description is built from them by
+ * `specBlockToSentence`, and the blocks are joined with `. ` so the line scans as sentences
+ * rather than a run-on.
  *
  * Truncation cuts on a word boundary and marks the cut with an ellipsis, counted inside
  * `maxLength` so the result never exceeds it. Returns `''` when there is nothing to say, so
@@ -142,9 +159,7 @@ export function specificationsToDescription(
   html: string | null | undefined,
   maxLength = 160
 ): string {
-  const parts = parseSpecifications(html).map(block =>
-    block.type === 'group' ? [block.term, block.details.join('. ')].join(': ') : block.text
-  );
+  const parts = parseSpecifications(html).map(specBlockToSentence);
 
   const text = parts
     .join('. ')

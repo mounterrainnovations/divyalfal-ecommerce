@@ -17,13 +17,25 @@ interface YouMayAlsoLikeProps {
  * flashes an empty heading.
  *
  * `useRelatedProducts` can only ever return three, so the layout is sized for three and not
- * for "however many": `col-span-4` at lg fills the twelve columns exactly. Below lg it is
- * one-up (`col-span-12`), not two-up -- three tiles at `col-span-6` filled a row of two and
- * stranded the third beside a blank half, the only ragged row on the page, and the one-up
- * column is also the only width at which a portrait tile is worth looking at on a phone. The
- * stagger steps per column of that three-up row, so it is `% 3`, not the `% 4` left over from
- * a four-up strip that never existed here.
+ * for "however many": `col-span-4` fills the twelve columns exactly. Below `md` it is one-up
+ * (`col-span-12`), not two-up -- three tiles at `col-span-6` filled a row of two and stranded
+ * the third beside a blank half, the only ragged row on the page, and on a phone a third of
+ * 390px is not a photograph worth showing. The stagger steps per column of that three-up row,
+ * so it is `% 3`, not the `% 4` left over from a four-up strip that never existed here.
+ *
+ * Three-up starts at `md`, not `lg`. It used to start at `lg`, which left a tile rendering
+ * 720px wide at 768 while `ProductTile`'s shared hint still claimed 33vw -- the browser
+ * fetched about a third of the width it was about to display, and the photograph arrived
+ * upscaled on the one page whose whole job is showing the garment.
+ *
+ * `SIZES` is this strip's own, because the shared default describes a four-up grid nothing
+ * here uses. Every figure is measured in a browser, not derived from the class names:
+ * 342px at 390 wide, 224px at 768, 277px at 1024, and a fixed 416px from 1440 up, where the
+ * editorial grid stops growing.
  */
+const SIZES =
+  '(min-width: 1440px) 416px, (min-width: 1024px) 28vw, (min-width: 768px) 30vw, 88vw';
+
 const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
   const headingId = useId();
   const { products, loading } = useRelatedProducts(currentProductId);
@@ -42,9 +54,9 @@ const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
         {siteCopy.product.related.heading}
       </h2>
       {products.map((product, index) => (
-        <div key={product.id} className="col-span-12 lg:col-span-4">
+        <div key={product.id} className="col-span-12 md:col-span-4">
           <Reveal delay={(index % 3) * 60}>
-            <ProductTile product={product} />
+            <ProductTile product={product} sizes={SIZES} />
           </Reveal>
         </div>
       ))}

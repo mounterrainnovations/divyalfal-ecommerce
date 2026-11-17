@@ -89,6 +89,41 @@ describe('ProductTile', () => {
     expect(name.indexOf(base.name)).toBeLessThan(name.indexOf('₹8,000'));
   });
 
+  /**
+   * The SC 2.5.3 regression guard, on the **computed** accessible name.
+   *
+   * The assertion above reads `textContent`, which only restates the markup -- it would still
+   * pass if someone put `aria-label="Saree"` back on the link and threw the visible words
+   * away. `getByRole(..., { name })` runs dom-accessibility-api, the same name computation the
+   * browser and axe perform, so this fails if the name stops containing what is on screen.
+   *
+   * That matters here specifically: the project's `axe-core` is a major version behind the one
+   * Lighthouse bundles, and on 4.11 `label-content-name-mismatch` is still `experimental` and
+   * is skipped by a tag-based run. Without this test the Level A fix has no guard in the repo.
+   */
+  it('computes an accessible name containing every visible word, in visible order', () => {
+    const { rerender } = render(<ProductTile product={{ ...base, photos: [] }} />);
+    // Photo-less: the frame's caption leads, because that is what a sighted user reads first.
+    expect(
+      screen.getByRole('link', { name: 'Image coming soon Red Velvet Saree ₹8,000' })
+    ).toBeInTheDocument();
+
+    // On sale, with photographs: both prices in visible order, then the sr-only gloss.
+    rerender(<ProductTile product={{ ...base, sale: true, salePrice: 6000 }} />);
+    expect(
+      screen.getByRole('link', { name: 'Red Velvet Saree ₹6,000 ₹8,000 original price' })
+    ).toBeInTheDocument();
+
+    // The visible run is contiguous inside the name, which is what axe 4.14 checks: no
+    // screen-reader-only word may be interleaved between the words a sighted user reads.
+    const name = screen.getByRole('link').textContent ?? '';
+    const visible = ['Red Velvet Saree', '₹6,000', '₹8,000'];
+    const positions = visible.map((word) => name.indexOf(word));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    expect(name.toLowerCase().indexOf('original price')).toBeGreaterThan(positions[2]);
+  });
+
   it('puts the screen-reader-only words after the visible run, never inside it', () => {
     const { container } = render(
       <ProductTile product={{ ...base, sale: true, salePrice: 6000 }} />

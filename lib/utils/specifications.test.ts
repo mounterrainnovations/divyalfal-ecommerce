@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseSpecifications, specificationsToDescription } from './specifications';
+import {
+  parseSpecifications,
+  specBlockToSentence,
+  specificationsToDescription,
+} from './specifications';
 
 // The two live products' `specifications`, as the rich-text editor stored them.
 const LIVE_SAREE =
@@ -102,6 +106,48 @@ describe('specificationsToDescription', () => {
     expect(specificationsToDescription('<h2>Fabric</h2><p>Pure silk</p>', 300)).toBe(
       'Fabric: Pure silk'
     );
+  });
+
+  it('keeps every detail under a term, not only the first', () => {
+    // The docstring used to promise `Term: first detail` while the code joined them all.
+    // Joining them all is right for a description; the doc now says so.
+    expect(
+      specificationsToDescription('<h2>Fabric</h2><p>Pure silk</p><p>Hand woven</p>', 300)
+    ).toBe('Fabric: Pure silk. Hand woven');
+  });
+});
+
+/**
+ * `specificationsToDescription` maps each block through this, so it is exported and tested
+ * directly -- the empty-details case cannot be reached through the public function, because
+ * `parseSpecifications` turns a term with nothing under it into a text block instead. That
+ * invariant is asserted below too, so the defensive branch and the reason it is unreachable
+ * are both pinned.
+ */
+describe('specBlockToSentence', () => {
+  it('reads a term with all of its details, joined as sentences', () => {
+    expect(
+      specBlockToSentence({ type: 'group', term: 'Fabric', details: ['Pure silk', 'Hand woven'] })
+    ).toBe('Fabric: Pure silk. Hand woven');
+  });
+
+  it('reads a plain block as itself', () => {
+    expect(specBlockToSentence({ type: 'text', text: 'Made in Bhopal' })).toBe('Made in Bhopal');
+  });
+
+  it('reads a term with no details as the bare term, never a trailing colon', () => {
+    expect(specBlockToSentence({ type: 'group', term: 'Fabric', details: [] })).toBe('Fabric');
+    expect(specBlockToSentence({ type: 'group', term: 'Fabric', details: [] })).not.toContain(':');
+  });
+
+  it('never produces an empty-details group through the parser, so the branch stays unreachable', () => {
+    // A lone bold line, and a bold line followed by nothing.
+    for (const html of ['<p><strong>Fabric</strong></p>', '<h2>Fabric</h2>']) {
+      const blocks = parseSpecifications(html);
+      expect(blocks).toEqual([{ type: 'text', text: 'Fabric' }]);
+      expect(blocks.every((b) => b.type !== 'group' || b.details.length > 0)).toBe(true);
+    }
+    expect(specificationsToDescription('<p><strong>Fabric</strong></p>', 300)).toBe('Fabric');
   });
 
   it('truncates on a word boundary and marks the cut with an ellipsis', () => {

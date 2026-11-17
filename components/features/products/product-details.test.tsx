@@ -325,13 +325,22 @@ describe('YouMayAlsoLike', () => {
     expect(within(section).queryByText('Current')).toBeNull();
     // Tiles sit under the page's h2, so their names are h3.
     expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(3);
+    /**
+     * The layout and the `sizes` hint have to agree, measured at every breakpoint.
+     *
+     * `col-span-12 lg:col-span-4` left the strip one-up all the way to 1023px: at 768 a tile
+     * rendered 720px wide while `ProductTile`'s shared hint still claimed 33vw (253px), so the
+     * browser fetched roughly a third of the width it was about to display and a couture
+     * photograph arrived visibly upscaled. Three-up from `md` divides the twelve columns
+     * exactly (no ragged row, which is why this is not `col-span-6`) and keeps one-up on
+     * phones, where a third of 390px is not a photograph worth showing.
+     */
     for (const link of links) {
       const cell = link.closest<HTMLElement>('[class*="col-span"]')!;
-      expect(cell.className).toContain('lg:col-span-4');
-      // Below lg the strip is one-up, not two-up. Three `col-span-6` tiles filled a row of
-      // two and left the third alone beside a blank half -- the only ragged row on the page.
       expect(cell.className).toContain('col-span-12');
-      expect(cell.className).not.toMatch(/(?:^|\s)col-span-6(?:\s|$)/);
+      expect(cell.className).toContain('md:col-span-4');
+      // Not two-up: three tiles would fill a row of two and strand the third beside a blank.
+      expect(cell.className).not.toMatch(/(?:^|\s)(?:md:|lg:)?col-span-6(?:\s|$)/);
     }
 
     // The stagger steps per visual column, and the strip is three-up, never four.
@@ -339,6 +348,33 @@ describe('YouMayAlsoLike', () => {
       section.querySelectorAll<HTMLElement>('[style*="--reveal-delay"]')
     ).map((node) => node.style.getPropertyValue('--reveal-delay'));
     expect(delays).toEqual(['0ms', '60ms', '120ms']);
+  });
+
+  /**
+   * The hint the browser picks a file from, matched to the widths this strip measured in a
+   * real browser: 342px at 390, 224px at 768, 277px at 1024, 416px at 1440 and above (the
+   * grid caps at the 1440 content max, so beyond that it is a fixed pixel width, not a vw).
+   * `ProductTile`'s shared default describes a four-up grid that no surface here uses, so this
+   * one is passed per surface.
+   */
+  it('hints the photograph at the width this strip actually renders', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ products: related }) })
+    );
+    const { container } = render(<YouMayAlsoLike currentProductId="p1" />);
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: siteCopy.product.related.heading, level: 2 })
+      ).toBeInTheDocument()
+    );
+
+    const sizes = container.querySelector('img')?.getAttribute('sizes') ?? '';
+    expect(sizes).toBe('(min-width: 1440px) 416px, (min-width: 1024px) 28vw, (min-width: 768px) 30vw, 88vw');
+    // Not the shared default, which would under-fetch at every one of those widths.
+    expect(sizes).not.toContain('25vw');
+    expect(sizes).not.toContain('33vw');
+    expect(sizes).not.toContain('50vw');
   });
 
   it('renders nothing when the request fails', async () => {

@@ -437,9 +437,16 @@ describe('the gold focus ring', () => {
   });
 
   it('names the constraint at the token definition, where someone reaching for gold will see it', () => {
-    expect(css).toMatch(/--gold:[^\n]*\n|\/\*[^*]*gold/);
-    const goldBlock = css.slice(Math.max(0, css.indexOf('--gold:') - 700), css.indexOf('--gold:'));
-    expect(goldBlock).toContain('paper-deep');
-    expect(goldBlock).toMatch(/3\s*:\s*1|3:1/);
+    // The comment has to sit immediately above `--gold`, not anywhere in the file: someone
+    // changing the token reads the lines just above it and nothing else.
+    const definition = css.indexOf('--gold:');
+    expect(definition).toBeGreaterThan(-1);
+    const precedingComment = css.slice(Math.max(0, definition - 700), definition);
+    expect(precedingComment).toContain('paper-deep');
+    // Both measured ratios, so the comment cannot drift from the guard above it.
+    expect(precedingComment).toContain('3.168');
+    expect(precedingComment).toContain('2.855');
+    // And the alternative, so the reader is not left with a constraint and no way out.
+    expect(precedingComment).toContain('outline-ink');
   });
 });
