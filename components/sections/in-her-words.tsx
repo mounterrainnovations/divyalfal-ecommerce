@@ -46,7 +46,7 @@ const pad = (value: number) => String(value).padStart(2, '0');
  *
  * Both headings are `h2`; the page's `h1` is the hero wordmark. The prose stays at full
  * strength — `text-ink-soft` is ~5.5:1 on paper and any opacity utility on it would break
- * AA — and the stats are plain figures with a gold hairline above each, not shadowed cards.
+ * AA — and the stats are plain figures with a gold hairline above each, not floating cards.
  */
 export default function InHerWords() {
   const quotes = siteCopy.home.testimonials;
