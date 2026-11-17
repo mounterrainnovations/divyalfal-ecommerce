@@ -68,30 +68,10 @@ const ALLOWED: ReadonlyArray<readonly [prefix: string, reason: string]> = [
   // not, and that is the design rather than an omission. Both stay in the module because
   // Phase 2's CMS seed consumes these keys.
   ['nav.logo', 'the navbar sets the brand as type, not as the logo image (spec §7)'],
-  [
-    'home.categories.items[0].image',
-    'Movement 2 is a type index: the six avatar circles are gone (spec §8)',
-  ],
-  [
-    'home.categories.items[1].image',
-    'Movement 2 is a type index: the six avatar circles are gone (spec §8)',
-  ],
-  [
-    'home.categories.items[2].image',
-    'Movement 2 is a type index: the six avatar circles are gone (spec §8)',
-  ],
-  [
-    'home.categories.items[3].image',
-    'Movement 2 is a type index: the six avatar circles are gone (spec §8)',
-  ],
-  [
-    'home.categories.items[4].image',
-    'Movement 2 is a type index: the six avatar circles are gone (spec §8)',
-  ],
-  [
-    'home.categories.items[5].image',
-    'Movement 2 is a type index: the six avatar circles are gone (spec §8)',
-  ],
+  // The six `home.categories.items[*].image` paths used to be exempt here, as "Movement 2 is
+  // a type index: the six avatar circles are gone". They are no longer exempt and no longer
+  // unrendered: the density pass gave Movement 2 a live preview, and each of the six is the
+  // photograph of its own collection. Six exemptions off the list, six leaves back on a page.
 
   // --- The fallback tiers. Owner's call (spec §5a.1): they render only when the catalogue
   // has no photographed garment, which the sweep's real-stock surfaces deliberately do not

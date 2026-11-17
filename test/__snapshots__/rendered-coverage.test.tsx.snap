@@ -2,8 +2,8 @@
 
 exports[`rendered coverage of the copy module > checks a meaningful share of the module, so it cannot pass vacuously 1`] = `
 {
-  "exempt": 84,
-  "required": 286,
+  "exempt": 78,
+  "required": 292,
   "total": 370,
 }
 `;
