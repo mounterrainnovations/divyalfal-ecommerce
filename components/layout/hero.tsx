@@ -103,7 +103,9 @@ const { props: still } = getImageProps({
  * its own headline burned into the bottom quarter, which a baseline wordmark landed on top
  * of. The stand-in that replaces it (`public/samples/hero/hero-golden-warp-on-the-loom.webp`, a
  * placeholder -- see `public/samples/README.md`) carries no text, so the baseline is free
- * again. The video keeps its centred word because that is the position its wash was measured
+ * again, and it was re-checked at the new photograph: the word sits over the lower-left of the
+ * loom, which is the calmest part of the frame, and the wash below holds it at AA there. The
+ * video keeps its centred word because that is the position its wash was measured
  * at (below); moving it would void the 50% figure. **The alignment is CSS, `max-[768px]:`,
  * and never state** -- a JS-driven alignment painted the phone's wordmark on the baseline and
  * then jumped it to the centre, measured as a 0.052 layout shift on mobile `/`, the page's
@@ -114,17 +116,20 @@ const { props: still } = getImageProps({
  * (forbidden), not a black scrim -- and whether it is needed is per medium, because the two
  * media are not equally bright:
  *
- *   - **Desktop still, none.** The old photograph was bright enough to need a flat 35%: at
- *     that wash the brightest pixel under the wordmark's glyph strokes measured 3.58:1 at
- *     1440x900 and 4.20:1 at 1920x1080. The stand-in is a black silk drape, and with no wash
- *     at all the worst stroke pixel measures **9.26:1 at 1440 and 9.55:1 at 1920** (no stroke
- *     pixel under 3:1; stroke mean ~17.9:1). 0% is therefore the lowest flat opacity that
- *     holds large-text AA, and the wash element carries no background at this width. Measured
- *     on the real rendered frame (Chrome, the wordmark's own glyph strokes isolated by diffing
- *     the frame with and without the heading), at the baseline position. **This is a property
- *     of the placeholder, not of the design:** real photography will almost certainly be
- *     brighter, and the wordmark then needs a flat wash again, re-measured the same way --
- *     35% was the figure for the previous photograph.
+ *   - **Desktop still, 25%.** The figure is a property of the photograph behind it and has
+ *     moved three times: 35% for the pre-revamp composite, 0% for the black silk drape that
+ *     replaced it, and **25%** for the loom that replaced *that*. Re-measured the same way --
+ *     the wordmark re-drawn to an offscreen canvas at its live computed font, size and
+ *     letter-spacing to make a glyph mask, the still mapped through the page's own
+ *     `object-cover` arithmetic, composited as `c = a*ink + (1-a)*still` and compared with
+ *     `--paper` -- over 5,215 stroke pixels at 1440x900 and 5,360 at 1920x1080. With **no**
+ *     wash the worst stroke pixel is **1.88:1** at both widths and 5.6% / 10.8% of the
+ *     wordmark's strokes fall under 3:1, because the warp runs through bright gold (the
+ *     brightest pixel under a stroke is sRGB 227,176,1). 20% reaches only 2.77:1. **25% is the
+ *     lowest flat opacity that clears 3:1 for large text at both widths: 3.08:1 at 1440 and
+ *     3.08:1 at 1920, with no stroke pixel under 3:1 and a stroke mean of 9.1:1.** The margin
+ *     over the 3:1 line is thin (0.08), so a brighter hero -- or a viewport whose `next/image`
+ *     variant resolves differently -- wants re-measuring rather than assuming.
  *   - **Mobile / portrait-tablet video, 50%.** Task 13 measured what nobody had: the same
  *     35% over `bg_video.webm`, sampled at 11 frames across its 14.9s, at 390x844 and again
  *     at portrait tablet 768x1024 where `object-cover` crops it differently. Measured under
@@ -227,11 +232,12 @@ export default function Hero() {
         <source src={mobileVideo} type="video/webm" media={PHONE} />
       </video>
 
-      {/* Flat ink wash over the video only, 50%, no gradient, no pure black. The desktop still
-          is dark enough to need none, so above 768px this element carries no background at
-          all -- see the measurements in the component comment above. Do not lower the video's
-          figure, or give the still a wash, without re-measuring. */}
-      <div aria-hidden="true" className="absolute inset-0 max-[768px]:bg-ink/50" />
+      {/* Flat ink wash, no gradient, no pure black, and a different figure per medium because
+          the two media are not equally bright: 25% over the still, 50% over the video. Both are
+          the lowest opacity that holds the wordmark at 3:1 for large text over their own
+          medium -- see the measurements in the component comment above. Neither figure may be
+          lowered, and the still's may not be dropped, without re-measuring. */}
+      <div aria-hidden="true" className="absolute inset-0 bg-ink/25 max-[768px]:bg-ink/50" />
 
       {/* No reveal on the wordmark. It is the page's LCP element on mobile, and its 180ms
           stagger plus 700ms fade was the whole of the gap between 88 and the 90 target --

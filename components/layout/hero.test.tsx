@@ -210,8 +210,11 @@ describe('Hero', () => {
    * over the wordmark's whole bounding box -- a bright pixel in a letter gap is not behind
    * any type):
    *
-   *  - desktop still: needs none. The placeholder black-silk still measures 9.26:1 (1440) and
-   *    9.55:1 (1920) at its worst stroke pixel with no wash; the previous photograph needed 35%.
+   *  - desktop still: 25%. The placeholder loom still measures 1.88:1 at its worst stroke
+   *    pixel with no wash at all (both 1440x900 and 1920x1080) and 2.77:1 at 20%; 25% is the
+   *    lowest flat opacity that clears 3:1 for large text, at 3.08:1 on both widths. The
+   *    black-silk placeholder before it needed none and the photograph before that needed 35%
+   *    -- the figure belongs to the photograph, not to the design.
    *  - mobile `bg_video.webm` at 390, and the same footage at portrait tablet 768x1024 where
    *    `object-cover` crops it differently: 35% does NOT. Sampled across 11 frames, the worst
    *    stroke pixel sat at 2.15:1 (390) and 2.28:1 (768), and in one frame 18% of the
@@ -220,11 +223,12 @@ describe('Hero', () => {
    *
    * Numbers and per-frame tables: `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
    *
-   * The wash is now one element carrying a `max-[768px]:` variant rather than a conditionally
+   * The wash is one element carrying a `max-[768px]:` variant rather than a conditionally
    * rendered one: the medium is chosen by CSS, so its treatment has to be too, on the same
-   * 768 boundary. Above 768 it declares no background at all, which is the still's measured 0%.
+   * 768 boundary. The base declaration is the still's 25%; the variant raises it to the
+   * video's 50% at and below 768.
    */
-  it('washes the video at the measured 50% and the still at nothing, in CSS', () => {
+  it('washes the video at the measured 50% and the still at the measured 25%, in CSS', () => {
     const { container } = render(<Hero />);
     const wash = washOf(container);
     expect(wash).not.toBeNull();
@@ -232,7 +236,9 @@ describe('Hero', () => {
     expect(wash?.className).toMatch(/\babsolute\b/);
     expect(wash?.className).toMatch(/\binset-0\b/);
 
-    // No unconditional wash: the still's measured floor is 0%, so above 768 there is none.
+    // The still's measured floor is 25%, declared unconditionally so the variant can raise it.
+    expect(container.querySelector('[class~="bg-ink/25"]')).not.toBeNull();
+    // Never the video's figure unconditionally, and never either retired figure at all.
     expect(container.querySelector('[class~="bg-ink/50"]')).toBeNull();
     expect(container.querySelector('[class~="bg-ink/35"]')).toBeNull();
     expect(container.querySelector('[class~="max-[768px]:bg-ink/35"]')).toBeNull();
