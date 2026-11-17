@@ -12,7 +12,7 @@ interface YouMayAlsoLikeProps {
 }
 
 /**
- * A quiet four-up strip under a hairline rule: no card, no fill, just the same portrait tiles
+ * A quiet three-up strip under a hairline rule: no card, no fill, just the same portrait tiles
  * the listings use. Renders nothing until there is something to show, so the page never
  * flashes an empty heading.
  */
@@ -34,7 +34,7 @@ const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
         {siteCopy.product.related.heading}
       </h2>
       {products.map((product, index) => (
-        <div key={product.id} className="col-span-6 lg:col-span-3">
+        <div key={product.id} className="col-span-6 lg:col-span-4">
           <Reveal delay={(index % 4) * 60}>
             <ProductTile product={product} />
           </Reveal>

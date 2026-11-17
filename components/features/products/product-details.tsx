@@ -131,7 +131,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
       </header>
 
       <div className="flex flex-col gap-8">
-        <fieldset className="m-0 min-w-0 border-0 p-0">
+        <fieldset className="relative m-0 min-w-0 border-0 p-0">
           <legend className="mb-3 p-0 font-ui text-eyebrow font-normal uppercase text-ink-soft">
             Size
           </legend>
@@ -152,6 +152,13 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               </label>
             ))}
           </div>
+          {/* Radios cannot be unselected, so a chosen size needs its own way back. Positioned
+              over the legend row so it appearing never moves the controls below. */}
+          {size ? (
+            <Button variant="quiet" onClick={() => setSize(null)} className="absolute right-0 top-0">
+              Clear size
+            </Button>
+          ) : null}
         </fieldset>
 
         <Button href={enquiryHref(product.name, size)} className="self-start">

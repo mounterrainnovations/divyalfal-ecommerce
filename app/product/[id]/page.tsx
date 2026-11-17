@@ -57,8 +57,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const { product, dbProduct } = productData;
 
-  const navLabel = (href: string) =>
-    siteCopy.nav.items.find(item => item.href === href)?.label ?? '';
+  // A link with no words in it is worse than no link, so an href missing from the nav falls
+  // back to a plain label rather than rendering empty.
+  const navLabel = (href: string, fallback: string) =>
+    siteCopy.nav.items.find(item => item.href === href)?.label || fallback;
   const crumb =
     'font-ui text-caption text-ink-soft transition-colors duration-300 hover:text-ink motion-reduce:transition-none ' +
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink';
@@ -69,13 +71,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <ol className="col-span-12 flex flex-wrap items-center gap-x-3 gap-y-1 font-ui text-caption text-ink-soft">
           <li>
             <Link href="/" className={crumb}>
-              {navLabel('/')}
+              {navLabel('/', 'Home')}
             </Link>
           </li>
           <li aria-hidden="true">/</li>
           <li>
             <Link href="/products" className={crumb}>
-              {navLabel('/products')}
+              {navLabel('/products', 'All Products')}
             </Link>
           </li>
           <li aria-hidden="true">/</li>
@@ -91,7 +93,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <div className="col-span-12 lg:col-span-7">
           <ProductHero photos={dbProduct.photos} productName={product.name} />
         </div>
-        <div className="col-span-12 lg:sticky lg:top-28 lg:col-span-4 lg:col-start-9">
+        {/* Capped to the room below the header and scrollable, so a disclosure opened on a short
+            screen can never push the Shipping / Care / Disclaimer prose below the pin where it
+            could not be reached. The padding and matching negative margin keep the focus outlines
+            of the controls from being clipped by the scroll container. */}
+        <div className="col-span-12 lg:sticky lg:top-28 lg:col-span-4 lg:col-start-9 lg:-m-2 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:p-2 overscroll-contain">
           <ProductDetails product={product} />
         </div>
       </div>

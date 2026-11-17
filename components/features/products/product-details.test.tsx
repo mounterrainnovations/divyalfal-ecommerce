@@ -7,8 +7,9 @@ import YouMayAlsoLike from './you-may-also-like';
 import { siteCopy } from '@/lib/content/site-copy';
 import type { Product } from '@/types';
 
-// The route imports Prisma at module scope; the test only reads its exports.
-vi.mock('@/lib/db', () => ({ prisma: {} }));
+// The route imports Prisma at module scope. Tests that render the page feed it a product here.
+const findUnique = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/db', () => ({ prisma: { product: { findUnique } } }));
 
 const base: Product = {
   id: 'p1',
@@ -129,6 +130,26 @@ describe('ProductDetails', () => {
     expect(text()).toMatch(/size M/i);
   });
 
+  it('lets a chosen size be cleared, so the enquiry stops naming it', async () => {
+    const user = userEvent.setup();
+    render(<ProductDetails product={base} />);
+    const text = () =>
+      new URL(screen.getByRole('link', { name: /whatsapp/i }).getAttribute('href') ?? '').searchParams.get(
+        'text'
+      ) ?? '';
+
+    // Nothing to clear until a size is chosen.
+    expect(screen.queryByRole('button', { name: /clear size/i })).toBeNull();
+
+    await user.click(screen.getByRole('radio', { name: 'L' }));
+    expect(text()).toMatch(/size L/i);
+
+    await user.click(screen.getByRole('button', { name: /clear size/i }));
+    expect(screen.getAllByRole('radio').every(radio => !(radio as HTMLInputElement).checked)).toBe(true);
+    expect(text()).not.toMatch(/size/i);
+    expect(screen.queryByRole('button', { name: /clear size/i })).toBeNull();
+  });
+
   it('has no quantity selector and no link that leads nowhere', () => {
     const { container } = render(<ProductDetails product={base} />);
     expect(screen.queryByLabelText(/quantity/i)).toBeNull();
@@ -196,6 +217,44 @@ describe('ProductHero', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it('makes the strip a tab stop only when there is something to scroll', () => {
+    const { rerender } = render(<ProductHero photos={base.photos} productName={base.name} />);
+    expect(screen.getByRole('region', { name: /product photographs/i })).toHaveAttribute('tabindex', '0');
+
+    rerender(<ProductHero photos={['/a.jpg']} productName={base.name} />);
+    expect(screen.getByRole('region', { name: /product photographs/i })).not.toHaveAttribute('tabindex');
+  });
+
+  it('gives the empty frame the same shape as a photograph at every width', () => {
+    const { container: empty } = render(<ProductHero photos={[]} productName={base.name} />);
+    const { container: full } = render(<ProductHero photos={['/a.jpg']} productName={base.name} />);
+    const ratio = (container: HTMLElement) =>
+      classTokens(container).filter(token => token.includes('aspect-'));
+    expect(ratio(empty)).toEqual(['aspect-[3/4]']);
+    expect(ratio(full)).toEqual(['aspect-[3/4]']);
+  });
+
+  it('follows rapid presses of Next to successive photos, not to the one the scroll has reached', async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+    const width = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(300);
+    Element.prototype.scrollTo = scrollTo;
+    try {
+      render(<ProductHero photos={base.photos} productName={base.name} />);
+      const next = screen.getByRole('button', { name: 'Next image' });
+      // Two presses before any scroll event has reported progress.
+      await user.click(next);
+      await user.click(next);
+      expect(scrollTo.mock.calls.map(call => call[0].left)).toEqual([300, 600]);
+
+      await user.click(screen.getByRole('button', { name: 'Previous image' }));
+      expect(scrollTo.mock.calls[2][0].left).toBe(300);
+    } finally {
+      width.mockRestore();
+      delete (Element.prototype as { scrollTo?: unknown }).scrollTo;
+    }
+  });
+
   it('uses no banned styling', () => {
     const { container } = render(<ProductHero photos={base.photos} productName={base.name} />);
     expect(classTokens(container).filter(token => BANNED.test(token))).toEqual([]);
@@ -210,7 +269,7 @@ describe('YouMayAlsoLike', () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it('keeps the existing request shape, leaves the current product out, and shows a four-up strip', async () => {
+  it('keeps the existing request shape, leaves the current product out, and shows an honest three-up strip', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ products: related }),
@@ -229,16 +288,20 @@ describe('YouMayAlsoLike', () => {
 
     const section = screen.getByRole('region', { name: siteCopy.product.related.heading });
     const links = within(section).getAllByRole('link');
-    expect(links).toHaveLength(4);
+    // limit=4 minus the current product can only ever leave three, so the row is three-up:
+    // each tile spans a third of the grid and there is no blank quarter.
+    expect(links).toHaveLength(3);
     expect(links.map(link => link.getAttribute('href'))).toEqual([
       '/product/p2',
       '/product/p3',
       '/product/p4',
-      '/product/p5',
     ]);
     expect(within(section).queryByText('Current')).toBeNull();
     // Tiles sit under the page's h2, so their names are h3.
-    expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(4);
+    expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(3);
+    for (const link of links) {
+      expect(link.closest('[class*="col-span"]')?.className).toContain('lg:col-span-4');
+    }
   });
 
   it('renders nothing when the request fails', async () => {
@@ -256,5 +319,55 @@ describe('product route', () => {
     const route = await import('@/app/product/[id]/page');
     expect(route.dynamic).toBe('force-dynamic');
     expect(route.revalidate).toBe(0);
+  });
+
+  const renderPage = async () => {
+    findUnique.mockResolvedValue({
+      id: 'p1',
+      name: 'Midnight Silk Saree',
+      price: 3500,
+      sale: false,
+      salePrice: null,
+      photos: ['/a.jpg', '/b.jpg'],
+      category: 'SAREE',
+      specifications: '<p><strong>Great</strong></p><p>testing</p>',
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ products: [] }) }));
+    const route = await import('@/app/product/[id]/page');
+    const ui = await route.default({ params: Promise.resolve({ id: 'p1' }) });
+    return render(ui);
+  };
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('keeps the detail column reachable: sticky, capped to the viewport, and scrollable, with a disclosure open', async () => {
+    const user = userEvent.setup();
+    await renderPage();
+
+    // The wrapper that pins the details is the one that contains the h1.
+    const column = screen.getByRole('heading', { level: 1 }).closest('[class*="lg:sticky"]');
+    expect(column).not.toBeNull();
+    const tokens = (column?.getAttribute('class') ?? '').split(/\s+/);
+    expect(tokens).toContain('lg:sticky');
+    // Without a cap, an opened disclosure makes the column taller than the viewport and the
+    // Shipping / Care / Disclaimer prose sits below the pin, unreachable until the photos end.
+    expect(tokens).toContain('lg:max-h-[calc(100vh-7rem)]');
+    expect(tokens).toContain('lg:overflow-y-auto');
+    expect(tokens).toContain('overscroll-contain');
+
+    // Open a disclosure: its prose is then inside the capped column.
+    await user.click(screen.getByRole('heading', { name: siteCopy.product.shipping.heading }));
+    const disclosure = screen
+      .getByRole('heading', { name: siteCopy.product.shipping.heading })
+      .closest('details');
+    expect(disclosure).toHaveAttribute('open');
+    expect(column).toContainElement(screen.getByText(siteCopy.product.shipping.items[0]));
+  });
+
+  it('never renders an empty breadcrumb link', async () => {
+    await renderPage();
+    const crumbs = within(screen.getByRole('navigation', { name: 'Breadcrumb' })).getAllByRole('link');
+    expect(crumbs.length).toBe(2);
+    for (const crumb of crumbs) expect(crumb.textContent?.trim()).not.toBe('');
   });
 });
