@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { request } from '@/lib/admin/api';
+import { ENQUIRIES_CHANGED } from '@/lib/admin/events';
 import { FOCUS, LABEL, RULE } from './styles';
 
 export interface RailSection {
@@ -10,10 +13,7 @@ export interface RailSection {
   href: string;
 }
 
-/**
- * The portal's seven sections, in the order the plan names them. Overview and Products are
- * built; the other five are route stubs until their screens land.
- */
+/** The portal's seven sections, in the order the plan names them. */
 export const SECTIONS: RailSection[] = [
   { label: 'Overview', href: '/dashboard' },
   { label: 'Products', href: '/dashboard/products' },
@@ -42,8 +42,48 @@ export function isCurrent(pathname: string | null, href: string) {
  * (left on the rail, under the item on the phone row) and ink type instead of soft.
  * `aria-current="page"` carries the same fact to a screen reader.
  */
+/**
+ * How many enquiries are waiting, for the mark beside the Enquiries item.
+ *
+ * Refetched on every navigation, because that is when the count is most likely to be stale,
+ * and updated without a request while the admin works in the Enquiries screen — which
+ * announces each change on `ENQUIRIES_CHANGED` (see `lib/admin/events.ts`).
+ *
+ * A failure is silence. Until the CMS migration is applied this request answers 503, and a
+ * portal rail is the last place that should carry an error about a table.
+ */
+function useUnreadEnquiries(pathname: string | null): number {
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const read = async () => {
+      const answer = await request<{ unread: number }>('/api/admin/enquiries?limit=1', {
+        signal: controller.signal,
+      });
+      if (answer.ok && answer.data) setUnread(answer.data.unread);
+    };
+    read();
+
+    const listen = (event: Event) => {
+      const count = (event as CustomEvent<number>).detail;
+      if (typeof count === 'number') setUnread(count);
+    };
+    window.addEventListener(ENQUIRIES_CHANGED, listen);
+
+    return () => {
+      controller.abort();
+      window.removeEventListener(ENQUIRIES_CHANGED, listen);
+    };
+  }, [pathname]);
+
+  return unread;
+}
+
 export default function Rail() {
   const pathname = usePathname();
+  const unread = useUnreadEnquiries(pathname);
 
   return (
     <nav
@@ -72,6 +112,9 @@ export default function Rail() {
                 )}
               >
                 {section.label}
+                {section.href === '/dashboard/enquiries' && unread > 0 ? (
+                  <span className="text-ink"> · {unread}</span>
+                ) : null}
               </Link>
             </li>
           );

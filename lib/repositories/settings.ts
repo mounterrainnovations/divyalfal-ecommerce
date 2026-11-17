@@ -20,7 +20,16 @@ import { prisma } from '@/lib/db';
 /** The seed's internal marker. Never shown, never editable, never deletable through the API. */
 export const INTERNAL_SETTING_KEYS = new Set(['seed.gallery']);
 
-/** Every key the admin may read and write. Matches what `prisma/seed-cms.ts` writes. */
+/**
+ * Every key the admin may read and write.
+ *
+ * The first eight are what `prisma/seed-cms.ts` writes. The four after them are **not
+ * seeded**, and that is deliberate: `siteCopy.footer.social` is an empty array because no
+ * Instagram or Facebook address has ever been supplied, and there is no Open Graph image in
+ * the site today. A seed cannot invent them, but the Settings screen can offer the rows so
+ * that the client can supply them once, in the obvious place, instead of someone editing a
+ * constant. A key with no row simply reads as absent until it is first saved.
+ */
 export const EDITABLE_SETTING_KEYS = [
   'whatsapp',
   'contact.phone',
@@ -30,6 +39,10 @@ export const EDITABLE_SETTING_KEYS = [
   'contact.hours',
   'seo.title',
   'seo.description',
+  'seo.ogImage',
+  'social.instagram',
+  'social.facebook',
+  'social.youtube',
 ] as const;
 
 export type SettingKey = (typeof EDITABLE_SETTING_KEYS)[number];
