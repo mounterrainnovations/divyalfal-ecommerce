@@ -1,22 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { siteCopy } from '@/lib/content/site-copy';
-
-/**
- * The desktop/mobile split is `useMedia`, exactly as before the revamp, so the hook is
- * mocked rather than stubbed through `window.matchMedia`: that pins *which* breakpoint the
- * hero asks for as well as what it renders on either side of it.
- */
-const useMedia = vi.hoisted(() => vi.fn<(query: string) => boolean>());
-vi.mock('@/lib/hooks/useMedia', () => ({ useMedia }));
 
 import Hero from './hero';
 
 const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
 
+const PHONE = '(max-width: 768px)';
+
 /** Every class token rendered anywhere inside a container, as tokens rather than substrings. */
 const classTokens = (container: HTMLElement) =>
-  Array.from(container.querySelectorAll('[class]')).flatMap((node) =>
+  Array.from(container.querySelectorAll('[class]')).flatMap(node =>
     (node.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
   );
 
@@ -29,16 +24,52 @@ const classTokens = (container: HTMLElement) =>
 const overlayOf = (container: HTMLElement) =>
   container.querySelector('section > div[class~="absolute"][class~="inset-0"][class~="flex"]');
 
+/** The flat wash: the one `aria-hidden` plate between the media and the wordmark overlay. */
+const washOf = (container: HTMLElement) =>
+  container.querySelector('section > div[aria-hidden="true"]');
+
+/**
+ * A controllable `matchMedia`. jsdom ships none, and the hero subscribes to one so that a
+ * desktop window dragged under 768px re-runs the video's source selection.
+ */
+function stubMatchMedia(initial: boolean) {
+  const listeners = new Set<() => void>();
+  let matches = initial;
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    get matches() {
+      return matches;
+    },
+    media: query,
+    addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+    removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+  }));
+  return {
+    flip(next: boolean) {
+      matches = next;
+      for (const listener of listeners) listener();
+    },
+    get subscribers() {
+      return listeners.size;
+    },
+  };
+}
+
 describe('Hero', () => {
   beforeEach(() => {
-    useMedia.mockReset();
-    useMedia.mockReturnValue(false);
+    stubMatchMedia(false);
+    // jsdom implements neither; the hero calls load() when the media query flips.
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('renders the wordmark over the media as the page h1', () => {
     render(<Hero />);
-    const heading = screen.getByRole('heading', { level: 1, name: wordmark });
-    expect(heading).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: wordmark })).toBeInTheDocument();
   });
 
   it('uppercases the wordmark in CSS, never in the copy', () => {
@@ -50,31 +81,113 @@ describe('Hero', () => {
     expect(heading).toHaveClass('uppercase');
   });
 
-  it('asks useMedia for the 768px split and keeps the desktop image behind the wordmark', () => {
-    const { container } = render(<Hero />);
-    expect(useMedia).toHaveBeenCalledWith('(max-width: 768px)');
-    const img = container.querySelector('img');
-    expect(img).not.toBeNull();
-    // PLACEHOLDER: an interim licensed sample, see public/samples/README.md.
-    expect(img?.getAttribute('src')).toContain('hero-black-silk-drape.webp');
+  /**
+   * The finding this component was rebuilt for.
+   *
+   * It used to pick its medium with `useMedia('(max-width: 768px)')`, and `useMedia`
+   * initialises `false` — so the server rendered the desktop branch for every client. The live
+   * SSR HTML carried `<link rel="preload" as="image" … imageSizes="100vw">` for the desktop
+   * still and no `bg_video.webm` at all: a 390px phone fetched a landscape still at preload
+   * priority, painted it, then replaced the whole hero on hydration.
+   *
+   * So the check is on the *server* markup, with no effects run and no media query answered:
+   * both media have to be in it, each behind a `media` attribute, or the phone is being served
+   * the desktop hero again.
+   */
+  it('emits both media in the server HTML, each gated by a media query', () => {
+    const html = renderToStaticMarkup(<Hero />);
+
+    // The footage is there at all -- it was not, for any client, before this.
+    expect(html).toContain(mobileVideo);
+    expect(html).toContain(`media="${PHONE}"`);
+    // And so is the still, as a next/image srcSet.
+    expect(html).toContain('%2Fsamples%2Fhero%2Fhero-black-silk-drape.webp');
     expect(desktopImage).toBe('/samples/hero/hero-black-silk-drape.webp');
-    // The wordmark names the hero; the photograph is decoration, not an alternative to it.
-    expect(img).toHaveAttribute('alt', '');
-    expect(container.querySelector('video')).toBeNull();
+    // Nothing in the decision is JavaScript: the markup does not differ by hook answer.
+    expect(renderToStaticMarkup(<Hero />)).toBe(html);
   });
 
-  it('keeps the mobile video source and marks it decorative', () => {
-    useMedia.mockReturnValue(true);
+  it('gates the footage with `media` on the source, never a `src` a CSS hidden cannot stop', () => {
     const { container } = render(<Hero />);
     const video = container.querySelector('video');
     expect(video).not.toBeNull();
-    expect(video).toHaveAttribute('src', mobileVideo);
+
+    // `autoplay` overrides `preload="none"` in every engine that implements it, so a
+    // display:none video carrying a `src` still downloads the clip. Proven earlier on this
+    // branch, in the spotlight band. The bytes are saved by the unmatched source, not by CSS.
+    expect(video?.hasAttribute('src')).toBe(false);
+    const source = video?.querySelector('source');
+    expect(source).toHaveAttribute('src', mobileVideo);
+    expect(source).toHaveAttribute('media', PHONE);
+    expect(source).toHaveAttribute('type', 'video/webm');
     expect(mobileVideo).toContain('bg_video.webm');
+
     expect(video?.muted).toBe(true);
     expect(video?.hasAttribute('playsinline')).toBe(true);
     expect(video).toHaveAttribute('aria-hidden', 'true');
     expect(video?.hasAttribute('controls')).toBe(false);
-    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('gives a phone a 43-byte inline candidate for the still, so none of it is requested', () => {
+    const { container } = render(<Hero />);
+    const picture = container.querySelector('picture');
+    expect(picture).not.toBeNull();
+
+    // `<picture>`'s `<img>` is its mandatory fallback and loads whenever no source matches, so
+    // "desktops only" has to be said by giving the phone something free rather than by
+    // leaving it out.
+    const source = picture?.querySelector('source');
+    expect(source).toHaveAttribute('media', PHONE);
+    expect(source?.getAttribute('srcset') ?? '').toMatch(/^data:image\/gif;base64,/);
+
+    // A desktop matches no source and falls through to the img's own responsive set.
+    const img = picture?.querySelector('img');
+    expect(img).toHaveAttribute('alt', '');
+    expect(img?.getAttribute('srcset') ?? '').toContain('hero-black-silk-drape');
+    expect(img).toHaveAttribute('sizes', '100vw');
+  });
+
+  it('preloads the still only where the still is shown', () => {
+    const html = renderToStaticMarkup(<Hero />);
+    // The old hint had no `media`, which is exactly why every phone paid for it.
+    expect(html).toMatch(/<link[^>]*rel="preload"[^>]*as="image"/);
+    expect(html).toContain(`media="not all and ${PHONE}"`);
+    // Still high priority -- it is the desktop LCP element.
+    expect(html).toMatch(/fetchPriority="high"/i);
+  });
+
+  it('never lazy-loads the above-the-fold still, and never uses the deprecated `priority`', () => {
+    const { container } = render(<Hero />);
+    const img = container.querySelector('picture img');
+    expect(img).toHaveAttribute('loading', 'eager');
+    expect(img).not.toHaveAttribute('loading', 'lazy');
+    // `priority` is the Next 16 deprecation; `preload` is deliberately not passed either,
+    // because it is the prop that emitted the ungated hint.
+    expect(container.innerHTML).not.toMatch(/\bpriority="/);
+  });
+
+  /**
+   * The resize case, and only the resize case. Source selection inside a `<video>` runs once
+   * and does not re-run when a media query flips, so a desktop window dragged under 768px
+   * would find a `<video>` with no chosen resource. `<picture>` re-picks on its own.
+   *
+   * The first paint does not depend on this: it is correct from the markup alone.
+   */
+  it('re-runs the video source selection when the 768px query flips', () => {
+    const media = stubMatchMedia(false);
+    const load = vi
+      .spyOn(HTMLMediaElement.prototype, 'load')
+      .mockImplementation(() => {});
+
+    const { unmount } = render(<Hero />);
+    expect(media.subscribers).toBe(1);
+    expect(load).not.toHaveBeenCalled();
+
+    media.flip(true);
+    expect(load).toHaveBeenCalledTimes(1);
+
+    unmount();
+    expect(media.subscribers).toBe(0);
   });
 
   it('holds a full viewport height with no inset frame around the media', () => {
@@ -86,7 +199,7 @@ describe('Hero', () => {
     // Tokens, not substrings: `[class*="p-6"]` also matched `gap-6` and `top-6`, so it passed
     // for reasons that had nothing to do with an inset frame. Any all-round padding would be
     // the card coming back; the grid's own inline padding comes from `grid-editorial`.
-    expect(classTokens(container).filter((token) => /^p-\d/.test(token))).toEqual([]);
+    expect(classTokens(container).filter(token => /^p-\d/.test(token))).toEqual([]);
   });
 
   /**
@@ -106,48 +219,33 @@ describe('Hero', () => {
    *    ~253) that a 35% wash cannot hold down. 50% brings that worst pixel to 3.3:1.
    *
    * Numbers and per-frame tables: `.superpowers/sdd/2026-11-16-storefront-revamp/task-13-report.md`.
+   *
+   * The wash is now one element carrying a `max-[768px]:` variant rather than a conditionally
+   * rendered one: the medium is chosen by CSS, so its treatment has to be too, on the same
+   * 768 boundary. Above 768 it declares no background at all, which is the still's measured 0%.
    */
-  it('puts no wash over the desktop still, whose measured floor is 0%', () => {
-    // Measured on the placeholder black-silk still: the worst glyph-stroke pixel is 9.26:1 at
-    // 1440x900 and 9.55:1 at 1920x1080 with no wash at all, so the lowest flat opacity holding
-    // 3:1 is 0% and no element is rendered. The previous photograph needed 35%. Real
-    // photography will need re-measuring -- see the component comment.
+  it('washes the video at the measured 50% and the still at nothing, in CSS', () => {
     const { container } = render(<Hero />);
-    expect(container.querySelector('[class*="bg-ink/"]')).toBeNull();
-    expect(container.querySelector('section > div[aria-hidden="true"]')).toBeNull();
-  });
-
-  it('washes the mobile and portrait-tablet video at the measured 50%', () => {
-    useMedia.mockReturnValue(true);
-    const { container } = render(<Hero />);
-    const wash = container.querySelector('[class~="bg-ink/50"]');
+    const wash = washOf(container);
     expect(wash).not.toBeNull();
-    expect(wash).toHaveAttribute('aria-hidden', 'true');
-    expect(container.querySelector('[class~="bg-ink/35"]')).toBeNull();
+    expect(wash?.className).toMatch(/max-\[768px\]:bg-ink\/50/);
     expect(wash?.className).toMatch(/\babsolute\b/);
     expect(wash?.className).toMatch(/\binset-0\b/);
-    // Driven by the same `useMedia` answer that picks the media, not by a `md:` variant:
-    // `md:` is min-width 768 while the video is max-width 768, so at exactly 768 a variant
-    // would put the still's wash over the video.
+
+    // No unconditional wash: the still's measured floor is 0%, so above 768 there is none.
+    expect(container.querySelector('[class~="bg-ink/50"]')).toBeNull();
+    expect(container.querySelector('[class~="bg-ink/35"]')).toBeNull();
+    expect(container.querySelector('[class~="max-[768px]:bg-ink/35"]')).toBeNull();
+    // Driven by the max-width variant, not by `md:`: `md:` is min-width 768 while the video is
+    // max-width 768, so at exactly 768 a `md:` variant would put the still's treatment over
+    // the video -- which is the one width this measured.
     expect(container.innerHTML).not.toMatch(/md:bg-ink/);
   });
 
   it('keeps the wash a wash: one flat ink opacity, never black and never a scrim', () => {
-    for (const mobile of [false, true]) {
-      useMedia.mockReturnValue(mobile);
-      const { container, unmount } = render(<Hero />);
-      expect(container.innerHTML).not.toMatch(/bg-black|bg-ink\/(?:[6-9]\d|100)\b/);
-      expect(container.innerHTML).not.toMatch(/gradient/);
-      unmount();
-    }
-  });
-
-  it('preloads the desktop still with `preload`, not the deprecated `priority` prop', () => {
     const { container } = render(<Hero />);
-    // `preload` makes next/image skip lazy loading. `priority` is the Next 16 deprecation and
-    // must not come back; either way the above-the-fold still must never be lazy.
-    expect(container.querySelector('img')).not.toHaveAttribute('loading', 'lazy');
-    expect(container.innerHTML).not.toMatch(/\bpriority\b/);
+    expect(container.innerHTML).not.toMatch(/bg-black|bg-ink\/(?:[6-9]\d|100)\b/);
+    expect(container.innerHTML).not.toMatch(/gradient/);
   });
 
   it('sets the wordmark on the baseline, columns 2-7, bottom-aligned', () => {
@@ -165,24 +263,25 @@ describe('Hero', () => {
     expect(heading).toHaveClass('md:col-start-2');
   });
 
+  /**
+   * Measured, and the reason the media split had to move into the markup without taking the
+   * wordmark with it: a state-driven alignment painted the phone's wordmark on the baseline
+   * and then jumped it to the centre on hydration -- 0.052 CLS on mobile `/`, the page's only
+   * layout shift. The position stays a CSS variant on the same 768 boundary.
+   */
   it('keeps the wordmark centred at the video breakpoint, in CSS rather than state', () => {
-    // The 50% video wash was measured with the word centred, so at max-width 768px it stays
-    // there. It is a CSS variant on the same 768 boundary `useMedia` answers for: `useMedia`
-    // is false on the server and first client render, so state-driven alignment would paint
-    // the phone's wordmark at the bottom and then jump it on hydration (a measured CLS).
-    for (const mobile of [false, true]) {
-      useMedia.mockReturnValue(mobile);
-      const { container, unmount } = render(<Hero />);
-      const overlay = overlayOf(container);
-      expect(overlay?.className).toMatch(/max-\[768px\]:items-center/);
-      expect(overlay?.className).toMatch(/max-\[768px\]:pb-0/);
-      unmount();
-    }
+    const { container } = render(<Hero />);
+    const overlay = overlayOf(container);
+    expect(overlay?.className).toMatch(/max-\[768px\]:items-center/);
+    expect(overlay?.className).toMatch(/max-\[768px\]:pb-0/);
+    // And it is the same in the server markup, so there is nothing for hydration to move.
+    expect(renderToStaticMarkup(<Hero />)).toContain('max-[768px]:items-center');
   });
 
-  it('uses the CSS-only load reveal on the media, not the scroll-triggered Reveal primitive', () => {
+  it('uses the CSS-only load reveal on both media, not the scroll-triggered Reveal primitive', () => {
     const { container } = render(<Hero />);
-    expect(container.querySelector('.reveal-image')).not.toBeNull();
+    expect(container.querySelector('picture img.reveal-image')).not.toBeNull();
+    expect(container.querySelector('video.reveal-image')).not.toBeNull();
     // Reveal arms blocks with data-reveal and is for below-the-fold content only.
     expect(container.querySelector('[data-reveal]')).toBeNull();
   });
@@ -203,17 +302,13 @@ describe('Hero', () => {
    * the LCP element.
    */
   it('does not animate the wordmark, which is the LCP element', () => {
-    for (const mobile of [false, true]) {
-      useMedia.mockReturnValue(mobile);
-      const { container, unmount } = render(<Hero />);
-      const wordmark = screen.getByRole('heading', { level: 1 });
-      expect(wordmark).not.toHaveClass('reveal-text');
-      expect(wordmark.className).not.toMatch(/\breveal-/);
-      expect(wordmark.closest('[style*="--reveal-delay"]')).toBeNull();
-      // The media keeps its reveal: the hero still has an entrance.
-      expect(container.querySelector('.reveal-image')).not.toBeNull();
-      unmount();
-    }
+    const { container } = render(<Hero />);
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).not.toHaveClass('reveal-text');
+    expect(heading.className).not.toMatch(/\breveal-/);
+    expect(heading.closest('[style*="--reveal-delay"]')).toBeNull();
+    // The media keeps its reveal: the hero still has an entrance.
+    expect(container.querySelector('.reveal-image')).not.toBeNull();
   });
 
   it('uses no pill, gradient, shadow or grey-scale utility classes', () => {
@@ -221,12 +316,12 @@ describe('Hero', () => {
     expect(container.innerHTML).not.toMatch(
       /rounded-full|rounded-3xl|gradient|shadow|(?:text|bg)-gray-/
     );
-    // Opacity never goes on type. The video's wash is `bg-ink/50`; the wordmark is a flat `text-paper`.
+    // Opacity never goes on type. The video's wash is `bg-ink/50`; the wordmark is a flat
+    // `text-paper`.
     expect(container.innerHTML).not.toMatch(/\btext-[A-Za-z0-9_-]+\/\d/);
   });
 
   it('leaves the decorative video out of the tab order without a redundant tabIndex', () => {
-    useMedia.mockReturnValue(true);
     const { container } = render(<Hero />);
     const video = container.querySelector('video');
     // A <video> with no `controls` is not focusable, so `tabIndex={-1}` asserted nothing; an
