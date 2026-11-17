@@ -153,6 +153,128 @@ export async function countUsage(asset: Pick<MediaAsset, 'id' | 'url'>): Promise
 }
 
 /**
+ * `countUsage` for a whole page of assets, in three queries rather than three per asset.
+ *
+ * The grid shows "used in N places" on every tile, and calling `countUsage` sixty times would
+ * be 180 round trips to draw one screen. The three reads here are each one query for the page:
+ * every product's photo list, every content block's JSON as text, and the slide counts grouped
+ * by asset. The per-asset arithmetic then happens in memory, which at this catalogue's size is
+ * a few hundred string tests.
+ *
+ * It must agree with `countUsage`, which is the one `deleteAsset` enforces with: a block counts
+ * **once** whether the URL is in its draft, its published value or both, which is why the two
+ * JSON columns are concatenated per row rather than tested separately.
+ */
+export async function countUsageFor(
+  assets: Pick<MediaAsset, 'id' | 'url'>[]
+): Promise<Record<string, AssetUsage>> {
+  const usage: Record<string, AssetUsage> = {};
+  if (assets.length === 0) return usage;
+
+  const [products, blocks, slides] = await Promise.all([
+    prisma.product.findMany({ select: { photos: true } }),
+    prisma.$queryRaw<{ body: string }[]>(
+      Prisma.sql`
+        SELECT coalesce("draft"::text, '') || ' ' || coalesce("published"::text, '') AS body
+        FROM "ContentBlock"
+      `
+    ),
+    prisma.slide.groupBy({ by: ['assetId'], _count: { _all: true } }),
+  ]);
+
+  const slidesByAsset = new Map(slides.map(row => [row.assetId, row._count._all]));
+
+  for (const asset of assets) {
+    const productCount = products.filter(product => product.photos.includes(asset.url)).length;
+    const blockCount = blocks.filter(block => block.body.includes(asset.url)).length;
+    const slideCount = slidesByAsset.get(asset.id) ?? 0;
+    usage[asset.id] = {
+      products: productCount,
+      blocks: blockCount,
+      slides: slideCount,
+      total: productCount + blockCount + slideCount,
+    };
+  }
+
+  return usage;
+}
+
+/** Thrown when an asset's bytes cannot be replaced in place. */
+export class AssetNotReplaceableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AssetNotReplaceableError';
+  }
+}
+
+export interface ReplaceAssetInput {
+  body: Buffer;
+  mimeType: string;
+  bytes: number;
+  width?: number | null;
+  height?: number | null;
+}
+
+/**
+ * Overwrite an asset's bytes **at its existing storage path**, so every reference follows.
+ *
+ * This is the only honest way to replace a photograph here. References are URL strings in
+ * `Product.photos` and inside `ContentBlock` JSON, so giving the row a new URL would leave
+ * every existing reference pointing at the old file — a "replace" that replaced nothing.
+ * Writing new bytes to the same key means the product page, the content block and the slide
+ * all show the new photograph without anything else being touched.
+ *
+ * Two refusals, both deliberate:
+ *
+ *  - **A seeded asset cannot be replaced.** Its URL is root-relative (`/samples/...`), so the
+ *    bytes are a file in `public/` under source control, not an object in the bucket.
+ *  - **The kind cannot change.** An `IMAGE` consumer renders an `<img>`; handing it a film
+ *    would break the page that references it rather than update it.
+ *
+ * The URL does not change, which is the point — and also the one caveat: a cache that already
+ * holds the old file keeps serving it until it expires. The caller says so rather than
+ * claiming the site has already changed.
+ */
+export async function replaceAssetFile(
+  id: string,
+  input: ReplaceAssetInput
+): Promise<MediaAsset> {
+  const asset = await prisma.mediaAsset.findUnique({ where: { id } });
+  if (!asset) throw new AssetNotFoundError(id);
+
+  if (isRootRelative(asset.url)) {
+    throw new AssetNotReplaceableError(
+      'This file ships with the site rather than living in storage, so its bytes cannot be replaced. Upload the new photograph as its own asset and use that instead.'
+    );
+  }
+
+  const kind = kindFor(input.mimeType);
+  if (kind !== asset.kind) {
+    throw new AssetNotReplaceableError(
+      `This asset is a ${asset.kind.toLowerCase()} and the replacement is a ${kind.toLowerCase()}. Everything that shows it expects the same kind of file.`
+    );
+  }
+
+  const { error } = await supabaseAdmin.storage
+    .from(STORAGE_BUCKET)
+    .upload(asset.path, input.body, { contentType: input.mimeType, upsert: true });
+
+  if (error) throw new Error(`Could not write the replacement file: ${error.message}`);
+
+  return prisma.mediaAsset.update({
+    where: { id },
+    data: {
+      mimeType: input.mimeType,
+      bytes: input.bytes,
+      // Measured in the browser before upload; null reads as "not measured", never as a wrong
+      // number, and nothing but the admin's own columns depends on it.
+      width: input.width ?? null,
+      height: input.height ?? null,
+    },
+  });
+}
+
+/**
  * Delete an asset, but only when nothing points at it.
  *
  * The order matters and is deliberate: **usage, then the storage object, then the row.** A

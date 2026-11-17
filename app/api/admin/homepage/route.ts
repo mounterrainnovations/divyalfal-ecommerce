@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import { getSections, saveSections, type SectionInput } from '@/lib/repositories/homepage';
 
 /** GET /api/admin/homepage -> `{ sections: HomepageSection[] }`, in display order. */
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
   try {
     return NextResponse.json({ sections: await getSections() });
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] GET /api/admin/homepage failed', error);
     return NextResponse.json({ error: 'Failed to load sections' }, { status: 500 });
   }
@@ -73,6 +75,7 @@ export async function PUT(request: Request) {
   try {
     return NextResponse.json(await saveSections(sections));
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] PUT /api/admin/homepage failed', error);
     return NextResponse.json({ error: 'Failed to save sections' }, { status: 500 });
   }

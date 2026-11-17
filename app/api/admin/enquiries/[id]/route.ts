@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { EnquiryStatus } from '@prisma/client';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import { EnquiryNotFoundError, setEnquiryStatus } from '@/lib/repositories/enquiries';
 
 const STATUSES: EnquiryStatus[] = ['UNREAD', 'READ', 'ARCHIVED'];
@@ -41,6 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (error instanceof EnquiryNotFoundError) {
       return NextResponse.json({ error: 'Enquiry not found' }, { status: 404 });
     }
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] PATCH /api/admin/enquiries/[id] failed', error);
     return NextResponse.json({ error: 'Failed to update enquiry' }, { status: 500 });
   }

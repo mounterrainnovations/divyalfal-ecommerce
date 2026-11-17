@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import { getDraft, saveDraft, UnknownContentKeyError } from '@/lib/repositories/content';
 
 /** GET /api/admin/content/[key] -> the whole block, draft and published. */
@@ -16,6 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
     if (!block) return NextResponse.json({ error: 'Unknown content key' }, { status: 404 });
     return NextResponse.json(block);
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] GET /api/admin/content/[key] failed', error);
     return NextResponse.json({ error: 'Failed to load block' }, { status: 500 });
   }
@@ -52,6 +54,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ key:
     if (error instanceof UnknownContentKeyError) {
       return NextResponse.json({ error: 'Unknown content key' }, { status: 400 });
     }
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] PUT /api/admin/content/[key] failed', error);
     return NextResponse.json({ error: 'Failed to save draft' }, { status: 500 });
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import {
   AssetInUseError,
   AssetNotFoundError,
@@ -39,6 +40,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (error instanceof AssetNotFoundError) {
       return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
     }
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] PATCH /api/admin/media/[id] failed', error);
     return NextResponse.json({ error: 'Failed to update asset' }, { status: 500 });
   }
@@ -72,6 +74,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (error instanceof AssetNotFoundError) {
       return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
     }
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] DELETE /api/admin/media/[id] failed', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to delete asset' },

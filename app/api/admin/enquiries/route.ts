@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { EnquiryStatus } from '@prisma/client';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import { listEnquiries } from '@/lib/repositories/enquiries';
 
 const STATUSES: EnquiryStatus[] = ['UNREAD', 'READ', 'ARCHIVED'];
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(result);
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] GET /api/admin/enquiries failed', error);
     return NextResponse.json({ error: 'Failed to load enquiries' }, { status: 500 });
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import { publish } from '@/lib/repositories/content';
 
 /**
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     const result = await publish(keys as string[]);
     return NextResponse.json(result);
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] POST /api/admin/content/publish failed', error);
     return NextResponse.json({ error: 'Publish failed' }, { status: 500 });
   }

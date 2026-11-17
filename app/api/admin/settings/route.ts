@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
 import {
   EDITABLE_SETTING_KEYS,
   getSettings,
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
       editableKeys: [...EDITABLE_SETTING_KEYS],
     });
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] GET /api/admin/settings failed', error);
     return NextResponse.json({ error: 'Failed to load settings' }, { status: 500 });
   }
@@ -71,6 +73,7 @@ export async function PUT(request: Request) {
         { status: 400 }
       );
     }
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] PUT /api/admin/settings failed', error);
     return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
   }

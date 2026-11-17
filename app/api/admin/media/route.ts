@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 import type { MediaKind } from '@prisma/client';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
-import { backfillFromProductPhotos, createAsset, listAssets } from '@/lib/repositories/media';
+import { isMissingTable, notSetUpResponse } from '@/lib/admin/not-set-up';
+import {
+  backfillFromProductPhotos,
+  countUsageFor,
+  createAsset,
+  listAssets,
+} from '@/lib/repositories/media';
 
 const KINDS: MediaKind[] = ['IMAGE', 'VIDEO'];
 
 /**
  * GET /api/admin/media?kind=&tag=&cursor=&limit=
- *   -> `{ assets: MediaAsset[], nextCursor: string | null }`, newest first.
+ *   -> `{ assets: MediaAsset[], nextCursor: string | null, usage: Record<id, AssetUsage> }`,
+ *   newest first.
+ *
+ * `usage` is the same count `DELETE` enforces with, for the assets on this page only, so the
+ * library can say "used in 3 places" on a tile instead of finding out at the moment of
+ * deletion. It is three queries for the page, not three per asset (`countUsageFor`).
  */
 export async function GET(request: Request) {
   try {
@@ -28,8 +39,9 @@ export async function GET(request: Request) {
       tag: params.get('tag') ?? undefined,
       limit: Number.isFinite(limitParam) && limitParam > 0 ? limitParam : undefined,
     });
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, usage: await countUsageFor(result.assets) });
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] GET /api/admin/media failed', error);
     return NextResponse.json({ error: 'Failed to list media' }, { status: 500 });
   }
@@ -62,6 +74,7 @@ export async function POST(request: Request) {
       const created = await backfillFromProductPhotos();
       return NextResponse.json({ created });
     } catch (error) {
+      if (isMissingTable(error)) return notSetUpResponse();
       console.error('[API] media backfill failed', error);
       return NextResponse.json({ error: 'Backfill failed' }, { status: 500 });
     }
@@ -98,6 +111,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(asset, { status: 201 });
   } catch (error) {
+    if (isMissingTable(error)) return notSetUpResponse();
     console.error('[API] POST /api/admin/media failed', error);
     return NextResponse.json({ error: 'Failed to create asset' }, { status: 500 });
   }
