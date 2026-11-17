@@ -95,11 +95,17 @@
   --tracking-wordmark: 0.14em;
   --measure: 68ch;
 
-  /* Layout — 12 columns, 1440 max, 24px mobile gutters, 96px mobile rhythm. */
+  /* Layout — 12 columns, 1440 max, 24px mobile gutters, 80px mobile rhythm.
+     THE RHYTHM IS ONE TOKEN, AND IT IS THE PAGE'S DENSITY DIAL. Every movement, the contact
+     form, the store map and the footer's top padding read it, so tightening the page is done
+     here and not section by section. It was 96/160 when the pacing was drawn for lush
+     photography and a full catalogue; at eleven photographs and two products the homepage read
+     as empty paper. `app/tokens.test.ts` pins both figures so the dial cannot turn by
+     accident. */
   --content-max: 1440px;
   --grid-columns: 12;
   --gutter: 24px;
-  --section-rhythm: 96px;
+  --section-rhythm: 80px;
   --hairline: 1px;
 
   /* Motion budget: image reveal 900ms (opacity + 1.04 -> 1), text fade-up 24px,
@@ -113,7 +119,7 @@
 @media (min-width: 1024px) {
   :root {
     --gutter: 48px;
-    --section-rhythm: 160px;
+    --section-rhythm: 104px;
   }
 }
 
