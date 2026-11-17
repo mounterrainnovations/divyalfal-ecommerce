@@ -15,14 +15,23 @@ import { hasPhotographed, photographedFirst } from '@/lib/utils/product-utils';
  * Six slots, two per row, each row a different asymmetry: a wide tile with a narrower one
  * dropped below its shoulder, then the mirror. `/api/homepage-sections` returns at most one
  * product per category, so six is the ceiling and the cycle never repeats on one page.
+ *
+ * **The drops came down in the density pass** (32/24/40 -> 20/14/24) and the spans did not.
+ * The offsets were never what made this movement tall — a row is as tall as its five-column
+ * tile, and every drop here is shorter than the difference between a five-column tile and a
+ * four-column one — but at 160px of drop they opened bands of bare paper beside the smaller
+ * tile, which is what the page was being judged for. Shortening the drop closes the paper and
+ * costs no photograph a pixel. **The spans stayed deliberately**: the only way to make this
+ * movement materially shorter is to shrink the garments, and on a couture storefront that is
+ * the one trade not worth making. The arithmetic is in the density-pass report.
  */
 const TILE_PLACEMENT = [
   'col-span-12 md:col-span-5 md:col-start-2',
-  'col-span-12 mt-12 md:col-span-4 md:col-start-8 md:mt-32',
-  'col-span-12 mt-12 md:col-span-4 md:col-start-2 md:mt-24',
-  'col-span-12 mt-12 md:col-span-5 md:col-start-7 md:mt-0',
-  'col-span-12 mt-12 md:col-span-5 md:col-start-2 md:mt-24',
-  'col-span-12 mt-12 md:col-span-4 md:col-start-8 md:mt-40',
+  'col-span-12 mt-10 md:col-span-4 md:col-start-8 md:mt-20',
+  'col-span-12 mt-10 md:col-span-4 md:col-start-2 md:mt-14',
+  'col-span-12 mt-10 md:col-span-5 md:col-start-7 md:mt-0',
+  'col-span-12 mt-10 md:col-span-5 md:col-start-2 md:mt-14',
+  'col-span-12 mt-10 md:col-span-4 md:col-start-8 md:mt-24',
 ];
 
 /**
@@ -101,7 +110,7 @@ export default function ShopByStyle() {
       </div>
 
       {rowsOf(tiles).map((row, rowIndex) => (
-        <div key={rowIndex} className={cn('grid-editorial', rowIndex === 0 ? 'mt-4 md:mt-20' : '')}>
+        <div key={rowIndex} className={cn('grid-editorial', rowIndex === 0 ? 'mt-4 md:mt-12' : '')}>
           {row.map((tile, tileIndex) => {
             const index = rowIndex * TILES_PER_ROW + tileIndex;
             return (
@@ -113,7 +122,7 @@ export default function ShopByStyle() {
         </div>
       ))}
 
-      <Reveal className="grid-editorial mt-16 md:mt-28" delay={Math.max(tiles.length - 1, 0) * 60}>
+      <Reveal className="grid-editorial mt-12 md:mt-20" delay={Math.max(tiles.length - 1, 0) * 60}>
         <HairlineRule className="col-span-12 md:col-span-10 md:col-start-2" />
       </Reveal>
     </section>
