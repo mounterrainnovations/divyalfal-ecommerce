@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import {
+  IMAGE_TYPES,
+  IMAGE_MAX_BYTES,
+  VIDEO_TYPES,
+  VIDEO_MAX_BYTES,
+  STORAGE_BUCKET,
+} from './limits';
 
 export async function POST(request: Request) {
   // First statement, before the body is read or storage is touched. It sits outside the main
@@ -19,19 +26,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    const isImage = IMAGE_TYPES.includes(file.type);
+    const isVideo = VIDEO_TYPES.includes(file.type);
+
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
+    if (!isImage && !isVideo) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPG, PNG, WebP, and GIF are allowed.' },
+        { error: 'Invalid file type. Only JPG, PNG, WebP, GIF, MP4 and WebM are allowed.' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 });
+    // Validate file size. The image branch keeps the product form's exact contract: 5MB, 400,
+    // and that same message. Video gets its own larger cap, and a 413, which is what a
+    // body-too-large refusal actually is.
+    if (isImage) {
+      if (file.size > IMAGE_MAX_BYTES) {
+        return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 });
+      }
+    } else if (file.size > VIDEO_MAX_BYTES) {
+      return NextResponse.json(
+        { error: `Video too large. Maximum size is ${VIDEO_MAX_BYTES / (1024 * 1024)}MB.` },
+        { status: 413 }
+      );
     }
 
     // Generate unique filename
@@ -44,7 +61,7 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Supabase storage
-    const { error } = await supabaseAdmin.storage.from('product-images').upload(filePath, buffer, {
+    const { error } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(filePath, buffer, {
       contentType: file.type,
       upsert: false,
     });
@@ -57,7 +74,7 @@ export async function POST(request: Request) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabaseAdmin.storage.from('product-images').getPublicUrl(filePath);
+    } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
 
     return NextResponse.json({ url: publicUrl }, { status: 200 });
   } catch (error) {
