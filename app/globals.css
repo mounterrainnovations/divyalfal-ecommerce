@@ -170,6 +170,21 @@
   max-width: var(--measure);
 }
 
+/* A scroller with no visible scrollbar. Live storefront CSS: the product hero's thumbnail
+   rail (`components/features/products/product-hero.tsx`) scrolls horizontally on a phone and
+   relies on this. It is written here, in the design system, and NOT in the deprecated legacy
+   block below -- it sat there until the final fix wave, where the deprecation comment named
+   only the dashboard files as consumers, so deleting that block would have revealed a
+   scrollbar on `/product/[id]`. `test/no-legacy-styles.test.ts` holds it above the marker. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
@@ -265,7 +280,14 @@ body {
    that no storefront file referenced it. The storefront is clean — `test/no-legacy-styles.test.ts`
    holds that as a standing guard — but `app/dashboard/**`, `components/ui/button.tsx` and
    `components/ui/rich-text-editor.tsx` still read these tokens, and Phase 2 Task 9 owns the
-   dashboard restyle. So the block stays until then: Phase 2 Task 9 removes it. */
+   dashboard restyle. So the block stays until then: Phase 2 Task 9 removes it.
+
+   WHAT TO DELETE: everything between this comment and the `END OF THE DEPRECATED BLOCK`
+   marker, and nothing past it. `.scrollbar-hide` used to be written below that reset and is
+   live storefront CSS (the product hero's thumbnail rail); it has been moved up into the
+   design system so this deletion cannot take it. What follows the marker is the TipTap
+   editor's own `.ProseMirror` rules, which belong to `components/ui/rich-text-editor.tsx` and
+   go when it does, and an orphaned `.animate-shimmer` nothing imports. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -390,14 +412,8 @@ body {
   }
 }
 
-.scrollbar-hide {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+/* END OF THE DEPRECATED BLOCK. Phase 2 Task 9 deletes everything above this line back to the
+   DEPRECATED comment, and nothing below it. */
 
 /* Shimmer animation for image loading */
 @keyframes shimmer {

@@ -34,7 +34,11 @@ const navLabel = (href: string) => siteCopy.nav.items.find(item => item.href ===
 
 /**
  * Sale sorting happens in the browser (the route has no discount sort). `default` is the order
- * the API returned, as it always was; the discount sorts are offered, not imposed.
+ * the API returned; `discount-high` is where the page opens, because that is where the live
+ * page has always opened — the pre-revamp `app/sale/page.tsx` initialised
+ * `sortBy: 'discount-high'` and listed `default` only as one option among six. A Task 10
+ * ruling briefly made `default` the initial value, which reordered the client's live sale
+ * page; it was reverted in the final fix wave. "Default" stays in the list.
  */
 const SALE_SORT_OPTIONS = [
   { value: 'default', label: 'Default' },
@@ -81,7 +85,8 @@ const CONFIG: Record<
     searchLabel: 'Search sale products',
     searchPlaceholder: 'Search sale products...',
     sortOptions: SALE_SORT_OPTIONS,
-    defaultSort: 'default',
+    // The deepest discount leads, as it did before the revamp. See SALE_SORT_OPTIONS above.
+    defaultSort: 'discount-high',
     range: DISCOUNT_GROUP,
     count: n => `${n} ${n === 1 ? 'product' : 'products'} on sale`,
     emptyHeading: 'No sale products found',

@@ -11,9 +11,15 @@ const rupees = new Intl.NumberFormat('en-IN', {
  * The one price formatter: Indian digit grouping, no decimals — 1250000 -> "₹12,50,000".
  * Numeric strings are accepted because `lib/common/product-interfaces` re-exports this
  * under its old name and its callers were typed `number | string`.
+ *
+ * Anything that will not parse goes back out as it came in rather than through
+ * `Intl.NumberFormat`, which renders it as "₹NaN". No caller can reach that today — every
+ * storefront price is coerced to a finite number upstream — so this is a floor, not a
+ * feature: a garment priced "on request" shows those words, never a broken number.
  */
 export function formatPrice(value: number | string): string {
   const numeric = typeof value === 'string' ? parseFloat(value) : value;
+  if (!Number.isFinite(numeric)) return String(value);
   return rupees.format(numeric);
 }
 

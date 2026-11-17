@@ -362,6 +362,53 @@ describe('the legacy shadcn token block', () => {
 });
 
 /**
+ * `.scrollbar-hide` is live storefront CSS and must not sit inside the block Phase 2 deletes.
+ *
+ * It used to be written after the `@layer base` reset, in the legacy tail — and the
+ * deprecation comment above that tail named only `app/dashboard/**`,
+ * `components/ui/button.tsx` and `components/ui/rich-text-editor.tsx` as the remaining
+ * consumers. `components/features/products/product-hero.tsx` is a storefront file and depends
+ * on this rule for the thumbnail rail it scrolls horizontally on a phone, so Phase 2 Task 9's
+ * deletion of "that block" would have revealed a scrollbar on `/product/[id]` with nothing
+ * to catch it.
+ *
+ * So the rule lives in the design system's own utility region, above the deprecation marker,
+ * and this test holds it there by position: the definition must come before the DEPRECATED
+ * comment, and the deprecated region must declare where it ends.
+ */
+describe('.scrollbar-hide', () => {
+  const css = readFileSync(path.join(ROOT, 'app/globals.css'), 'utf8');
+
+  it('is defined in the live token layer, above the deprecated block', () => {
+    const definition = css.indexOf('.scrollbar-hide');
+    const deprecation = css.search(/DEPRECATED[^\n]*legacy shadcn token/);
+    expect(definition).toBeGreaterThan(-1);
+    expect(deprecation).toBeGreaterThan(-1);
+    expect(definition).toBeLessThan(deprecation);
+    // Both halves of the rule moved, not just the first.
+    expect(css).toContain('.scrollbar-hide::-webkit-scrollbar');
+    expect(css.indexOf('.scrollbar-hide::-webkit-scrollbar')).toBeLessThan(deprecation);
+  });
+
+  it('is still the class the product hero asks for', () => {
+    const hero = readFileSync(
+      path.join(ROOT, 'components/features/products/product-hero.tsx'),
+      'utf8'
+    );
+    expect(stripComments(hero)).toContain('scrollbar-hide');
+  });
+
+  it('leaves the deprecated region with an explicit end, so a deletion cannot overrun it', () => {
+    const start = css.search(/DEPRECATED[^\n]*legacy shadcn token/);
+    const end = css.indexOf('END OF THE DEPRECATED BLOCK');
+    expect(end).toBeGreaterThan(start);
+    // Nothing the storefront needs may be written between the two markers.
+    const deprecated = css.slice(start, end);
+    expect(deprecated).not.toContain('.scrollbar-hide');
+  });
+});
+
+/**
  * Every surface that renders a `ProductTile` must pass its own `sizes`.
  *
  * `sizes` tells the browser how wide the photograph will be *before* layout, so it can pick a

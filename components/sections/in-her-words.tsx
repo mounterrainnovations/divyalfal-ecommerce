@@ -87,11 +87,14 @@ export default function InHerWords() {
             <p className="font-ui text-eyebrow uppercase text-ink-soft">
               {`${pad(index + 1)} / ${pad(total)}`}
             </p>
+            {/* Named for what they move. The Atelier gallery above has its own pair, and
+                "Previous" / "Next" twice on one page left a screen-reader user listing the
+                controls unable to tell the photographs from the quotes. Chrome, so inline. */}
             <Button variant="quiet" onClick={() => step(-1)}>
-              Previous
+              Previous quote
             </Button>
             <Button variant="quiet" onClick={() => step(1)}>
-              Next
+              Next quote
             </Button>
           </div>
         </Reveal>

@@ -27,6 +27,22 @@ describe('formatPrice', () => {
   it('keeps accepting numeric strings, as the legacy export did', () => {
     expect(formatPrice('10999')).toBe('₹10,999');
   });
+
+  /**
+   * No caller can reach this today -- every storefront price arrives as a finite number from
+   * `transformDbProductToProduct` or `readSections`, both of which coerce. But the signature
+   * says `number | string`, and `Intl.NumberFormat` renders an unparseable string as "₹NaN":
+   * a price on a couture storefront that reads "₹NaN" is worse than one that reads oddly.
+   * The raw value goes back out unchanged, so whatever the caller had is what shows.
+   */
+  it('returns the raw value rather than "₹NaN" for anything it cannot parse', () => {
+    expect(formatPrice('on request')).toBe('on request');
+    expect(formatPrice('')).toBe('');
+    expect(formatPrice(Number.NaN)).toBe('NaN');
+    expect(formatPrice(Number.POSITIVE_INFINITY)).toBe('Infinity');
+    // A numeric string with trailing noise still parses, exactly as it did before.
+    expect(formatPrice('10999abc')).toBe('₹10,999');
+  });
 });
 
 describe('resolvePrice', () => {

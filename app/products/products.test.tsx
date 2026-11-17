@@ -736,17 +736,24 @@ describe('/sale', () => {
     expect(requested(fetchMock)).toHaveLength(1);
   });
 
-  it('starts on Default, the API order, and still offers every discount sort', async () => {
+  /**
+   * `/sale` opens on the deepest discount first, which is the order the live page has always
+   * had: the pre-revamp `app/sale/page.tsx` initialised `sortBy: 'discount-high'` and offered
+   * `default` only as one option among six. Task 10's ruling made `default` the initial value
+   * and so silently reordered the live sale page; the final fix wave reverted it. "Default"
+   * stays in the list — it is the API's own order, and a visitor who wants it can pick it.
+   */
+  it('opens on Highest Discount, as the live page always did, and still offers Default', async () => {
     const small: Product = { ...onSale, id: 'a', name: 'Small Cut', price: 10000, salePrice: 9000 };
     const deep: Product = { ...onSale, id: 'b', name: 'Deep Cut', price: 10000, salePrice: 5000 };
     respondWith([small, deep]);
     const user = userEvent.setup();
     render(<SalePage />);
-    await screen.findByRole('link', { name: /Small Cut/ });
+    await screen.findByRole('link', { name: /Deep Cut/ });
     const select = screen.getByRole('combobox', { name: 'Sort by' }) as HTMLSelectElement;
     const order = () => screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent);
 
-    expect(select.value).toBe('default');
+    expect(select.value).toBe('discount-high');
     expect(within(select).getAllByRole('option').map(o => o.textContent)).toEqual([
       'Default',
       'Highest Discount',
@@ -755,11 +762,12 @@ describe('/sale', () => {
       'Price: High to Low',
       'Newest First',
     ]);
+    // The deepest cut leads, without the visitor touching the control.
+    expect(order()).toEqual(['Deep Cut', 'Small Cut']);
+
+    await user.selectOptions(select, 'default');
     // Default is the order the API gave, not a discount ranking.
     expect(order()).toEqual(['Small Cut', 'Deep Cut']);
-
-    await user.selectOptions(select, 'discount-high');
-    expect(order()).toEqual(['Deep Cut', 'Small Cut']);
     await user.selectOptions(select, 'discount-low');
     expect(order()).toEqual(['Small Cut', 'Deep Cut']);
     await user.selectOptions(select, 'price-low');
@@ -767,6 +775,28 @@ describe('/sale', () => {
 
     await user.click(screen.getByRole('radio', { name: '10-25% OFF' }));
     expect(order()).toEqual(['Small Cut']);
+  });
+
+  it('returns to Highest Discount, not Default, when the filters are cleared', async () => {
+    const small: Product = { ...onSale, id: 'a', name: 'Small Cut', price: 10000, salePrice: 9000 };
+    const deep: Product = { ...onSale, id: 'b', name: 'Deep Cut', price: 10000, salePrice: 5000 };
+    respondWith([small, deep]);
+    const user = userEvent.setup();
+    render(<SalePage />);
+    await screen.findByRole('link', { name: /Deep Cut/ });
+    const select = screen.getByRole('combobox', { name: 'Sort by' }) as HTMLSelectElement;
+
+    await user.selectOptions(select, 'price-low');
+    expect(select.value).toBe('price-low');
+    // The reset control lives in the empty state, so filter down to nothing first: neither
+    // fixture is cut by 75% or more.
+    await user.click(screen.getByRole('radio', { name: '75%+ OFF' }));
+    await user.click(screen.getByRole('button', { name: 'Clear Filters' }));
+    expect(select.value).toBe('discount-high');
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual([
+      'Deep Cut',
+      'Small Cut',
+    ]);
   });
 
   it('renders an editorial empty state with the original line and a way back', async () => {

@@ -97,12 +97,16 @@ export default function Atelier() {
             <p aria-live="polite" className="font-ui text-eyebrow uppercase text-ink-soft">
               {`${pad(current + 1)} / ${pad(total)}`}
             </p>
+            {/* Named for what they move, not just "Previous" / "Next". The In Her Words
+                quotes have a pair of controls too, and a screen-reader user listing the
+                homepage's controls met four of them under two names. Chrome, so the strings
+                are inline rather than in `siteCopy`. */}
             <div className="flex items-center gap-8">
               <Button variant="quiet" onClick={() => step(-1)}>
-                Previous
+                Previous frame
               </Button>
               <Button variant="quiet" onClick={() => step(1)}>
-                Next
+                Next frame
               </Button>
             </div>
           </Reveal>
