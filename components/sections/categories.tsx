@@ -83,8 +83,10 @@ const PREVIEW_SIZES =
  * 131 x 164 on a phone. So the subject wants to sit centred and survive every one of those;
  * nothing is overlaid on the image, so it needs no clear band for type. They are seen one at a
  * time, large, and in immediate succession as the reader moves down the list, so they want a
- * consistent treatment far more than they want individual drama. The weakest file in place today
- * is `/categories/lehenge.webp` at 368x399 — smaller than the frame it has to fill.
+ * consistent treatment far more than they want individual drama. All six now sit under
+ * `public/samples/categories/` at 1400x1750 -- at least 2x the 559x705 frame at the content max --
+ * and are curated as one set: cloth and hung garments in soft daylight, warm ground, no face in any
+ * of them. See `public/samples/README.md` for provenance.
  */
 export default function Categories() {
   const [active, setActive] = useState(0);

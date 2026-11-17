@@ -92,7 +92,7 @@ describe('siteCopy', () => {
     // `text-transform: uppercase` and the eyebrow tracking in CSS.
     expect(siteCopy.home.hero.wordmark).toBe('Divyafal');
     // PLACEHOLDER sample (public/samples/README.md), not launch content.
-    expect(siteCopy.home.hero.desktopImage).toBe('/samples/hero/hero-black-silk-drape.webp');
+    expect(siteCopy.home.hero.desktopImage).toBe('/samples/hero/hero-golden-warp-on-the-loom.webp');
     expect(siteCopy.home.hero.mobileVideo).toBe(
       'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm'
     );

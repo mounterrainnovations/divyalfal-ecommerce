@@ -101,7 +101,7 @@ const { props: still } = getImageProps({
  * clear of the frame's foot -- and on the phone video it stays vertically centred. The still
  * used to force a centred wordmark: `mock_hero_desktop_2.webp` was a 1100x550 composite with
  * its own headline burned into the bottom quarter, which a baseline wordmark landed on top
- * of. The stand-in that replaces it (`public/samples/hero/hero-black-silk-drape.webp`, a
+ * of. The stand-in that replaces it (`public/samples/hero/hero-golden-warp-on-the-loom.webp`, a
  * placeholder -- see `public/samples/README.md`) carries no text, so the baseline is free
  * again. The video keeps its centred word because that is the position its wash was measured
  * at (below); moving it would void the 50% figure. **The alignment is CSS, `max-[768px]:`,
