@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { transformDbProductToProduct } from '@/lib/utils/product-utils';
 import { retryDatabaseOperation } from '@/lib/utils/database';
+import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -30,6 +31,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Admin-only write. First statement, outside the try/catch so a refusal is never rewritten.
+  try {
+    await requireAdmin(req);
+  } catch {
+    return unauthorizedResponse();
+  }
+
   try {
     const { id } = await params;
     const data = await req.json();
@@ -56,6 +64,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Admin-only write. First statement, outside the try/catch so a refusal is never rewritten.
+  try {
+    await requireAdmin(_);
+  } catch {
+    return unauthorizedResponse();
+  }
+
   try {
     const { id } = await params;
     await retryDatabaseOperation(async () => prisma.product.delete({ where: { id } }));
