@@ -22,9 +22,12 @@ function migrationDirs(): string[] {
 
 // Strip `-- line comments` so a comment mentioning a keyword cannot trip or hide a match.
 function stripComments(sql: string): string {
+  // Split on /\r?\n/ and drop any stray CR: git checks these files out with CRLF on Windows,
+  // and `.` does not match `\r` in a JS regex, so `/--.*$/` silently fails to strip a comment
+  // on a CRLF line. That turned every statement into a false violation.
   return sql
-    .split('\n')
-    .map((line) => line.replace(/--.*$/, ''))
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\r/g, '').replace(/--.*$/, ''))
     .join('\n');
 }
 
