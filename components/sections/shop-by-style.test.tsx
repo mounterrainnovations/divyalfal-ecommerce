@@ -139,6 +139,46 @@ describe('ShopByStyle', () => {
     expect(screen.queryAllByRole('img')).toHaveLength(0);
   });
 
+  /**
+   * The live catalogue's own state, and the one this section got wrong.
+   *
+   * `shopByStyle` returns exactly one product and that product has no photographs at all. The
+   * old condition was `products.length === 0`, so the section rendered one real `ProductTile`
+   * whose entire content was the honest "Image coming soon" frame — a single empty grey box
+   * under "Shop by Style" — while the four composed looks sat behind a condition that could
+   * only fire at *zero* products. Spec goal 5 is "looks intentional at 2 products" and §5
+   * forbids a grid that renders half-empty.
+   *
+   * So the tier turns on whether a *photographed* product exists, not on whether the array is
+   * empty. The empty frame inside `ProductTile` stays correct — a garment that reaches a
+   * listing with no picture must say so rather than borrow a stock one — but it cannot carry
+   * a movement on its own.
+   */
+  it('falls back when the only product has no photographs at all', async () => {
+    const [unphotographed] = products;
+    expect(unphotographed.photos).toEqual([]);
+    mockFetch({ freshArrivals: [], shopByStyle: [unphotographed] });
+    const { container } = render(<ShopByStyle />);
+
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.style.items[0].name });
+    expect(fallbackTiles(container)).toHaveLength(siteCopy.home.style.items.length);
+    // The lone photo-less garment is not shown beside the archive, and its empty frame is gone.
+    expect(screen.queryByRole('heading', { level: 3, name: unphotographed.name })).toBeNull();
+    expect(screen.queryByText('Image coming soon')).toBeNull();
+    expect(container.querySelector('a[href^="/product/"]')).toBeNull();
+  });
+
+  it('shows real stock, photo-less garments included, as soon as one product has a photograph', async () => {
+    mockFetch({ freshArrivals: [], shopByStyle: products });
+    const { container } = render(<ShopByStyle />);
+
+    await screen.findByRole('heading', { level: 3, name: products[1].name });
+    // Nothing is hidden: the photo-less garment still gets its tile and its honest frame.
+    expect(fallbackTiles(container)).toHaveLength(0);
+    expect(screen.getByRole('heading', { level: 3, name: products[0].name })).toBeInTheDocument();
+    expect(screen.getByText('Image coming soon')).toBeInTheDocument();
+  });
+
   it.each([
     ['an empty object', {}, true, 200],
     ['an error payload with a 500', { error: 'Failed to fetch homepage sections' }, false, 500],

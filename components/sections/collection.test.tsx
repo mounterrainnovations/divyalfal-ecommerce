@@ -130,6 +130,64 @@ describe('Collection', () => {
     await waitFor(() => expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1));
   });
 
+  /**
+   * The two sentences that rendered nowhere.
+   *
+   * `recommended.tabs[0].body` and `tabs[1].body` were in the copy module and in its snapshot
+   * — so the preservation guard was green — but no component read them, and `collection.tsx`
+   * read only `tabs[1].title`. A snapshot of the module can only prove the module is
+   * complete; `test/rendered-coverage.test.tsx` is the guard that proves the words reach a
+   * page. These two belong here: Movement 3 is where Most Recommended's two tabbed strands
+   * were folded in, so each strand's own title now labels its own blurb.
+   */
+  it('renders both of Most Recommended’s strands, title and blurb, verbatim', async () => {
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+
+    const { heading, tabs } = siteCopy.home.recommended;
+    // The movement's eyebrow is the heading of the rail it absorbed.
+    expect(screen.getByText(heading)).toBeInTheDocument();
+    for (const tab of tabs) {
+      expect(screen.getByText(tab.title)).toBeInTheDocument();
+      expect(screen.getByText(tab.body)).toBeInTheDocument();
+    }
+    // Verbatim, as transcribed -- not a paraphrase and not truncated.
+    expect(tabs[0].body).toBe(
+      'Discover our top-selling styles, loved by customers for their elegance and quality. Shop from our most popular collections.'
+    );
+    expect(tabs[1].body).toBe(
+      'Explore our latest collection of stunning pieces just added to our store — featuring the newest designs and trends.'
+    );
+  });
+
+  it('keeps both strands on screen in the fallback state too', async () => {
+    mockFetch({ freshArrivals: [], shopByStyle: [] });
+    render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+    for (const tab of siteCopy.home.recommended.tabs) {
+      expect(screen.getByText(tab.body)).toBeInTheDocument();
+    }
+  });
+
+  /**
+   * The same ruling as Movement 4's: the composed tier stands in when no *photographed*
+   * product exists, not when the array is empty. A single photo-less garment would otherwise
+   * open the sequence as one 648px-wide "Image coming soon" frame — the widest editorial
+   * moment on the homepage, holding no photograph at all.
+   */
+  it('falls back when the only product has no photographs at all', async () => {
+    const [unphotographed] = products;
+    expect(unphotographed.photos).toEqual([]);
+    mockFetch({ freshArrivals: [unphotographed], shopByStyle: [] });
+    const { container } = render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
+    expect(fallbackTiles(container)).toHaveLength(siteCopy.home.collection.length);
+    expect(screen.queryByRole('heading', { level: 3, name: unphotographed.name })).toBeNull();
+    expect(screen.queryByText(/image coming soon/i)).toBeNull();
+  });
+
   it('renders real products when the API returns them', async () => {
     mockFetch({ freshArrivals: products, shopByStyle: [] });
     const { container } = render(<Collection />);

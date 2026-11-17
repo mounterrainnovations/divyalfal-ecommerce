@@ -9,7 +9,7 @@ import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
 import { useHomepageSections } from '@/lib/hooks/useHomepageSections';
 import { cn } from '@/lib/utils';
-import { photographedFirst } from '@/lib/utils/product-utils';
+import { hasPhotographed, photographedFirst } from '@/lib/utils/product-utils';
 
 /**
  * Six slots, two per row, each row a different asymmetry: a wide tile with a narrower one
@@ -67,7 +67,15 @@ function rowsOf<T>(items: T[]): T[][] {
  *
  * The fallback tier is the client's decision, kept: the four looks in `siteCopy.home.style`
  * render in the same placements at 70% opacity with their names and nothing else — no link,
- * no price, no hover swap. They appear only when there is no real stock at all.
+ * no price, no hover swap.
+ *
+ * **It stands in when no *photographed* garment exists, not when the array is empty**
+ * (`hasPhotographed`). That is the live catalogue's own state and the one this section got
+ * wrong: `shopByStyle` returns exactly one product and it has zero photos, so the old
+ * `products.length === 0` test kept the composed tier hidden and rendered one real tile whose
+ * entire content was the "image coming soon" frame — Movement 4 as a single empty grey box
+ * under a display heading. The frame stays correct inside `ProductTile`; it was the
+ * section-level condition that was wrong.
  *
  * `{}`, `{ error }`, empty arrays and a rejected fetch are one branch (`readSections` in
  * `collection.tsx`), and the request itself is shared with Movement 3: one
@@ -76,7 +84,7 @@ function rowsOf<T>(items: T[]): T[][] {
 export default function ShopByStyle() {
   const { status, sections } = useHomepageSections();
   const products = photographedFirst(sections.shopByStyle).slice(0, TILE_PLACEMENT.length);
-  const showFallback = status === 'ready' && products.length === 0;
+  const showFallback = status === 'ready' && !hasPhotographed(products);
 
   const tiles: ReactNode[] = showFallback
     ? siteCopy.home.style.items.map(item => <StyleFallbackTile key={item.name} item={item} />)

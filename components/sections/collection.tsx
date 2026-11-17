@@ -14,7 +14,7 @@ import { siteCopy } from '@/lib/content/site-copy';
 import { useHomepageSections } from '@/lib/hooks/useHomepageSections';
 import { useMedia } from '@/lib/hooks/useMedia';
 import { cn } from '@/lib/utils';
-import { photographedFirst } from '@/lib/utils/product-utils';
+import { hasPhotographed, photographedFirst } from '@/lib/utils/product-utils';
 
 const STORAGE = 'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images';
 
@@ -52,6 +52,16 @@ const TILE_SIZES =
 
 const ROW_RHYTHM = 'mt-16 md:mt-28';
 
+/**
+ * Where each of Most Recommended's two strands sits. Not a two-up: the first holds columns
+ * 2–5, the second starts at 8, so the pair keeps the movement's asymmetry rather than
+ * reading as a feature table.
+ */
+const STRAND_PLACEMENT = [
+  'col-span-12 md:col-span-4 md:col-start-2',
+  'col-span-12 md:col-span-4 md:col-start-8',
+] as const;
+
 /** Media width of a lookbook pair: seven of twelve columns, capped by the 1440 content max. */
 const PAIR_SIZES = '(min-width: 1440px) 830px, (min-width: 768px) 58vw, 100vw';
 
@@ -75,9 +85,18 @@ const PAIR_SIZES = '(min-width: 1440px) 830px, (min-width: 768px) 58vw, 100vw';
  * it is composed rather than tolerated: the four named looks in `siteCopy.home.collection`
  * render as full `EditorialPair` lookbook spreads, image and prose alternating sides, and
  * carrying no link, no price and no add-to-cart. They are a lookbook of past work, which is
- * what they are — not stock pretending to be purchasable. They stand in only when there is
- * no real stock at all; a real garment is never padded out with placeholders, which is the
- * one way this departs from the retired rails (they topped up to four).
+ * what they are — not stock pretending to be purchasable. A real garment is never padded out
+ * with placeholders, which is the one way this departs from the retired rails (they topped up
+ * to four).
+ *
+ * **The tier turns on whether a photographed garment exists, not on whether the array is
+ * empty** (`hasPhotographed`). `ProductTile`'s "image coming soon" frame is the honest answer
+ * for a garment that reaches a listing with no picture, and it stays — but it cannot carry
+ * this movement, where the opening slot is 648px wide and is the largest photograph on the
+ * homepage. One photo-less product under the old `products.length === 0` test rendered exactly
+ * that: a single empty frame, while the composed tier waited behind a condition only zero
+ * products could satisfy. Spec goal 5 is "looks intentional at 2 products" and §5 forbids a
+ * grid that renders half-empty.
  *
  * `{}`, `{ error }`, empty arrays and a rejected fetch all land in the same branch — see
  * `lib/hooks/useHomepageSections`. Nothing here can blank the section or throw.
@@ -94,7 +113,7 @@ const PAIR_SIZES = '(min-width: 1440px) 830px, (min-width: 768px) 58vw, 100vw';
 export default function Collection() {
   const { status, sections } = useHomepageSections();
   const products = photographedFirst(sections.freshArrivals).slice(0, PRODUCT_PLACEMENT.length);
-  const showFallback = status === 'ready' && products.length === 0;
+  const showFallback = status === 'ready' && !hasPhotographed(products);
 
   const rows: ReactNode[] = showFallback
     ? siteCopy.home.collection.map((entry, index) => (
@@ -112,7 +131,9 @@ export default function Collection() {
     <section className="section-rhythm bg-paper">
       <div className="grid-editorial">
         <Reveal className="col-span-12 md:col-span-6 md:col-start-2">
-          <Eyebrow>{siteCopy.home.recommended.tabs[1].title}</Eyebrow>
+          {/* The eyebrow is the heading of the rail this movement absorbed, not one of its
+              two tab titles -- both of those now label their own blurb below. */}
+          <Eyebrow>{siteCopy.home.recommended.heading}</Eyebrow>
           <DisplayHeading level={2} size={2} className="mt-5">
             {siteCopy.home.explore.heading}
           </DisplayHeading>
@@ -127,6 +148,25 @@ export default function Collection() {
             {siteCopy.home.explore.cta}
           </Button>
         </Reveal>
+      </div>
+
+      {/* Most Recommended's two strands, as a pair of notes under the lead.
+          `recommended.tabs` carried a title and a blurb each; the retired rail showed them
+          behind a pair of tab controls, and when the three rails collapsed into this one
+          movement only `tabs[1].title` survived into the markup -- the two blurbs stayed in
+          `siteCopy`, in its snapshot, and on no page at all. They are the two strands this
+          sequence now holds, so this is where they read. No new words: both the titles and
+          both the blurbs are the stored strings. */}
+      <div className="grid-editorial mt-14 gap-y-10 md:mt-20">
+        <Reveal className="col-span-12 md:col-span-10 md:col-start-2">
+          <HairlineRule />
+        </Reveal>
+        {siteCopy.home.recommended.tabs.map((tab, index) => (
+          <Reveal key={tab.title} delay={index * 60} className={STRAND_PLACEMENT[index]}>
+            <Eyebrow>{tab.title}</Eyebrow>
+            <p className="measure mt-5 font-ui text-body text-ink-soft">{tab.body}</p>
+          </Reveal>
+        ))}
       </div>
 
       {rows[0] ?? null}
