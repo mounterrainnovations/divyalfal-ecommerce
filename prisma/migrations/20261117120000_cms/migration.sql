@@ -96,3 +96,16 @@ CREATE INDEX "Enquiry_status_createdAt_idx" ON "Enquiry"("status", "createdAt");
 -- AddForeignKey
 ALTER TABLE "Slide" ADD CONSTRAINT "Slide_assetId_fkey" FOREIGN KEY ("assetId") REFERENCES "MediaAsset"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+
+
+-- EnableRowLevelSecurity
+-- Added by hand (Prisma does not generate it). Supabase exposes every table in the public schema
+-- through PostgREST to anyone holding the (public) anon key unless RLS is on. Enquiry holds visitor
+-- PII and ContentBlock.draft holds unpublished copy. Prisma connects as a privileged role and
+-- bypasses RLS, so enabling it with no policies closes that path without affecting the app.
+ALTER TABLE "MediaAsset" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ContentBlock" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "HomepageSection" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Slide" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "SiteSetting" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Enquiry" ENABLE ROW LEVEL SECURITY;
