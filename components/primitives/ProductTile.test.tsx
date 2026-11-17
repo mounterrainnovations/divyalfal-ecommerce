@@ -158,12 +158,33 @@ describe('ProductTile', () => {
     expect(screen.getByRole('link')).toHaveClass('group');
   });
 
-  it('is a 3:4 portrait frame with sizes matching the editorial grid', () => {
+  it('is a 3:4 portrait frame', () => {
     const { container } = render(<ProductTile product={base} />);
     expect(container.querySelector('[class~="aspect-[3/4]"]')).not.toBeNull();
+  });
+
+  it('passes the surface its own sizes hint straight through to the photograph', () => {
+    const own = '(min-width: 1440px) 648px, (min-width: 1024px) 46vw, 47vw';
+    const { container } = render(<ProductTile product={base} sizes={own} />);
+    for (const image of Array.from(container.querySelectorAll('img'))) {
+      expect(image).toHaveAttribute('sizes', own);
+    }
+  });
+
+  /**
+   * The fallback is generous on purpose: the full editorial content width, which is the widest
+   * a tile can ever be. A surface that forgets to pass its own over-fetches, which costs
+   * bytes; the opposite mistake ships a photograph the browser has to upscale. Nothing in the
+   * storefront relies on it -- `test/no-legacy-styles.test.ts` fails if a call site does.
+   */
+  it('falls back to a hint that over-fetches rather than one that upscales', () => {
+    const { container } = render(<ProductTile product={base} />);
     const sizes = container.querySelector('img')?.getAttribute('sizes') ?? '';
-    expect(sizes).toContain('25vw');
-    expect(sizes).toContain('50vw');
+    expect(sizes).toBe('calc(100vw - 48px)');
+    // The retired shared default described a four-up grid no surface used.
+    expect(sizes).not.toContain('25vw');
+    expect(sizes).not.toContain('33vw');
+    expect(sizes).not.toContain('50vw');
   });
 
   it('lazy-loads by default and eager-loads the first photo when priority is set', () => {

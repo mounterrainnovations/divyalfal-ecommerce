@@ -370,8 +370,12 @@ describe('YouMayAlsoLike', () => {
     );
 
     const sizes = container.querySelector('img')?.getAttribute('sizes') ?? '';
-    expect(sizes).toBe('(min-width: 1440px) 416px, (min-width: 1024px) 28vw, (min-width: 768px) 30vw, 88vw');
-    // Not the shared default, which would under-fetch at every one of those widths.
+    expect(sizes).toBe(
+      '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw, calc(100vw - 48px)'
+    );
+    // Not `ProductTile`'s generous fallback, which this surface must never rely on.
+    expect(sizes).not.toBe('calc(100vw - 48px)');
+    // Not the retired shared default, which under-fetched at every one of those widths.
     expect(sizes).not.toContain('25vw');
     expect(sizes).not.toContain('33vw');
     expect(sizes).not.toContain('50vw');

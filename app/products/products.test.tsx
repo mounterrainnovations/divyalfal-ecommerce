@@ -149,6 +149,25 @@ describe('/products', () => {
     expect(withPhotos.querySelector('img')).not.toBeNull();
   });
 
+  /**
+   * The `sizes` hint has to describe this grid, not a generic one. Measured at both edges of
+   * every band: 719px at 767 (one-up, the full content width), 456px at 1023 (two-up), 350px
+   * at 1439 (two-up, narrower from lg because the filter rail takes a share of the row), and
+   * a fixed 350px from 1440 up where the editorial grid stops growing. The shared default this
+   * replaced asked for 195px at 390 and 253px at 768.
+   */
+  it('hints each photograph at the width this grid actually renders it', async () => {
+    respondWith([saree, noPhotos]);
+    render(<ProductsPage />);
+    const tile = await screen.findByRole('link', { name: /Emerald Banarasi Saree/ });
+    const sizes = tile.querySelector('img')?.getAttribute('sizes') ?? '';
+    expect(sizes).toBe(
+      '(min-width: 1440px) 350px, (min-width: 1024px) 25vw, (min-width: 768px) 45vw, calc(100vw - 48px)'
+    );
+    // Never ProductTile's bare fallback: this surface measures its own.
+    expect(sizes).not.toBe('calc(100vw - 48px)');
+  });
+
   it('has exactly one h1, the page title, with the product names as h2s beneath it', async () => {
     respondWith([saree, noPhotos]);
     render(<ProductsPage />);

@@ -30,11 +30,12 @@ interface YouMayAlsoLikeProps {
  *
  * `SIZES` is this strip's own, because the shared default describes a four-up grid nothing
  * here uses. Every figure is measured in a browser, not derived from the class names:
- * 342px at 390 wide, 224px at 768, 277px at 1024, and a fixed 416px from 1440 up, where the
- * editorial grid stops growing.
+ * the widest point of every band, not one sample inside it: 719px at 767 (the full content
+ * width, where one-up peaks), 309px at 1023, 416px at 1439, and a fixed 416px from 1440 up,
+ * where the editorial grid stops growing.
  */
 const SIZES =
-  '(min-width: 1440px) 416px, (min-width: 1024px) 28vw, (min-width: 768px) 30vw, 88vw';
+  '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw, calc(100vw - 48px)';
 
 const YouMayAlsoLike = ({ currentProductId }: YouMayAlsoLikeProps) => {
   const headingId = useId();

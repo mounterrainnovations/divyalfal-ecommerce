@@ -362,6 +362,54 @@ describe('the legacy shadcn token block', () => {
 });
 
 /**
+ * Every surface that renders a `ProductTile` must pass its own `sizes`.
+ *
+ * `sizes` tells the browser how wide the photograph will be *before* layout, so it can pick a
+ * file. It describes a layout, and the four surfaces that render this tile lay it out four
+ * different ways — the listings one-up then two-up, the related strip one-up then three-up,
+ * and the two home bands drifting across the grid at five and six columns. A single shared
+ * hint was right for none of them: measured at the widest point of each band, the home
+ * Collection rendered 648px at 1440 while the shared hint asked for 336px, a 1.9x upscale on
+ * the homepage's largest editorial moment.
+ *
+ * `ProductTile`'s fallback is deliberately generous rather than typical, so forgetting to pass
+ * one over-fetches instead of shipping a blurred garment — but relying on it is still a bug,
+ * and this is the only place that can catch it, since a missing optional prop is not a type
+ * error. Measure the new surface at both edges of every band (767 and 768, 1023 and 1024,
+ * 1439 and 1440); the widest point of a band is usually its top, not the breakpoint itself.
+ */
+describe('ProductTile sizes hints', () => {
+  it('is passed explicitly by every surface that renders a tile', () => {
+    const offenders: string[] = [];
+    for (const rel of storefrontFiles()) {
+      if (rel === 'components/primitives/ProductTile.tsx') continue;
+      const source = stripComments(readFileSync(path.join(ROOT, rel), 'utf8'));
+      // Each `<ProductTile` up to its closing bracket, so a multi-line call is one match.
+      for (const found of source.matchAll(/<ProductTile\b[\s\S]*?\/?>/g)) {
+        if (!/\bsizes=/.test(found[0])) {
+          offenders.push(`${rel}: ${found[0].replace(/\s+/g, ' ').slice(0, 80)}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('finds the call sites it claims to check, so the guard cannot pass vacuously', () => {
+    const callSites = storefrontFiles().filter(
+      rel =>
+        rel !== 'components/primitives/ProductTile.tsx' &&
+        /<ProductTile\b/.test(stripComments(readFileSync(path.join(ROOT, rel), 'utf8')))
+    );
+    expect(callSites).toEqual([
+      'components/features/products/product-listing.tsx',
+      'components/features/products/you-may-also-like.tsx',
+      'components/sections/collection.tsx',
+      'components/sections/shop-by-style.tsx',
+    ]);
+  });
+});
+
+/**
  * The gold focus ring, and the ground it is allowed on.
  *
  * Measured at the Task 13 gate: `--gold` against `--paper` is **3.168 : 1**, which clears

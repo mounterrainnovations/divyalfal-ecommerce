@@ -25,10 +25,20 @@ const TILE_PLACEMENT = [
   'col-span-12 mt-12 md:col-span-4 md:col-start-8 md:mt-40',
 ];
 
-const TILES_PER_ROW = 2;
+/**
+ * The widest a tile gets here, measured at both edges of every band rather than at one sample
+ * inside it. `TILE_PLACEMENT` alternates five and four columns, so the hint covers the
+ * five-column case: 719px at 767 (the full content width, where one-up peaks), 392px at 1023,
+ * 532px at 1439, and a fixed 532px from 1440 up, where the editorial grid stops growing.
+ *
+ * One constant for both kinds of tile: the real `ProductTile` and the `StyleFallbackTile` sit
+ * in the same `TILE_PLACEMENT` slots, so they render at identical widths and there is no
+ * reason for them to disagree about it.
+ */
+const TILE_SIZES =
+  '(min-width: 1440px) 532px, (min-width: 1024px) 38vw, (min-width: 768px) 39vw, calc(100vw - 48px)';
 
-/** Widest tile here is five of twelve columns, capped by the 1440px content max. */
-const TILE_SIZES = '(min-width: 1440px) 576px, (min-width: 768px) 42vw, 100vw';
+const TILES_PER_ROW = 2;
 
 function rowsOf<T>(items: T[]): T[][] {
   const rows: T[][] = [];
@@ -70,7 +80,7 @@ export default function ShopByStyle() {
 
   const tiles: ReactNode[] = showFallback
     ? siteCopy.home.style.items.map(item => <StyleFallbackTile key={item.name} item={item} />)
-    : products.map(product => <ProductTile key={product.id} product={product} headingLevel={3} />);
+    : products.map(product => <ProductTile key={product.id} product={product} headingLevel={3} sizes={TILE_SIZES} />);
 
   return (
     <section className="section-rhythm bg-paper">

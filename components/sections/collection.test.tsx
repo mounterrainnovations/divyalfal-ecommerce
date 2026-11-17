@@ -164,6 +164,26 @@ describe('Collection', () => {
     ]);
   });
 
+  /**
+   * The largest photograph on the homepage, so the hint matters most here. Measured at both
+   * edges of every band: 719px at 767, 476px at 1023, 648px at 1439, and a fixed 648px from
+   * 1440 up. The shared default this replaced asked for 336px at 1440 -- a 1.9x upscale on
+   * the one image the client will judge the site by.
+   */
+  it('hints the garment photograph at the width this band actually renders it', async () => {
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    const { container } = render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+
+    const tile = container.querySelector('a[href^="/product/"]');
+    const sizes = tile?.querySelector('img')?.getAttribute('sizes') ?? '';
+    expect(sizes).toBe(
+      '(min-width: 1440px) 648px, (min-width: 1024px) 46vw, (min-width: 768px) 47vw, calc(100vw - 48px)'
+    );
+    expect(sizes).not.toBe('calc(100vw - 48px)');
+    expect(sizes).not.toContain('336px');
+  });
+
   it('prices real products through resolvePrice and keeps the photo-less frame honest', async () => {
     mockFetch({ freshArrivals: products, shopByStyle: [] });
     const { container } = render(<Collection />);

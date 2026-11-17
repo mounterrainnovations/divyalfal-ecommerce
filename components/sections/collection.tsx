@@ -41,6 +41,15 @@ const PRODUCT_PLACEMENT = [
   'col-span-12 md:col-span-6 md:col-start-6',
 ];
 
+/**
+ * The widest a product tile gets here, measured at both edges of every band. `PRODUCT_PLACEMENT`
+ * alternates six and five columns, so the hint covers the six-column case: 719px at 767,
+ * 476px at 1023, 648px at 1439, and a fixed 648px from 1440 up. The shared fallback asked for
+ * 336px at 1440 -- a 1.9x upscale on the largest photograph on the homepage.
+ */
+const TILE_SIZES =
+  '(min-width: 1440px) 648px, (min-width: 1024px) 46vw, (min-width: 768px) 47vw, calc(100vw - 48px)';
+
 const ROW_RHYTHM = 'mt-16 md:mt-28';
 
 /** Media width of a lookbook pair: seven of twelve columns, capped by the 1440 content max. */
@@ -94,7 +103,7 @@ export default function Collection() {
     : products.map((product, index) => (
         <div key={product.id} className={cn('grid-editorial', ROW_RHYTHM)}>
           <Reveal className={PRODUCT_PLACEMENT[index]} delay={index * 60}>
-            <ProductTile product={product} headingLevel={3} />
+            <ProductTile product={product} headingLevel={3} sizes={TILE_SIZES} />
           </Reveal>
         </div>
       ));

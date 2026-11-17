@@ -188,6 +188,25 @@ describe('ShopByStyle', () => {
     expect(spy.mock.calls[0][0]).toBe('/api/homepage-sections');
   });
 
+  /**
+   * Measured at both edges of every band: 719px at 767, 392px at 1023, 532px at 1439, and a
+   * fixed 532px from 1440 up. `TILE_PLACEMENT` alternates five and four columns, so the hint
+   * covers the five-column case; one constant serves the real tile and the fallback tile,
+   * because both sit in the same slots and render at the same widths.
+   */
+  it('hints both the real tile and the fallback tile at the same measured width', async () => {
+    mockFetch({ freshArrivals: [], shopByStyle: products });
+    const { container } = render(<ShopByStyle />);
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+
+    const expected =
+      '(min-width: 1440px) 532px, (min-width: 1024px) 38vw, (min-width: 768px) 39vw, calc(100vw - 48px)';
+    const images = Array.from(container.querySelectorAll('img'));
+    expect(images.length).toBeGreaterThan(0);
+    for (const image of images) expect(image).toHaveAttribute('sizes', expected);
+    expect(expected).not.toBe('calc(100vw - 48px)');
+  });
+
   it('uses no banned utility and no scroller apparatus', async () => {
     mockFetch({ freshArrivals: [], shopByStyle: products });
     const { container } = render(<ShopByStyle />);

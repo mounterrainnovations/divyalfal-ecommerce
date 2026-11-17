@@ -123,6 +123,15 @@ function shapeSale(products: Product[], range: FilterRailValue['range'], sortBy:
  */
 const GRID =
   'm-0 grid list-none grid-cols-1 items-start p-0 md:grid-cols-2 md:gap-x-16 md:[&>li:nth-child(even)]:mt-24';
+/**
+ * How wide a tile's photograph actually renders here, measured at both edges of every band:
+ * one-up below md (the full content width), two-up above it, and narrower from lg where the
+ * filter rail takes a share of the row. Widest per band: 719px at 767, 456px at 1023, 350px
+ * at 1439, and a fixed 350px from 1440 up, where the editorial grid stops growing.
+ */
+const TILE_SIZES =
+  '(min-width: 1440px) 350px, (min-width: 1024px) 25vw, (min-width: 768px) 45vw, calc(100vw - 48px)';
+
 const ITEM = 'mb-12 md:mb-20';
 
 function SkeletonTiles({ className }: { className?: string }) {
@@ -333,7 +342,12 @@ function ListingBody({ variant }: { variant: Variant }) {
             <ul aria-busy={loading} className={GRID}>
               {visible.map((product, index) => (
                 <Reveal as="li" key={product.id} delay={(index % 2) * 60} className={ITEM}>
-                  <ProductTile product={product} priority={index < 2} headingLevel={2} />
+                  <ProductTile
+                    product={product}
+                    priority={index < 2}
+                    headingLevel={2}
+                    sizes={TILE_SIZES}
+                  />
                 </Reveal>
               ))}
             </ul>

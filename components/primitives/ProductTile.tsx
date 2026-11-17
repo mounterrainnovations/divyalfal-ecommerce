@@ -4,18 +4,20 @@ import type { Product } from '@/types';
 import { resolvePrice } from '@/lib/utils/price';
 
 /**
- * The default `sizes` hint: a four-up grid from lg, three from md, two on a phone.
+ * The last-resort `sizes` hint, and nothing renders with it.
  *
- * **It describes a layout, so a surface that lays tiles out differently must pass its own.**
- * Four surfaces render this tile and no two place it alike -- the listings run one-up then
- * two-up, the related strip one-up then three-up, and the two home bands drift across the
- * grid at five and six columns -- so a single shared hint cannot be right for all of them. A
- * hint narrower than the render makes the browser fetch a file it then has to upscale, which
- * on a couture storefront is the one thing a photograph must not look like. `collection.tsx`
- * already does this for its lookbook pair (`PAIR_SIZES`); `sizes` is the same idea, per tile.
+ * `sizes` describes a layout, and the four surfaces that render this tile lay it out four
+ * different ways, so there is no honest shared value -- every one of them passes its own,
+ * measured at both edges of every band. (`collection.tsx` has done this for its lookbook pair
+ * since Task 8: `PAIR_SIZES`. This is the same idea, per tile.)
+ *
+ * The fallback is therefore chosen to be *generous rather than typical*: the full editorial
+ * content width, which is the widest a tile can ever be. A surface that forgets to pass its
+ * own over-fetches, which wastes bytes; the opposite mistake ships a photograph the browser
+ * has to upscale, which on a couture storefront is the one thing it must not look like.
+ * `test/no-legacy-styles.test.ts` fails if any call site relies on this.
  */
-const DEFAULT_SIZES =
-  '(min-width: 1440px) 336px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw';
+const FALLBACK_SIZES = 'calc(100vw - 48px)';
 
 /**
  * Portrait 3:4 product tile linking to `/product/[id]`.
@@ -58,14 +60,16 @@ export default function ProductTile({
   product,
   priority = false,
   headingLevel = 3,
-  sizes = DEFAULT_SIZES,
+  sizes = FALLBACK_SIZES,
 }: {
   product: Product;
   /** Eager-loads and preloads the first photo; use for above-the-fold tiles. */
   priority?: boolean;
   /**
    * The `sizes` hint, which must describe the width this surface actually renders the tile
-   * at. Measure it in a browser rather than reading it off the class names.
+   * at. Measure it in a browser rather than reading it off the class names, at both edges of
+   * every band -- the widest point of a band is usually its top, not the breakpoint. Required
+   * in practice: a guard test fails if a call site leaves it out.
    */
   sizes?: string;
   /** Heading element for the product name. Pick the level that follows the page's outline. */
