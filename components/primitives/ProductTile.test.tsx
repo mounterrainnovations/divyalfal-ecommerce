@@ -28,10 +28,11 @@ describe('ProductTile', () => {
   });
 
   it('keeps the first photo on hover when only one exists', async () => {
-    render(<ProductTile product={{ ...base, photos: ['/a.jpg'] }} />);
+    const { container } = render(<ProductTile product={{ ...base, photos: ['/a.jpg'] }} />);
     await userEvent.hover(screen.getByRole('link'));
-    expect(screen.getAllByRole('img')).toHaveLength(1);
-    expect(screen.getByRole('img')).toHaveAttribute('src', expect.stringContaining('a.jpg'));
+    const images = Array.from(container.querySelectorAll('img'));
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute('src', expect.stringContaining('a.jpg'));
   });
 
   it('stacks the second photo for the hover swap when two exist', () => {
@@ -40,8 +41,78 @@ describe('ProductTile', () => {
     expect(srcs).toHaveLength(2);
     expect(srcs[0]).toContain('a.jpg');
     expect(srcs[1]).toContain('b.jpg');
-    // Only the first photo is exposed to assistive tech; the swap image is decoration.
-    expect(screen.getAllByRole('img')).toHaveLength(1);
+  });
+
+  /**
+   * Neither photograph is exposed to assistive tech.
+   *
+   * A photograph carrying `alt={product.name}` is a picture of the thing the link already
+   * names, so a screen reader said the garment twice -- once for the link, once for the image
+   * inside it. WAI calls that a decorative image and asks for `alt=""`.
+   */
+  it('exposes no image to assistive tech, because the link already names the garment', () => {
+    const { container } = render(<ProductTile product={base} />);
+    const images = Array.from(container.querySelectorAll('img'));
+    expect(images).toHaveLength(2);
+    for (const image of images) expect(image).toHaveAttribute('alt', '');
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+    expect(screen.getByRole('heading', { name: base.name })).toBeInTheDocument();
+  });
+
+  /**
+   * WCAG 2.1 SC 2.5.3 Label in Name, Level A: a control's accessible name must contain the
+   * text a sighted user can read on it. A speech-input user says the words they can see.
+   *
+   * The tile used to name its link with `aria-labelledby="<heading> <price>"`, which left two
+   * pieces of visible text out of the name -- the empty frame's "Image coming soon" and, on a
+   * sale tile, the struck original price -- so axe reported `label-content-name-mismatch`
+   * (serious, `wcag21a`/`wcag253`) on both `/products` tiles. The name now comes from the
+   * link's own contents, so it cannot drift from what is on screen: anything added inside the
+   * tile is in the name by construction.
+   *
+   * The one ordering constraint the rule imposes: the visible words must appear as one
+   * unbroken run in the name. Screen-reader-only text is in the name but not in the visible
+   * text, so it has to sit after all of it -- which is why "original price" follows the struck
+   * number instead of introducing it.
+   */
+  it('names the link from its own contents, so the name holds every visible word', () => {
+    render(<ProductTile product={{ ...base, photos: [] }} />);
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('aria-labelledby')).toBeNull();
+    expect(link.getAttribute('aria-label')).toBeNull();
+    const name = (link.textContent ?? '').replace(/\s+/g, ' ').trim();
+    expect(name).toContain('Image coming soon');
+    expect(name).toContain(base.name);
+    expect(name).toContain('₹8,000');
+    // Visible order: the frame's caption, then the garment, then the price.
+    expect(name.indexOf('Image coming soon')).toBeLessThan(name.indexOf(base.name));
+    expect(name.indexOf(base.name)).toBeLessThan(name.indexOf('₹8,000'));
+  });
+
+  it('puts the screen-reader-only words after the visible run, never inside it', () => {
+    const { container } = render(
+      <ProductTile product={{ ...base, sale: true, salePrice: 6000 }} />
+    );
+    // Asserted per block, because `textContent` runs the heading straight into the price
+    // while the accessible-name computation separates non-phrasing elements with a space.
+    expect(container.querySelector('h3')?.textContent).toBe(base.name);
+    const price = (container.querySelector('p')?.textContent ?? '').replace(/\s+/g, ' ').trim();
+    // The visible run first and unbroken, then the screen-reader-only gloss.
+    expect(price).toBe('₹6,000 ₹8,000 original price');
+
+    const gloss = screen.getByText(/original price/i);
+    expect(gloss).toHaveClass('sr-only');
+    expect(gloss.closest('s')).not.toBeNull();
+    // Inside the struck element and after its number, so it cannot split the visible words.
+    expect(gloss.previousSibling?.textContent).toBe('₹8,000');
+  });
+
+  it('keeps a space between the two prices, so they do not read as one number', () => {
+    const { container } = render(
+      <ProductTile product={{ ...base, sale: true, salePrice: 6000 }} />
+    );
+    const price = container.querySelector('p');
+    expect((price?.textContent ?? '')).toMatch(/₹6,000\s+₹8,000/);
   });
 
   it('hides the swap image until hover or keyboard focus, and shows it then', () => {

@@ -7,7 +7,7 @@ import { siteCopy } from '@/lib/content/site-copy';
 const { footer } = siteCopy;
 const { values } = siteCopy.home;
 
-/** Small uppercase label over a footer column. An h3: the page's h2s are the movements above. */
+/** Small uppercase label over a footer column. The element is `headingLevel`; see the component doc. */
 const COLUMN_HEADING = 'm-0 font-ui text-eyebrow font-normal uppercase text-ink-soft';
 
 const LINK =
@@ -59,8 +59,27 @@ function FooterLink({ label, href }: { label: string; href: string }) {
  *
  * Contact details are the real ones, and the telephone's display string is rendered
  * exactly as stored — its invisible characters are deliberate and pinned by a test.
+ *
+ * `headingLevel` is the element the three column labels use, and it defaults to 3 because
+ * that is right on every route whose own content is an `h1` followed by `h2` movements --
+ * which is all seven of the existing call sites. The two 404 routes are the exception: their
+ * only heading is their `h1`, with no `h2` to sit under, so an `h3` here skips a level and
+ * axe reports `heading-order` (it did, at 1440, 768 and 390). They pass `headingLevel={2}`.
+ * The level is the footer's to take from the page, not the page's to work around by
+ * inventing a heading or by going without a footer -- which is exactly what a lost visitor
+ * needs, since it carries the quick links and the only contact details on the page.
  */
-export default function Footer() {
+export default function Footer({
+  headingLevel = 3,
+}: {
+  /**
+   * Element for the three column labels. Keep the page's outline unbroken: 3 under a page
+   * with `h2` sections, 2 on a page whose only heading is its `h1`.
+   */
+  headingLevel?: 2 | 3;
+} = {}) {
+  const ColumnHeading = `h${headingLevel}` as const;
+
   return (
     <footer className="bg-paper-deep pt-[var(--section-rhythm)] pb-10">
       <div className="grid-editorial">
@@ -84,7 +103,7 @@ export default function Footer() {
           delay={60}
           className="col-span-12 mt-12 md:col-span-4 md:col-start-8 md:mt-0"
         >
-          <h3 className={COLUMN_HEADING}>{footer.contact.heading}</h3>
+          <ColumnHeading className={COLUMN_HEADING}>{footer.contact.heading}</ColumnHeading>
           <address className="mt-6 flex flex-col items-start gap-1 not-italic">
             <p className="m-0 font-ui text-caption text-ink-soft">{footer.contact.address}</p>
             <a href={`tel:${footer.contact.phone}`} className={LINK}>
@@ -112,9 +131,9 @@ export default function Footer() {
         </div>
 
         <Reveal className="col-span-12 mt-12 md:col-span-5 md:col-start-2">
-          <h3 id="footer-values" className={COLUMN_HEADING}>
+          <ColumnHeading id="footer-values" className={COLUMN_HEADING}>
             {values.heading}
-          </h3>
+          </ColumnHeading>
           <ul aria-labelledby="footer-values" className="m-0 mt-8 flex list-none flex-col gap-6 p-0">
             {values.items.map(item => (
               <li key={item.title}>
@@ -129,7 +148,7 @@ export default function Footer() {
           delay={60}
           className="col-span-12 mt-12 md:col-span-4 md:col-start-8"
         >
-          <h3 className={COLUMN_HEADING}>{footer.quickLinks.heading}</h3>
+          <ColumnHeading className={COLUMN_HEADING}>{footer.quickLinks.heading}</ColumnHeading>
           <ul className="m-0 mt-6 flex list-none flex-col items-start gap-1 p-0">
             {footer.quickLinks.items.map(item => (
               <li key={item.label}>

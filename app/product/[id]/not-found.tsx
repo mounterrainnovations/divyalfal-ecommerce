@@ -1,5 +1,6 @@
 import Button from '@/components/primitives/Button';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
+import Footer from '@/components/layout/footer';
 import HairlineRule from '@/components/primitives/HairlineRule';
 import { siteCopy } from '@/lib/content/site-copy';
 
@@ -15,9 +16,9 @@ const copy = siteCopy.product.notFound;
  *
  * Both actions are links, so this is a server component; nothing here needs the browser.
  *
- * No `Footer`, as before the revamp: the footer's columns are `h3`s, and a page whose only
- * heading is its own `h1` skips a level by rendering them (axe `heading-order`, measured at
- * the gate). The same note is on `app/not-found.tsx`.
+ * The footer is `headingLevel={2}`: its columns are `h3`s on every route with `h2` movements
+ * of its own, and a page whose only heading is its `h1` skips a level by rendering them (axe
+ * `heading-order`, measured at the gate). The same note is on `app/not-found.tsx`.
  */
 export default function ProductNotFound() {
   return (
@@ -42,6 +43,8 @@ export default function ProductNotFound() {
       <div className="grid-editorial">
         <HairlineRule className="col-span-12" />
       </div>
+
+      <Footer headingLevel={2} />
     </>
   );
 }

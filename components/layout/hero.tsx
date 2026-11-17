@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import type { CSSProperties } from 'react';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
 import { siteCopy } from '@/lib/content/site-copy';
 import { useMedia } from '@/lib/hooks/useMedia';
@@ -57,9 +56,19 @@ const { wordmark, desktopImage, mobileVideo } = siteCopy.home.hero;
  * Still unmeasured: widths between 390 and 1280 at unusual aspect ratios.
  *
  * Motion is CSS-only, because every pixel here is above the fold: `reveal-image` on the
- * media and `reveal-text` on the wordmark, staggered three steps of `--stagger` behind it
- * so the word settles as the image finishes. `Reveal` is deliberately not used — it is
- * scroll-triggered and is a no-op for anything already in view.
+ * media. `Reveal` is deliberately not used — it is scroll-triggered and is a no-op for
+ * anything already in view.
+ *
+ * **The wordmark carries no reveal, and that is measured rather than preferred.** It used to
+ * take `reveal-text` staggered three steps of `--stagger` behind the image. But it is also
+ * the page's LCP element on mobile, and 180ms of delay plus a 700ms fade put Chrome's
+ * observed LCP at 881ms — which Lighthouse's throttled model turned into 3.8s and a mobile
+ * `/` performance score of 88 against a target of 90. Two controlled runs isolated it:
+ * blocking all 4.6MB of remote media changed the score by **zero**, while forcing reduced
+ * motion — which `globals.css` answers by disabling the fade — moved it to **95** and the
+ * observed LCP to **153ms**. So the entrance is the image's alone here. Nothing else changes:
+ * `reveal-text` is still correct for above-the-fold text that is not the LCP element, and
+ * every staggered `Reveal` below the fold is untouched.
  *
  * The desktop/mobile media split stays `useMedia`, unchanged: a desktop still frame, a
  * portrait `webm` on a phone. The photograph carries `alt=""` and the video `aria-hidden`
@@ -108,15 +117,16 @@ export default function Hero() {
         className={cn('absolute inset-0', isMobile ? 'bg-ink/50' : 'bg-ink/35')}
       />
 
-      <div
-        className="absolute inset-0 flex items-center"
-        style={{ '--reveal-delay': 'calc(var(--stagger) * 3)' } as CSSProperties}
-      >
+      {/* No reveal on the wordmark. It is the page's LCP element on mobile, and its 180ms
+          stagger plus 700ms fade was the whole of the gap between 88 and the 90 target --
+          see the component comment. The media's `reveal-image` still carries the entrance,
+          and no `--reveal-delay` is set here because nothing beneath it reads one. */}
+      <div className="absolute inset-0 flex items-center">
         <div className="grid-editorial">
           <DisplayHeading
             level={1}
             size={1}
-            className="reveal-text col-span-12 tracking-(--tracking-wordmark) text-paper uppercase md:col-span-6 md:col-start-2"
+            className="col-span-12 tracking-(--tracking-wordmark) text-paper uppercase md:col-span-6 md:col-start-2"
           >
             {wordmark}
           </DisplayHeading>

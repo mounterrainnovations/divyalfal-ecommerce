@@ -360,3 +360,86 @@ describe('the legacy shadcn token block', () => {
     expect(css).not.toContain('.product-description');
   });
 });
+
+/**
+ * The gold focus ring, and the ground it is allowed on.
+ *
+ * Measured at the Task 13 gate: `--gold` against `--paper` is **3.168 : 1**, which clears
+ * WCAG 1.4.11's 3:1 for a non-text indicator by 0.17 — and against `--paper-deep` it is
+ * **2.855 : 1**, which does not. Today every `outline-gold` is in `components/layout/navbar.tsx`
+ * and every one of them sits on `bg-paper` (the header and the full-screen menu), so the
+ * ring passes everywhere it is drawn. That is luck rather than design: nothing stopped a new
+ * section on the deeper ground — the footer, the policy contact cards, the gallery band — from
+ * inheriting a focus ring that fails.
+ *
+ * So the invariant is checked rather than assumed, from the tokens themselves, so that
+ * lightening `--gold` or darkening `--paper-deep` changes the verdict here rather than
+ * silently shipping an indicator nobody can see.
+ *
+ * The pairing check is file-level, which is coarse: it cannot see that a ring in file A is
+ * rendered inside a `bg-paper-deep` section declared in file B. It catches the likely case —
+ * a component that draws both — and the token maths above catches the rest by making the
+ * constraint impossible to forget.
+ */
+const hexToRgb = (hex: string): [number, number, number] =>
+  [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+
+const relativeLuminance = ([r, g, b]: [number, number, number]) => {
+  const lin = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+};
+
+const contrast = (a: string, b: string) => {
+  const [la, lb] = [relativeLuminance(hexToRgb(a)), relativeLuminance(hexToRgb(b))];
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+};
+
+const cssToken = (css: string, name: string) => {
+  const found = new RegExp(`${name}:\\s*(#[0-9A-Fa-f]{6})`).exec(css);
+  if (!found) throw new Error(`token ${name} not found in globals.css`);
+  return found[1];
+};
+
+describe('the gold focus ring', () => {
+  const css = readFileSync(path.join(ROOT, 'app/globals.css'), 'utf8');
+  const gold = cssToken(css, '--gold');
+  const paper = cssToken(css, '--paper');
+  const paperDeep = cssToken(css, '--paper-deep');
+
+  it('computes the contrasts the gate measured in the browser', () => {
+    // Sanity-check the maths against the two values measured against the live page, so a
+    // mistake here cannot quietly make the guard below meaningless.
+    expect(contrast(gold, paper)).toBeCloseTo(3.168, 2);
+    expect(contrast(gold, paperDeep)).toBeCloseTo(2.855, 2);
+  });
+
+  it('clears 3:1 against paper, which is the only ground it is drawn on', () => {
+    expect(contrast(gold, paper)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('is never paired with the deeper paper ground while it fails 3:1 there', () => {
+    const carriers = storefrontFiles().filter(rel =>
+      stripComments(readFileSync(path.join(ROOT, rel), 'utf8')).includes('outline-gold')
+    );
+    // If this ever lists a file beyond the navbar, check that file's ground by hand before
+    // adding it: the pairing check below only sees grounds declared in the same file.
+    expect(carriers).toEqual(['components/layout/navbar.tsx']);
+
+    if (contrast(gold, paperDeep) >= 3) return; // gold was fixed; the hazard is gone.
+
+    const offenders = carriers.filter(rel =>
+      stripComments(readFileSync(path.join(ROOT, rel), 'utf8')).includes('bg-paper-deep')
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it('names the constraint at the token definition, where someone reaching for gold will see it', () => {
+    expect(css).toMatch(/--gold:[^\n]*\n|\/\*[^*]*gold/);
+    const goldBlock = css.slice(Math.max(0, css.indexOf('--gold:') - 700), css.indexOf('--gold:'));
+    expect(goldBlock).toContain('paper-deep');
+    expect(goldBlock).toMatch(/3\s*:\s*1|3:1/);
+  });
+});

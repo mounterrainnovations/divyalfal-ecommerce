@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { siteCopy } from '@/lib/content/site-copy';
 import NotFound from './not-found';
 import ProductNotFound from './product/[id]/not-found';
@@ -32,9 +32,9 @@ describe.each([
     const h1s = container.querySelectorAll('h1');
     expect(h1s).toHaveLength(1);
     expect(h1s[0]).toHaveTextContent(copy.heading);
-    // axe `heading-order`, measured at the gate: with only an h1 of its own, this page must
-    // not be followed by an h3. The footer's columns are h3s, so it does not render one --
-    // see the component comment. Any heading added here has to keep the run unbroken.
+    // axe `heading-order`, measured at the gate: this page's only heading of its own is the
+    // h1, so the footer's columns -- h3 everywhere else -- must come in at h2 here or the
+    // run skips a level. `<Footer headingLevel={2} />` is what makes this pass.
     const levels = Array.from(container.querySelectorAll('h1,h2,h3,h4,h5,h6')).map((h) =>
       Number(h.tagName[1])
     );
@@ -42,6 +42,21 @@ describe.each([
     levels.forEach((level, index) => {
       if (index > 0) expect(level - levels[index - 1]).toBeLessThanOrEqual(1);
     });
+  });
+
+  /**
+   * A lost visitor is exactly who needs the footer: the quick links, the real contact details
+   * and the way back. It was dropped once at the gate because the footer's h3 columns skipped
+   * a level under this page's lone h1; `headingLevel` is the fix, not removing the footer.
+   */
+  it('keeps the footer, at the heading level this page can carry', () => {
+    render(<Page />);
+    const contentinfo = screen.getByRole('contentinfo');
+    expect(contentinfo).toBeInTheDocument();
+    expect(within(contentinfo).getByText(siteCopy.footer.contact.address)).toBeInTheDocument();
+    const headings = Array.from(contentinfo.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+    expect(headings).toHaveLength(3);
+    for (const heading of headings) expect(heading.tagName).toBe('H2');
   });
 
   it('prints its copy verbatim from the module, inventing nothing', () => {

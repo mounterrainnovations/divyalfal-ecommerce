@@ -3,6 +3,7 @@
 import Button from '@/components/primitives/Button';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
 import Eyebrow from '@/components/primitives/Eyebrow';
+import Footer from '@/components/layout/footer';
 import HairlineRule from '@/components/primitives/HairlineRule';
 import { siteCopy } from '@/lib/content/site-copy';
 
@@ -22,13 +23,12 @@ const copy = siteCopy.notFound;
  * `'use client'` stays: "Go Back" calls `window.history.back()`, which needs the browser. It
  * is a `<button>`, not a link, because there is no href for "wherever you came from".
  *
- * No `Footer`, as before the revamp, and that is a measured decision rather than an omission.
- * The footer's three columns are `h3`s, which read correctly on every route that has `h2`
- * sections above them; this page has only its own `h1`, so a footer here skips a level and
- * axe reports `heading-order` (it did, at 1440, 768 and 390, before the footer came out).
- * There is no second heading to add without inventing copy, and the two ways out are the
- * whole job of a dead end. If the footer is ever wanted here, give it a `headingLevel` prop
- * rather than adding a heading to this page.
+ * The footer is `headingLevel={2}`, not the default 3. Its three column labels are `h3`s on
+ * every route whose own content is an `h1` followed by `h2` movements; this page's only
+ * heading is its `h1`, so `h3` skipped a level and axe reported `heading-order` at 1440, 768
+ * and 390. Two is the level this page can carry. The alternative tried first -- dropping the
+ * footer -- also cleared the violation, but took the quick links, the real contact details
+ * and the way back off the page where a lost visitor most needs them.
  */
 export default function NotFound() {
   return (
@@ -54,6 +54,8 @@ export default function NotFound() {
       <div className="grid-editorial">
         <HairlineRule className="col-span-12" />
       </div>
+
+      <Footer headingLevel={2} />
     </>
   );
 }

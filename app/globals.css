@@ -64,6 +64,13 @@
   --paper-deep: #F1EBE1;
   --ink: #141210;
   --ink-soft: #6B635A;
+  /* CONSTRAINT, measured at the Task 13 gate: gold reaches 3:1 against --paper (3.168:1,
+     so WCAG 1.4.11 for a focus indicator passes by 0.17) but NOT against --paper-deep
+     (2.855:1). So `outline-gold` is only ever correct on the paper ground. On the deeper
+     tone -- the footer, the policy contact cards, the gallery band -- use `outline-ink`
+     (17.5:1), which every one of them already does. `test/no-legacy-styles.test.ts`
+     recomputes both ratios from these tokens and fails if a file pairs the gold ring with
+     a paper-deep ground, so changing either value changes the verdict there first. */
   --gold: #A8873F;
   --accent-sale: #8C2F2F;
 

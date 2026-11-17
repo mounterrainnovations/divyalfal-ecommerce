@@ -160,12 +160,40 @@ describe('Hero', () => {
     expect(container.querySelector('.grid-editorial')).not.toBeNull();
   });
 
-  it('uses the CSS-only load reveals, not the scroll-triggered Reveal primitive', () => {
+  it('uses the CSS-only load reveal on the media, not the scroll-triggered Reveal primitive', () => {
     const { container } = render(<Hero />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('reveal-text');
     expect(container.querySelector('.reveal-image')).not.toBeNull();
     // Reveal arms blocks with data-reveal and is for below-the-fold content only.
     expect(container.querySelector('[data-reveal]')).toBeNull();
+  });
+
+  /**
+   * The wordmark paints immediately, and that is a measured decision, not an oversight.
+   *
+   * It is the page's LCP element on mobile. With `reveal-text` on it -- 180ms of stagger plus
+   * a 700ms fade -- Chrome recorded LCP at 881ms and Lighthouse's throttled model turned that
+   * into 3.8s, holding mobile `/` performance at 88 against a target of 90. Two controlled
+   * runs proved it was the animation and nothing else: blocking all 4.6MB of remote media
+   * moved the score by zero, while forcing reduced motion (which disables the fade) moved it
+   * to 95 and the observed LCP to 153ms.
+   *
+   * So the hero's entrance is carried by `reveal-image` on the media alone. The spec's motion
+   * budget is intact: the image still reveals, and every staggered text reveal below the fold
+   * is untouched. `reveal-text` is still the right tool for above-the-fold text that is not
+   * the LCP element.
+   */
+  it('does not animate the wordmark, which is the LCP element', () => {
+    for (const mobile of [false, true]) {
+      useMedia.mockReturnValue(mobile);
+      const { container, unmount } = render(<Hero />);
+      const wordmark = screen.getByRole('heading', { level: 1 });
+      expect(wordmark).not.toHaveClass('reveal-text');
+      expect(wordmark.className).not.toMatch(/\breveal-/);
+      expect(wordmark.closest('[style*="--reveal-delay"]')).toBeNull();
+      // The media keeps its reveal: the hero still has an entrance.
+      expect(container.querySelector('.reveal-image')).not.toBeNull();
+      unmount();
+    }
   });
 
   it('uses no pill, gradient, shadow or grey-scale utility classes', () => {

@@ -29,6 +29,33 @@ describe('Footer', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(6);
   });
 
+  /**
+   * The column headings default to `h3`, which is right on every route whose own content is
+   * an `h1` followed by `h2` movements. A page whose only heading is its `h1` -- the two 404
+   * routes -- would skip a level, which axe reports as `heading-order`, so it asks for `h2`
+   * instead. The default keeps all seven existing call sites unchanged.
+   */
+  it('sets its column headings at h3 by default', () => {
+    const { container } = render(<Footer />);
+    const headings = Array.from(container.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+    expect(headings).toHaveLength(3);
+    for (const heading of headings) expect(heading.tagName).toBe('H3');
+    expect(headings.map((h) => h.textContent)).toEqual([
+      footer.contact.heading,
+      values.heading,
+      footer.quickLinks.heading,
+    ]);
+  });
+
+  it('honours headingLevel, so a page with no h2 of its own skips no level', () => {
+    const { container } = render(<Footer headingLevel={2} />);
+    const headings = Array.from(container.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+    expect(headings).toHaveLength(3);
+    for (const heading of headings) expect(heading.tagName).toBe('H2');
+    // The values list is still labelled by its heading, whatever level that heading is.
+    expect(screen.getByRole('list', { name: values.heading })).toBeInTheDocument();
+  });
+
   it('renders the real phone and email, not the placeholders', () => {
     const { container } = render(<Footer />);
 
