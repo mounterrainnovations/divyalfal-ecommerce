@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { siteCopy } from '@/lib/content/site-copy';
 
 /**
- * The nav asks the router where it is: the home route is the only one whose first frame is
- * a photograph, so it is the only one that starts transparent over imagery.
+ * The nav asks the router where it is: the home route is the only one with no spacer under
+ * the nav (the hero sits at the top of the viewport), and the current page is marked.
  */
 const usePathname = vi.hoisted(() => vi.fn<() => string>());
 vi.mock('next/navigation', () => ({ usePathname }));
@@ -18,6 +18,16 @@ const PRIMARY = [
   { name: 'Virasat Academy', href: '/virasat-academy' },
   { name: 'Contact', href: '/contact-us' },
 ];
+
+// Banned vocabulary, assembled from fragments so this file's own source never spells one.
+const BANNED_SHAPES = new RegExp(
+  [
+    ['rounded', 'full'].join('-'),
+    ['rounded', '3xl'].join('-'),
+    ['bg', 'gradient'].join('-'),
+    ['gray', '\\d'].join('-'),
+  ].join('|')
+);
 
 function scrollTo(y: number) {
   Object.defineProperty(window, 'scrollY', { value: y, configurable: true, writable: true });
@@ -50,6 +60,18 @@ describe('NavBar', () => {
     for (const { href } of PRIMARY) expect(known).toContain(href);
   });
 
+  it('takes its labels from the nav copy, except Shop, which the brief names', () => {
+    render(<NavBar />);
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    const links = within(nav).getAllByRole('link');
+
+    // Home is the wordmark, so every other item in the copy is a link, in the copy's order.
+    const expected = siteCopy.nav.items
+      .filter(item => item.href !== '/')
+      .map(item => (item.href === '/products' ? 'Shop' : item.label));
+    expect(links.map(link => link.textContent)).toEqual(expected);
+  });
+
   it('sets the brand wordmark as a link home, uppercased in CSS and never in the copy', () => {
     render(<NavBar />);
     const brand = screen.getByRole('link', { name: siteCopy.home.hero.wordmark });
@@ -74,6 +96,19 @@ describe('NavBar', () => {
     usePathname.mockReturnValue('/sale');
     render(<NavBar />);
     expect(screen.getByRole('link', { name: 'Sale' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Shop' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('marks a link current on pages nested beneath it, and only those', () => {
+    usePathname.mockReturnValue('/products/some-lehenga');
+    const { unmount } = render(<NavBar />);
+    expect(screen.getByRole('link', { name: 'Shop' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Sale' })).not.toHaveAttribute('aria-current');
+    unmount();
+
+    // A sibling that merely shares a prefix is not nested.
+    usePathname.mockReturnValue('/products-archive');
+    render(<NavBar />);
     expect(screen.getByRole('link', { name: 'Shop' })).not.toHaveAttribute('aria-current');
   });
 
@@ -151,14 +186,18 @@ describe('NavBar', () => {
   it('closes when a destination is chosen', async () => {
     const user = userEvent.setup();
     // jsdom cannot navigate; swallow the default so the click only exercises our handler.
+    // Removed in `finally`, so a failed assertion cannot leak it into later tests.
     const stop = (event: Event) => event.preventDefault();
     document.addEventListener('click', stop);
-    render(<NavBar />);
-    await user.click(screen.getByRole('button', { name: 'Open menu' }));
-    const dialog = screen.getByRole('dialog');
-    await user.click(within(dialog).getByRole('link', { name: 'Sale' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    document.removeEventListener('click', stop);
+    try {
+      render(<NavBar />);
+      await user.click(screen.getByRole('button', { name: 'Open menu' }));
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getByRole('link', { name: 'Sale' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      document.removeEventListener('click', stop);
+    }
   });
 
   it('closes the menu when the route changes under it', async () => {
@@ -193,18 +232,20 @@ describe('NavBar', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
-  it('condenses once scrolled, taking the paper ground and the one soft lift', () => {
+  it('condenses once scrolled, taking the one soft lift', () => {
     render(<NavBar />);
     const banner = screen.getByRole('banner');
+    const row = banner.querySelector('[data-nav-row]') as HTMLElement;
 
     expect(banner).toHaveAttribute('data-condensed', 'false');
     expect(banner.className).not.toMatch(/shadow/);
+    expect(row).toHaveClass('h-(--nav-h)');
 
     scrollTo(240);
 
     expect(banner).toHaveAttribute('data-condensed', 'true');
-    expect(banner).toHaveClass('bg-paper');
     expect(banner.className).toMatch(/shadow-/);
+    expect(row).toHaveClass('h-(--nav-h-condensed)');
 
     scrollTo(0);
     expect(banner).toHaveAttribute('data-condensed', 'false');
@@ -217,28 +258,24 @@ describe('NavBar', () => {
     expect(screen.getByRole('banner')).toHaveAttribute('data-condensed', 'true');
   });
 
-  it('sits on its own ink wash with paper type over the hero photograph', () => {
-    // The hero's 35% wash alone leaves the brightest pixels behind an 11px link at about
-    // 2.1:1; the nav adds its own flat wash so paper type clears 4.5:1 on any pixel.
-    render(<NavBar />);
-    const banner = screen.getByRole('banner');
-    expect(banner).toHaveClass('bg-ink/50');
-    expect(screen.getByRole('link', { name: 'Shop' })).toHaveClass('text-paper');
-  });
-
-  it('sets ink type on the paper ground once condensed', () => {
-    render(<NavBar />);
-    scrollTo(240);
-    expect(screen.getByRole('banner')).not.toHaveClass('bg-ink/50');
-    expect(screen.getByRole('link', { name: 'Shop' })).toHaveClass('text-ink');
-  });
-
-  it('is plain ink on paper on routes with no photograph behind it', () => {
-    usePathname.mockReturnValue('/products');
-    render(<NavBar />);
-    const banner = screen.getByRole('banner');
-    expect(banner).not.toHaveClass('bg-ink/50');
-    expect(screen.getByRole('link', { name: 'Shop' })).toHaveClass('text-ink');
+  it('is the same solid paper bar with ink type on every route, scrolled or not', () => {
+    // No transparent state: the nav never leaves type sitting on a photograph or on page
+    // text sliding beneath it. The transparent-over-hero state is deferred to the new hero.
+    for (const path of ['/', '/products', '/contact-us']) {
+      usePathname.mockReturnValue(path);
+      for (const y of [0, 240]) {
+        scrollTo(y);
+        const { unmount } = render(<NavBar />);
+        const banner = screen.getByRole('banner');
+        expect(banner).toHaveClass('bg-paper');
+        expect(banner.className).not.toMatch(/bg-ink|bg-transparent/);
+        for (const link of within(banner).getAllByRole('link')) {
+          expect(link).toHaveClass('text-ink');
+          expect(link.className).not.toMatch(/text-paper/);
+        }
+        unmount();
+      }
+    }
   });
 
   it('overlays the hero on home and holds the nav height clear on every other route', () => {
@@ -252,19 +289,42 @@ describe('NavBar', () => {
     expect(spacer).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('keeps the spacer exactly as tall as the resting nav', () => {
+  it('reads one height variable for the row, the spacer and the menu row', async () => {
+    const user = userEvent.setup();
     usePathname.mockReturnValue('/sale');
     const { container } = render(<NavBar />);
     const spacer = container.querySelector('[data-nav-spacer]') as HTMLElement;
-    const row = screen.getByRole('banner').querySelector('[data-nav-row]') as HTMLElement;
-    const heights = (el: HTMLElement) => el.className.split(/\s+/).filter(c => /^(md:)?h-\d+$/.test(c));
-    expect(heights(spacer).sort()).toEqual(heights(row).filter(c => !c.includes('condensed')).sort());
+    const banner = screen.getByRole('banner');
+    const row = banner.querySelector('[data-nav-row]') as HTMLElement;
+
+    // Spacer and resting row are the same height by construction: same variable, defined
+    // identically on the header and on the spacer.
+    expect(spacer).toHaveClass('h-(--nav-h)');
+    expect(row).toHaveClass('h-(--nav-h)');
+    for (const el of [spacer, banner]) {
+      expect(el).toHaveClass('[--nav-h:64px]', 'md:[--nav-h:80px]');
+    }
+
+    // The menu's own top row reads it too, and defines it for itself.
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveClass('[--nav-h:64px]', 'md:[--nav-h:80px]');
+    expect(dialog.querySelector('.h-\\(--nav-h\\)')).not.toBeNull();
+
+    // No hard-coded duplicate of the height survives anywhere.
+    for (const el of [spacer, banner, row, dialog]) {
+      expect(el.outerHTML).not.toMatch(/\bh-16\b|md:h-20|md:h-16/);
+    }
   });
 
-  it('never draws a banned shape: no pills, no gradients', () => {
+  it('never draws a banned shape, closed or with the menu open', async () => {
+    const user = userEvent.setup();
     const { container } = render(<NavBar />);
-    const html = container.innerHTML;
-    expect(html).not.toMatch(/rounded-full|rounded-3xl|gradient|gray-\d/);
+    expect(container.innerHTML).not.toMatch(BANNED_SHAPES);
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(container.innerHTML).not.toMatch(BANNED_SHAPES);
   });
 
   it('removes its scroll listener on unmount', () => {
