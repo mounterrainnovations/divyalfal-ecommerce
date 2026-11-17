@@ -2,9 +2,8 @@ import Hero from '@/components/layout/hero';
 import Categories from '@/components/sections/categories';
 import Collection from '@/components/sections/collection';
 import ShopByStyle from '@/components/sections/shop-by-style';
-import About from '@/components/sections/about';
-import Testimonials from '@/components/sections/testimonials';
-import Slideshow from '@/components/sections/slideshow';
+import InHerWords from '@/components/sections/in-her-words';
+import Atelier from '@/components/sections/atelier';
 import OurValues from '@/components/sections/our-values';
 import CTABanner from '@/components/sections/cta-banner';
 import VirasatAcademy from '@/components/sections/virasat-academy';
@@ -17,9 +16,8 @@ export default function Home() {
       <Categories />
       <Collection />
       <ShopByStyle />
-      <Slideshow />
-      <Testimonials />
-      <About />
+      <Atelier />
+      <InHerWords />
       <CTABanner />
       <VirasatAcademy />
       <OurValues />
