@@ -53,14 +53,14 @@ const TILE_SIZES =
 const ROW_RHYTHM = 'mt-16 md:mt-28';
 
 /**
- * Where each of Most Recommended's two strands sits. Not a two-up: the first holds columns
- * 2–5, the second starts at 8, so the pair keeps the movement's asymmetry rather than
- * reading as a feature table.
+ * Where Most Recommended's surviving strand sits: columns 2–5, under the closing hairline and
+ * diagonally opposite the lead paragraph at columns 8–11, so the two read as a turned page
+ * rather than as a feature table.
  */
-const STRAND_PLACEMENT = [
-  'col-span-12 md:col-span-4 md:col-start-2',
-  'col-span-12 md:col-span-4 md:col-start-8',
-] as const;
+const STRAND_PLACEMENT = 'col-span-12 md:col-span-4 md:col-start-2';
+
+/** The one strand of Most Recommended with stock behind it. See the note at its markup. */
+const FRESH_ARRIVALS = siteCopy.home.recommended.tabs[1];
 
 /**
  * Media width of a lookbook pair: `EditorialPair` gives it seven of twelve columns, capped by
@@ -167,23 +167,27 @@ export default function Collection() {
         </Reveal>
       </div>
 
-      {/* Most Recommended's two strands, as a pair of notes under the lead.
+      {/* Most Recommended's surviving strand, as one note under the lead.
           `recommended.tabs` carried a title and a blurb each; the retired rail showed them
           behind a pair of tab controls, and when the three rails collapsed into this one
-          movement only `tabs[1].title` survived into the markup -- the two blurbs stayed in
-          `siteCopy`, in its snapshot, and on no page at all. They are the two strands this
-          sequence now holds, so this is where they read. No new words: both the titles and
-          both the blurbs are the stored strings. */}
-      <div className="grid-editorial mt-14 gap-y-10 md:mt-20">
+          movement only `tabs[1].title` survived into the markup -- the blurbs stayed in
+          `siteCopy`, in its snapshot, and on no page at all.
+
+          **Fresh Arrivals only.** The wave that found them rendered both, which asserted two
+          strands while the page has one: `tabs[0]` is Best Sellers, and there is no
+          best-sellers data anywhere -- `recommended.bestSellers` is invented stock that was
+          never promoted, the endpoint has no best-selling query, and nothing here is sorted
+          by sales. `tabs[0]` is exempt in `test/rendered-coverage.test.tsx` under the same
+          retired-rail reason, and returns to the page when there is a query behind it. No new
+          words: the title and the blurb are the stored strings. */}
+      <div className="grid-editorial mt-12 gap-y-10 md:mt-16">
         <Reveal className="col-span-12 md:col-span-10 md:col-start-2">
           <HairlineRule />
         </Reveal>
-        {siteCopy.home.recommended.tabs.map((tab, index) => (
-          <Reveal key={tab.title} delay={index * 60} className={STRAND_PLACEMENT[index]}>
-            <Eyebrow>{tab.title}</Eyebrow>
-            <p className="measure mt-5 font-ui text-body text-ink-soft">{tab.body}</p>
-          </Reveal>
-        ))}
+        <Reveal delay={60} className={STRAND_PLACEMENT}>
+          <Eyebrow>{FRESH_ARRIVALS.title}</Eyebrow>
+          <p className="measure mt-5 font-ui text-body text-ink-soft">{FRESH_ARRIVALS.body}</p>
+        </Reveal>
       </div>
 
       {rows[0] ?? null}

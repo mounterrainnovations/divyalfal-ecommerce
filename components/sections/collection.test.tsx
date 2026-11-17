@@ -131,16 +131,23 @@ describe('Collection', () => {
   });
 
   /**
-   * The two sentences that rendered nowhere.
+   * **One strand, because there is one strand's worth of stock.**
    *
-   * `recommended.tabs[0].body` and `tabs[1].body` were in the copy module and in its snapshot
-   * — so the preservation guard was green — but no component read them, and `collection.tsx`
-   * read only `tabs[1].title`. A snapshot of the module can only prove the module is
-   * complete; `test/rendered-coverage.test.tsx` is the guard that proves the words reach a
-   * page. These two belong here: Movement 3 is where Most Recommended's two tabbed strands
-   * were folded in, so each strand's own title now labels its own blurb.
+   * `recommended.tabs[0].body` and `tabs[1].body` were both in the copy module and in its
+   * snapshot — so the preservation guard was green — while no component read either, and the
+   * wave that found them rendered both. That overcorrected. `tabs[0]` is Best Sellers, and
+   * there are no best sellers anywhere: `recommended.bestSellers` is invented stock that was
+   * never promoted, the API has no best-selling query, and nothing in this movement is sorted
+   * by sales. Printing its blurb asserted a second strand the page does not have, which is
+   * the same family of mistake as a false confirmation — words claiming a thing that is not
+   * there.
+   *
+   * So Fresh Arrivals renders, with its own title labelling its own blurb, and the Best
+   * Sellers pair is exempted in `test/rendered-coverage.test.tsx` under the same retired-rail
+   * reason `bestSellers` already carries. The words stay in the module for Phase 2's CMS seed;
+   * they return to the page when there is a best-sellers query behind them.
    */
-  it('renders both of Most Recommended’s strands, title and blurb, verbatim', async () => {
+  it('renders the Fresh Arrivals strand, title and blurb, verbatim', async () => {
     mockFetch({ freshArrivals: products, shopByStyle: [] });
     render(<Collection />);
     await screen.findByRole('heading', { level: 3, name: products[0].name });
@@ -148,26 +155,38 @@ describe('Collection', () => {
     const { heading, tabs } = siteCopy.home.recommended;
     // The movement's eyebrow is the heading of the rail it absorbed.
     expect(screen.getByText(heading)).toBeInTheDocument();
-    for (const tab of tabs) {
-      expect(screen.getByText(tab.title)).toBeInTheDocument();
-      expect(screen.getByText(tab.body)).toBeInTheDocument();
-    }
+    expect(screen.getByText(tabs[1].title)).toBeInTheDocument();
+    expect(screen.getByText(tabs[1].body)).toBeInTheDocument();
     // Verbatim, as transcribed -- not a paraphrase and not truncated.
-    expect(tabs[0].body).toBe(
-      'Discover our top-selling styles, loved by customers for their elegance and quality. Shop from our most popular collections.'
-    );
+    expect(tabs[1].title).toBe('Fresh Arrivals');
     expect(tabs[1].body).toBe(
       'Explore our latest collection of stunning pieces just added to our store — featuring the newest designs and trends.'
     );
   });
 
-  it('keeps both strands on screen in the fallback state too', async () => {
+  it('asserts no Best Sellers strand, because no best-sellers data exists', async () => {
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    const { container } = render(<Collection />);
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+
+    const [bestSellers] = siteCopy.home.recommended.tabs;
+    expect(bestSellers.title).toBe('Best Sellers');
+    expect(screen.queryByText(bestSellers.title)).toBeNull();
+    expect(screen.queryByText(bestSellers.body)).toBeNull();
+    // Nor the invented garments the retired rail hardcoded beside it.
+    for (const entry of siteCopy.home.recommended.bestSellers) {
+      expect(screen.queryByText(entry.name)).toBeNull();
+    }
+    expect(container.innerHTML).not.toContain('%2Fsamples%2Fmostrec%2F');
+  });
+
+  it('keeps the Fresh Arrivals strand on screen in the fallback state too', async () => {
     mockFetch({ freshArrivals: [], shopByStyle: [] });
     render(<Collection />);
     await screen.findByRole('heading', { level: 3, name: siteCopy.home.collection[0].title });
-    for (const tab of siteCopy.home.recommended.tabs) {
-      expect(screen.getByText(tab.body)).toBeInTheDocument();
-    }
+    const [bestSellers, freshArrivals] = siteCopy.home.recommended.tabs;
+    expect(screen.getByText(freshArrivals.body)).toBeInTheDocument();
+    expect(screen.queryByText(bestSellers.body)).toBeNull();
   });
 
   /**

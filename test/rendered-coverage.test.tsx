@@ -109,6 +109,15 @@ const ALLOWED: ReadonlyArray<readonly [prefix: string, reason: string]> = [
     'home.recommended.freshArrivals',
     'retired rail: invented garment names/prices, never promoted to stock (spec §5a.1)',
   ],
+  // The Best Sellers strand, exempt for the same reason as the stock behind it. There is no
+  // best-sellers data anywhere -- `bestSellers` above is invented and was never promoted, the
+  // homepage endpoint has no best-selling query, and nothing in Movement 3 is sorted by sales.
+  // Printing the blurb asserted a second strand the page does not have. Fresh Arrivals
+  // (`tabs[1]`) renders; this pair returns when there is a query behind it.
+  [
+    'home.recommended.tabs[0]',
+    'retired rail: the Best Sellers strand has no stock behind it, so the page would assert a strand it does not have (spec §5a.1)',
+  ],
   ['home.recommended.addToCartLabel', 'retired cart string: no cart exists (spec §3)'],
   ['home.recommended.pricePrefix', 'retired cart string: prices come from resolvePrice'],
 
