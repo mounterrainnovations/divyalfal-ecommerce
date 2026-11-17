@@ -20,7 +20,8 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 /**
  * Text plus a rule, never a pill and never a fill. Renders an `<a>` when `href` is set
  * (client-side navigation for internal paths, a plain anchor for external schemes) and a
- * `<button>` otherwise. Keyboard focus draws a visible outline.
+ * `<button>` otherwise. `newTab` opens an external link in a new tab, with `noopener`.
+ * Keyboard focus draws a visible outline.
  */
 export default function Button({
   href,
@@ -30,6 +31,7 @@ export default function Button({
   className,
   type = 'button',
   disabled,
+  newTab,
 }: {
   href?: string;
   onClick?: () => void;
@@ -38,13 +40,20 @@ export default function Button({
   className?: string;
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
+  /** External links only: open in a new tab (`target="_blank"`, `rel="noopener noreferrer"`). */
+  newTab?: boolean;
 }) {
   const classes = cn(BASE, VARIANT[variant], className);
 
   if (href !== undefined) {
     if (EXTERNAL.test(href)) {
       return (
-        <a href={href} onClick={onClick} className={classes}>
+        <a
+          href={href}
+          onClick={onClick}
+          className={classes}
+          {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
           {children}
         </a>
       );

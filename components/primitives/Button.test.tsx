@@ -18,6 +18,19 @@ describe('Button', () => {
     expect(button.className).not.toMatch(/rounded/);
   });
 
+  it('opens an external link in a new tab only when asked, with noopener', () => {
+    const { rerender } = render(<Button href="https://example.com/map">Map</Button>);
+    expect(screen.getByRole('link')).not.toHaveAttribute('target');
+
+    rerender(
+      <Button href="https://example.com/map" newTab>
+        Map
+      </Button>,
+    );
+    expect(screen.getByRole('link')).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link')).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   it('is a text-and-rule treatment in both variants, with no fill', () => {
     const { rerender } = render(<Button href="/x">Primary</Button>);
     expect(screen.getByRole('link').className).toMatch(/border-b/);
