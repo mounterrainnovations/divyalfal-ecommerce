@@ -4,6 +4,9 @@
 // twice. These tests pin the three things that make that safe: a first run creates, a second
 // run is a provable no-op, and nothing the client has edited since can be overwritten.
 //
+// RUN WITH `npm run test:seed` (excluded from the default `npm test`; see vitest.seed.config.ts).
+// Needs DIRECT_URL and network access; writes to the cms_scratch schema only.
+//
 // SAFETY: this file talks to a real Postgres. The repo's `.env` points at the client's
 // PRODUCTION project, so every statement here is confined to the `cms_scratch` schema:
 //
@@ -26,7 +29,8 @@ import { PrismaClient } from '@prisma/client';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { GET as slideshowGET } from '@/app/api/slideshow/route';
 import { siteCopy } from '@/lib/content/site-copy';
-import { flattenSiteCopy, seedCms, type SeedResult } from './seed-cms';
+import { flattenLeaves } from '@/lib/content/flatten';
+import { seedCms, type SeedResult } from './seed-cms';
 
 // Every test crosses the network to a hosted Postgres; the default 5s is for unit tests.
 vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
@@ -34,11 +38,9 @@ vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 const ROOT = path.resolve(__dirname, '..');
 const SCRATCH_SCHEMA = 'cms_scratch';
 const SUPABASE_HOST = 'duwwgyobnpuqsqdromzj.supabase.co';
-const STRING_LEAVES = 370; // the number lib/content/site-copy.test.ts asserts on its own flatten
-// siteCopy also holds numeric leaves its snapshot never sees: four best-seller prices, four
-// fresh-arrival prices and five testimonial ratings. They are content, so they are seeded.
-const NUMERIC_LEAVES = 13;
-const LEAF_COUNT = STRING_LEAVES + NUMERIC_LEAVES;
+// 370 string leaves (what site-copy.test.ts asserts) + 13 numeric leaves (prices, ratings) = 383.
+// Task 14 must assert 383 blocks against the database, not 370.
+const LEAF_COUNT = 383;
 const SEVEN_SECTIONS = ['hero', 'categories', 'collection', 'shopByStyle', 'atelier', 'inHerWords', 'close'];
 
 function readEnvFile(name: string): string | undefined {
@@ -110,37 +112,6 @@ describe('seed target safety', () => {
   });
 });
 
-describe('flattenSiteCopy', () => {
-  const flat = flattenSiteCopy(siteCopy);
-
-  const stringKeys = Object.keys(flat).filter(k => typeof flat[k] === 'string');
-  const numericKeys = Object.keys(flat).filter(k => typeof flat[k] === 'number');
-
-  it('yields exactly the number of string leaves site-copy.test.ts asserts', () => {
-    expect(stringKeys).toHaveLength(STRING_LEAVES);
-  });
-
-  it('uses exactly the keys the committed site-copy snapshot holds for its string leaves', () => {
-    const snap = readFileSync(path.join(ROOT, 'lib/content/__snapshots__/site-copy.test.ts.snap'), 'utf8');
-    const snapshotKeys = [...snap.matchAll(/^ {2}"([^"]+)": /gm)].map(m => m[1]);
-    expect(snapshotKeys).toHaveLength(STRING_LEAVES);
-    expect([...stringKeys].sort()).toEqual([...snapshotKeys].sort());
-  });
-
-  it('also keeps the numeric leaves the snapshot cannot see: prices and ratings, nothing else', () => {
-    expect(numericKeys).toHaveLength(NUMERIC_LEAVES);
-    expect(numericKeys.every(k => /\.(price|rating)$/.test(k))).toBe(true);
-    expect(Object.keys(flat)).toHaveLength(LEAF_COUNT);
-  });
-
-  it('refuses a leaf that is neither string nor number, rather than dropping its content', () => {
-    expect(() => flattenSiteCopy({ a: { b: true } })).toThrow(/a\.b/);
-    expect(() => flattenSiteCopy({ a: [null] })).toThrow(/a\[0\]/);
-    expect(() => flattenSiteCopy({ a: NaN })).toThrow(/"a"/);
-  });
-});
-
-
 // One real first run, from empty tables, shared by the read-only tests below: every seed is
 // ~400 round trips to a hosted database, so seeding per test would make this file take minutes.
 // The tests that change rows put them back (see `reseedFromEmpty`) so they stay order-independent.
@@ -166,9 +137,10 @@ describe('seedCms against the scratch schema', () => {
     await wipe();
   });
 
-  // Put the slide table back as the seed would have it, without touching anything else.
-  async function reseedFromEmpty() {
+  // Put the gallery back as the seed would have it (slides and marker), touching nothing else.
+  async function reseedGallery() {
     await prisma.slide.deleteMany();
+    await prisma.siteSetting.deleteMany({ where: { key: 'seed.gallery' } });
     await seedCms(prisma);
   }
 
@@ -186,7 +158,7 @@ describe('seedCms against the scratch schema', () => {
   });
 
   it('stores every leaf verbatim, with draft and published the same value', async () => {
-    const flat = flattenSiteCopy(siteCopy);
+    const flat = flattenLeaves(siteCopy);
     const blocks = await prisma.contentBlock.findMany();
     expect(blocks).toHaveLength(LEAF_COUNT);
     for (const block of blocks) {
@@ -215,6 +187,7 @@ describe('seedCms against the scratch schema', () => {
     expect(await kind('home.hero.mobileVideo')).toBe('VIDEO');
     expect(await kind('home.hero.wordmark')).toBe('TEXT');
     expect(await kind('nav.items[0].href')).toBe('LINK');
+    expect(await kind('home.explore.ctaHref')).toBe('LINK');
     expect(await kind('home.about.body')).toBe('TEXT');
     expect(await kind('home.recommended.bestSellers[0].price')).toBe('NUMBER');
   });
@@ -398,7 +371,63 @@ describe('seedCms against the scratch schema', () => {
         where: { key: 'whatsapp' },
         data: { value: siteCopy.footer.contact.phone.replace(/\D/g, '') },
       });
-      await reseedFromEmpty();
+      await reseedGallery();
+    }
+  });
+
+  it('does not revive a gallery the client emptied on purpose', async () => {
+    await prisma.slide.deleteMany();
+    try {
+      const result = await seedCms(prisma);
+      expect(result.created).toBe(0);
+      expect(await prisma.slide.count()).toBe(0);
+    } finally {
+      await reseedGallery();
+    }
+  });
+
+  it('rolls the gallery back as a unit when a slide fails part-way, then recovers on the next run', async () => {
+    await prisma.slide.deleteMany();
+    await prisma.siteSetting.deleteMany({ where: { key: 'seed.gallery' } });
+
+    // The tenth slide points at an asset that does not exist: a real foreign-key failure
+    // inside the real transaction.
+    let calls = 0;
+    const failing = new Proxy(prisma, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop, target);
+        if (prop === 'slide') {
+          return {
+            ...value,
+            upsert: (args: {
+              where: { id: string };
+              create: { id: string; assetId: string; order: number; visible: boolean };
+              update: Record<string, never>;
+            }) => {
+              calls += 1;
+              const create = calls === 10 ? { ...args.create, assetId: 'missing-asset' } : args.create;
+              return prisma.slide.upsert({ where: args.where, create, update: args.update });
+            },
+          };
+        }
+        return typeof value === 'function' && String(prop).startsWith('$') ? value.bind(target) : value;
+      },
+    });
+
+    try {
+      await expect(seedCms(failing)).rejects.toThrow();
+      expect(calls).toBe(10);
+      // Nothing of the gallery survived: not nine slides, not the marker.
+      expect(await prisma.slide.count()).toBe(0);
+      expect(await prisma.siteSetting.findUnique({ where: { key: 'seed.gallery' } })).toBeNull();
+
+      // So the next run is not mistaken for a finished one, and completes the gallery.
+      const retry = await seedCms(prisma);
+      expect(retry.created).toBe(11);
+      expect(await prisma.slide.count()).toBe(10);
+      expect(await prisma.siteSetting.findUnique({ where: { key: 'seed.gallery' } })).not.toBeNull();
+    } finally {
+      await reseedGallery();
     }
   });
 });

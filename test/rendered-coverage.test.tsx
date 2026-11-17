@@ -15,6 +15,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/db', () => ({ prisma: { product: { findUnique: vi.fn() } } }));
 
 import { siteCopy } from '@/lib/content/site-copy';
+import { flattenLeaves, stringLeaves } from '@/lib/content/flatten';
 import type { Product } from '@/types';
 
 import Home from '@/app/page';
@@ -38,18 +39,8 @@ import YouMayAlsoLike from '@/components/features/products/you-may-also-like';
 /* Flattening, the same way `lib/content/site-copy.test.ts` does it            */
 /* -------------------------------------------------------------------------- */
 
-const flatten = (node: unknown, key: string, out: Record<string, string>) => {
-  if (typeof node === 'string') {
-    out[key] = node;
-  } else if (Array.isArray(node)) {
-    node.forEach((v, i) => flatten(v, `${key}[${i}]`, out));
-  } else if (node && typeof node === 'object') {
-    for (const [k, v] of Object.entries(node)) flatten(v, key ? `${key}.${k}` : k, out);
-  }
-};
-
-const LEAVES: Record<string, string> = {};
-flatten(siteCopy, '', LEAVES);
+// The one shared flatten; this sweep covers the string leaves (copy a visitor reads).
+const LEAVES: Record<string, string> = stringLeaves(flattenLeaves(siteCopy));
 
 /* -------------------------------------------------------------------------- */
 /* The allowlist: every leaf this sweep does not require on a page, and why    */

@@ -19,9 +19,13 @@
  * performs reads only.
  *
  * Two models have no unique column to upsert on, so the seed gives its rows deterministic ids
- * (a UUID derived from the file path): `MediaAsset`, and `Slide`. A `Slide` is also guarded as a
- * set: once the table has any row the gallery is the client's to curate, so the seed does not
- * recreate a slide they deleted.
+ * (a UUID derived from the file path): `MediaAsset`, and `Slide`. The slides are also guarded as a
+ * set by a `seed.gallery` marker written in the same transaction as the slides, so the gallery is
+ * seeded all-or-nothing, and once seeded it is the client's to curate: a deleted or emptied
+ * gallery is not recreated.
+ *
+ * Counts: 383 blocks (370 string leaves + 13 numeric leaves), 7 sections, 37 assets, 10 slides,
+ * 9 settings (8 + the gallery marker).
  *
  * Image URLs are root-relative (`/samples/...`, `/slideshow/...`), which `next.config.ts` accepts
  * without a `remotePatterns` entry. Nothing is uploaded to storage: replacing a `sample`
@@ -34,6 +38,7 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { PrismaClient, type BlockKind, type Prisma } from '@prisma/client';
+import { flattenLeaves } from '../lib/content/flatten';
 import { siteCopy } from '../lib/content/site-copy';
 
 export interface SeedResult {
@@ -44,35 +49,8 @@ export interface SeedResult {
 // ---------------------------------------------------------------------------------------------
 // siteCopy -> ContentBlock
 // ---------------------------------------------------------------------------------------------
-
-/**
- * Walk `siteCopy` to `page.section.field` keys, arrays as `field[0].leaf`.
- *
- * Deliberately the same shape as the flatten in `lib/content/site-copy.test.ts`, whose snapshot
- * is the contract for these keys. That one only collects STRING leaves (370 of them); `siteCopy`
- * also carries numeric leaves (the garment prices and the testimonial ratings), which its snapshot
- * and leaf count never see. Seeding only the strings would lose them the moment the storefront reads
- * from the database, so this flatten keeps numbers too (stored as `NUMBER` blocks). It THROWS on
- * any other leaf (boolean, null): silently skipping one would drop content without a trace.
- */
-export function flattenSiteCopy(
-  node: unknown,
-  prefix = '',
-  out: Record<string, string | number> = {}
-): Record<string, string | number> {
-  if (typeof node === 'string' || (typeof node === 'number' && Number.isFinite(node))) {
-    out[prefix] = node;
-  } else if (Array.isArray(node)) {
-    node.forEach((value, index) => flattenSiteCopy(value, `${prefix}[${index}]`, out));
-  } else if (node !== null && typeof node === 'object') {
-    for (const [key, value] of Object.entries(node)) {
-      flattenSiteCopy(value, prefix ? `${prefix}.${key}` : key, out);
-    }
-  } else {
-    throw new Error(`siteCopy leaf "${prefix}" is ${node === null ? 'null' : typeof node}, not a string or number.`);
-  }
-  return out;
-}
+// Keys come from `flattenLeaves` (lib/content/flatten.ts), the one flatten shared with the
+// snapshot test, the rendered-coverage sweep and the storefront.
 
 const IMAGE_VALUE = /\.(png|jpe?g|webp|gif|avif|svg)(\?.*)?$/i;
 const VIDEO_VALUE = /\.(webm|mp4|mov)(\?.*)?$/i;
@@ -83,7 +61,8 @@ function blockKind(key: string, value: string | number): BlockKind {
   if (isUrl && VIDEO_VALUE.test(value)) return 'VIDEO';
   if (isUrl && IMAGE_VALUE.test(value)) return 'IMAGE';
   const field = key.split('.').pop()!.replace(/\[\d+\]$/, '');
-  if (field === 'href') return 'LINK';
+  // `href`, and `ctaHref`-style fields.
+  if (field === 'href' || /Href$/.test(field)) return 'LINK';
   return 'TEXT';
 }
 
@@ -148,6 +127,9 @@ function settingsToSeed(): { key: string; value: Prisma.InputJsonValue }[] {
 // ---------------------------------------------------------------------------------------------
 // Media: the gallery and the samples
 // ---------------------------------------------------------------------------------------------
+
+/** Written in the same transaction as the slides: "the gallery has been seeded". */
+const GALLERY_MARKER = 'seed.gallery';
 
 const PUBLIC_DIR = path.resolve(__dirname, '..', 'public');
 
@@ -349,7 +331,9 @@ export async function seedCms(prisma: PrismaClient): Promise<SeedResult> {
   tally(sections.length, newSections.length);
 
   // --- Content blocks: one per siteCopy leaf ---------------------------------------------
-  const flat = flattenSiteCopy(siteCopy);
+  // The shared flatten (lib/content/flatten.ts): the same keys as the snapshot, plus the 13
+  // numeric leaves (prices, ratings) it cannot hold. 370 strings + 13 numbers = 383 blocks.
+  const flat = flattenLeaves(siteCopy);
   const keys = Object.keys(flat);
   const haveBlocks = new Set((await prisma.contentBlock.findMany({ select: { key: true } })).map(r => r.key));
   const newKeys = keys.filter(key => !haveBlocks.has(key));
@@ -384,19 +368,32 @@ export async function seedCms(prisma: PrismaClient): Promise<SeedResult> {
   tally(assets.length, newAssets.length);
 
   // --- Slides ----------------------------------------------------------------------------
-  // Guarded as a set: any existing slide means the gallery is already the client's to curate,
-  // and a deleted slide must not come back.
-  if ((await prisma.slide.count()) === 0) {
-    await inChunks(slides.map((s, order) => ({ ...s, order })), ({ id, asset, order }) =>
-      prisma.slide.upsert({
-        where: { id },
-        create: { id, assetId: asset.id, order, visible: true },
-        update: {},
-      })
-    );
-    tally(slides.length, slides.length);
+  // The gallery is seeded at most once. The slides and a completion marker are written in ONE
+  // transaction, so either all of it exists or none of it does: a failure part-way rolls back
+  // and the next run starts clean (no half-gallery to mistake for a finished one). Once the marker
+  // exists the gallery is the client's to curate: a slide they delete, or a gallery they empty
+  // on purpose, is never recreated. Slides already present without a marker (made by hand
+  // before the seed ran) are treated the same way.
+  const planned = slides.length + 1; // the slides and the marker
+  const galleryDone = await prisma.siteSetting.findUnique({ where: { key: GALLERY_MARKER } });
+  if (galleryDone || (await prisma.slide.count()) > 0) {
+    tally(planned, 0);
   } else {
-    tally(slides.length, 0);
+    await prisma.$transaction([
+      ...slides.map(({ id, asset }, order) =>
+        prisma.slide.upsert({
+          where: { id },
+          create: { id, assetId: asset.id, order, visible: true },
+          update: {},
+        })
+      ),
+      prisma.siteSetting.upsert({
+        where: { key: GALLERY_MARKER },
+        create: { key: GALLERY_MARKER, value: { seededAt: new Date().toISOString() } },
+        update: {},
+      }),
+    ]);
+    tally(planned, planned);
   }
 
   return { created, skipped };

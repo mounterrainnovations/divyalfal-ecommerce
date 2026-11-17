@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { siteCopy } from './site-copy';
+import { flattenLeaves, numericLeaves, stringLeaves } from './flatten';
 
 describe('siteCopy', () => {
   it('preserves the About paragraph verbatim', () => {
@@ -329,24 +330,23 @@ describe('siteCopy', () => {
  * module. Review the `.snap` diff as copy, and only run `-u` when the client has
  * actually approved a wording change.
  */
-const flatten = (node: unknown, key: string, out: Record<string, string>) => {
-  if (typeof node === 'string') {
-    out[key] = node;
-  } else if (Array.isArray(node)) {
-    node.forEach((v, i) => flatten(v, `${key}[${i}]`, out));
-  } else if (node && typeof node === 'object') {
-    for (const [k, v] of Object.entries(node)) flatten(v, key ? `${key}.${k}` : k, out);
-  }
-};
-
 describe('siteCopy snapshot', () => {
-  const flat: Record<string, string> = {};
-  flatten(siteCopy, '', flat);
+  // The one shared flatten (lib/content/flatten.ts). The snapshot covers the STRING leaves.
+  const all = flattenLeaves(siteCopy);
+  const flat = stringLeaves(all);
 
   it('has not gained or lost a single leaf', () => {
     // Explicit, so an added or removed key is a loud failure rather than a quiet
     // snapshot update. Change this number only together with an approved copy change.
     expect(Object.keys(flat)).toHaveLength(370);
+  });
+
+  // The 370 above is a string count. The numeric leaves (garment prices, testimonial ratings)
+  // are content the snapshot cannot hold, so they get the same loud protection here: the CMS
+  // seed stores them, so the database holds 370 + 13 = 383 blocks, not 370.
+  it('has not gained or lost a single numeric leaf', () => {
+    expect(Object.keys(numericLeaves(all))).toHaveLength(13);
+    expect(Object.keys(all)).toHaveLength(383);
   });
 
   it('matches the committed copy, string for string', () => {
