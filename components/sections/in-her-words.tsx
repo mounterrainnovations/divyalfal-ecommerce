@@ -9,6 +9,23 @@ import Reveal from '@/components/primitives/Reveal';
 import { siteCopy } from '@/lib/content/site-copy';
 import { cn } from '@/lib/utils';
 
+/**
+ * Both photographs sit in a four-column slot, so they share one set of measured widths above
+ * `md` and differ only in how wide they are on a phone: the quote's partner is eight of twelve
+ * columns (it is paired with the quote even when stacked), the About photograph is full width.
+ * Measured in Chrome at both edges of every band rather than read off the class names:
+ *
+ *   quote photo:  390 -> 232px;  767 -> 455px;  768 -> 224px;  1023 -> 309px;
+ *                 1024 -> 277px; 1439 -> 416px; 1440 -> 416px
+ *   About photo:  390 -> 342px;  767 -> 719px;  and the same four-column figures from 768 up
+ *
+ * The 768-1023 band is widest at its top, not at the breakpoint: the gutter doubles at 1024,
+ * so a four-column slot is narrower at 1024 than at 1023.
+ */
+const FOUR_COLUMNS = '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw';
+const QUOTE_PHOTO_SIZES = `${FOUR_COLUMNS}, calc(67vw - 32px)`;
+const ABOUT_PHOTO_SIZES = `${FOUR_COLUMNS}, calc(100vw - 48px)`;
+
 const pad = (value: number) => String(value).padStart(2, '0');
 
 /**
@@ -72,7 +89,7 @@ export default function InHerWords() {
         </Reveal>
       </div>
 
-      <div className="grid-editorial mt-12 md:mt-20">
+      <div className="grid-editorial mt-10 md:mt-12">
         <Reveal delay={60} className="col-span-12 md:col-span-7 md:col-start-2">
           <HairlineRule className="w-16" />
           <div aria-live="polite" aria-atomic="true" className="mt-8 md:mt-12">
@@ -101,7 +118,7 @@ export default function InHerWords() {
 
         <Reveal
           delay={120}
-          className="col-span-8 col-start-5 mt-12 md:col-span-3 md:col-start-10 md:mt-0"
+          className="col-span-8 col-start-5 mt-10 md:col-span-4 md:col-start-9 md:mt-0"
         >
           <div
             key={index}
@@ -115,25 +132,25 @@ export default function InHerWords() {
               src={entry.image}
               alt=""
               fill
-              sizes="(min-width: 768px) 25vw, 66vw"
+              sizes={QUOTE_PHOTO_SIZES}
               className="object-cover"
             />
           </div>
         </Reveal>
       </div>
 
-      <Reveal className="grid-editorial mt-24 md:mt-40">
+      <Reveal className="grid-editorial mt-16 md:mt-16">
         <HairlineRule className="col-span-12 md:col-span-10 md:col-start-2" />
       </Reveal>
 
-      <div className="grid-editorial mt-16 items-end gap-y-12 md:mt-24 md:gap-y-0">
+      <div className="grid-editorial mt-12 items-end gap-y-10 md:mt-14 md:gap-y-0">
         <Reveal className="col-span-12 md:col-span-4 md:col-start-2">
           <div className="relative aspect-[2/3] w-full overflow-hidden bg-paper-deep">
             <Image
               src={about.image}
               alt={about.imageAlt}
               fill
-              sizes="(min-width: 768px) 30vw, 100vw"
+              sizes={ABOUT_PHOTO_SIZES}
               className="object-cover"
             />
           </div>

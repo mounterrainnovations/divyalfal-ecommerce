@@ -139,6 +139,54 @@ describe('InHerWords', () => {
     }
   });
 
+  /**
+   * **The quote and its photograph are a pair, not a quote with a stamp beside it.**
+   *
+   * They were already side by side from `md`, but at three columns against seven the
+   * photograph was 296 x 444 beside a 620px-tall block of type — small enough to read as
+   * decoration rather than as the other half of the testimonial. At four columns it is
+   * 411 x 616, which is the quote block's own height to within four pixels, so the two
+   * genuinely pair. The quote keeps its seven columns, so this costs the section nothing.
+   */
+  it('pairs the quote with a photograph of its own height, not a corner stamp', () => {
+    const { container } = render(<InHerWords />);
+    const photo = container.querySelector(`img[src*="${encodeURIComponent(quotes[0].image)}"]`)!;
+    const slot = photo.closest<HTMLElement>('[class*="md:col-span-"]')!;
+    const quoteSlot = container
+      .querySelector('blockquote')!
+      .closest<HTMLElement>('[class*="md:col-span-"]')!;
+
+    expect(slot.className).toMatch(/\bmd:col-span-4\b/);
+    expect(slot.className).toMatch(/\bmd:col-start-9\b/);
+    expect(quoteSlot.className).toMatch(/\bmd:col-span-7\b/);
+    expect(quoteSlot.className).toMatch(/\bmd:col-start-2\b/);
+    // The two sit in the same editorial row, which is what makes them a pair.
+    expect(slot.parentElement).toBe(quoteSlot.parentElement);
+    // Stacked on a phone, where a half-width quote at display-2 would be unreadable.
+    expect(slot.className).toMatch(/\bcol-span-8\b/);
+  });
+
+  /**
+   * Measured in Chrome at both edges of every band, as every image surface on this page is:
+   * 232px at 390 (eight of twelve columns), 455px at 767, 224px at 768, 309px at 1023,
+   * 277px at 1024, 416px at 1439 and a fixed 416px from 1440 up.
+   */
+  it('hints both photographs at the widths this movement renders them', () => {
+    const { container } = render(<InHerWords />);
+    const quotePhoto = container.querySelector(`img[src*="${encodeURIComponent(quotes[0].image)}"]`);
+    const aboutPhoto = container.querySelector(
+      `img[src*="${encodeURIComponent(siteCopy.home.about.image)}"]`
+    );
+    const expected =
+      '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw, calc(67vw - 32px)';
+    expect(quotePhoto).toHaveAttribute('sizes', expected);
+    // The About photograph sits in the same four-column slot, so it takes the same hint.
+    expect(aboutPhoto).toHaveAttribute(
+      'sizes',
+      '(min-width: 1440px) 416px, (min-width: 1024px) 29vw, (min-width: 768px) 31vw, calc(100vw - 48px)'
+    );
+  });
+
   it('shows the About photograph with its real alt text', () => {
     render(<InHerWords />);
     expect(screen.getByRole('img', { name: siteCopy.home.about.imageAlt })).toBeInTheDocument();
