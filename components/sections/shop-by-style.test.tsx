@@ -45,6 +45,9 @@ describe('ShopByStyle', () => {
   beforeEach(() => {
     useMedia.mockReset();
     useMedia.mockImplementation(query => query === '(min-width: 768px)');
+    // Collection's band drives playback through a ref; jsdom implements neither method.
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     // The data hook logs the failure mode before falling back; keep the output readable.
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });

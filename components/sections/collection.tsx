@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import Button from '@/components/primitives/Button';
 import DisplayHeading from '@/components/primitives/DisplayHeading';
@@ -147,33 +148,75 @@ export default function Collection() {
  * breakpoint is therefore matched in JavaScript and the extra clips are simply not rendered.
  * All three return at `md`, which a test pins, so "re-homed, not retired" stays true.
  *
- * **Under `prefers-reduced-motion` nothing plays.** The clips render as their still first
- * frame (`preload="metadata"`, no `autoplay`), which keeps the composition and honours the
- * spec's rule that every piece of motion sits behind the reduced-motion query.
+ * **Under `prefers-reduced-motion` nothing ever plays — and that is why playback is started
+ * imperatively rather than with an `autoPlay` attribute.** A media query cannot be answered
+ * during server rendering, so `autoPlay={!prefersReducedMotion}` shipped `autoplay` in the
+ * server HTML and the browser acted on it before React hydrated; clearing the attribute
+ * afterwards does not pause an element that is already playing. So the markup is always
+ * paused, and an effect — which only ever runs on the client, with the real answer in hand —
+ * reads the query and calls `play()` when, and only when, motion is allowed. The effect also
+ * subscribes, so turning the setting on mid-session pauses the band rather than waiting for
+ * a reload.
+ *
+ * `preload="metadata"` rather than `"none"`: it is what paints the still first frame a
+ * reduced-motion viewer sees, and the clips that do play are about to download anyway.
+ *
+ * The column count follows the resolved clip count rather than a `md:` class, so the band a
+ * desktop paints before hydration is one full-bleed clip at the band's final height, not one
+ * panel beside two-thirds of bare gold ground.
  *
  * The footage is decoration — muted, out of the tab order and `aria-hidden` — so it carries
  * no accessible content and needs none.
  */
 function SpotlightInterlude() {
   const isDesktop = useMedia(DESKTOP);
-  const prefersReducedMotion = useMedia(REDUCED_MOTION);
   const clips = isDesktop ? SPOTLIGHT_FOOTAGE : SPOTLIGHT_FOOTAGE.slice(0, 1);
+  const panels = useRef<(HTMLVideoElement | null)[]>([]);
+
+  useEffect(() => {
+    const media =
+      typeof window.matchMedia === 'function' ? window.matchMedia(REDUCED_MOTION) : null;
+
+    const sync = () => {
+      const reduce = media?.matches ?? false;
+      for (const panel of panels.current) {
+        if (!panel) continue;
+        if (reduce) {
+          panel.pause();
+          continue;
+        }
+        const started: unknown = panel.play();
+        // A refused play — an autoplay policy, a codec — leaves the first frame on screen,
+        // which is the reduced-motion state and perfectly acceptable here.
+        if (started instanceof Promise) started.catch(() => {});
+      }
+    };
+
+    sync();
+    media?.addEventListener('change', sync);
+    return () => media?.removeEventListener('change', sync);
+  }, [clips.length]);
 
   return (
     <Reveal className={cn('w-full', ROW_RHYTHM)} delay={60}>
       <HairlineRule />
-      <div className="grid w-full grid-cols-1 gap-px bg-gold md:grid-cols-3">
-        {clips.map(src => (
+      <div
+        className={cn(
+          'grid w-full grid-cols-1 gap-px bg-gold',
+          clips.length > 1 && 'md:grid-cols-3'
+        )}
+      >
+        {clips.map((src, index) => (
           <video
             key={src}
+            ref={node => {
+              panels.current[index] = node;
+            }}
             src={src}
-            autoPlay={!prefersReducedMotion}
             muted
             loop
             playsInline
-            // Nothing is fetched until the clip plays; under reduced motion it never does,
-            // so load just enough to paint a still first frame.
-            preload={prefersReducedMotion ? 'metadata' : 'none'}
+            preload="metadata"
             aria-hidden="true"
             tabIndex={-1}
             className="aspect-[9/16] w-full bg-paper-deep object-cover md:aspect-auto md:h-[72svh]"

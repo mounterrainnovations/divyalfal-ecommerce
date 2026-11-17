@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import Collection from './collection';
 import { siteCopy } from '@/lib/content/site-copy';
 import { formatPrice } from '@/lib/utils/price';
@@ -59,11 +60,51 @@ function mockFetch(body: unknown, ok = true, status = 200) {
 const fallbackTiles = (container: HTMLElement) =>
   Array.from(container.querySelectorAll('[data-tier="fallback"]'));
 
+/**
+ * A live `window.matchMedia`: `matches` is read through a getter, and `set` notifies the
+ * listeners, so a test can resolve or flip a query the way a browser does. The band reads
+ * the reduced-motion query here rather than through `useMedia`, because the answer has to be
+ * read at the moment playback would start, not at the moment the component rendered.
+ */
+function stubMatchMedia(initial: Record<string, boolean> = {}) {
+  const matches: Record<string, boolean> = { ...initial };
+  const listeners = new Map<string, Set<() => void>>();
+
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    media: query,
+    get matches() {
+      return matches[query] ?? false;
+    },
+    addEventListener: (_event: string, listener: () => void) => {
+      if (!listeners.has(query)) listeners.set(query, new Set());
+      listeners.get(query)!.add(listener);
+    },
+    removeEventListener: (_event: string, listener: () => void) => {
+      listeners.get(query)?.delete(listener);
+    },
+  }));
+
+  return {
+    set(query: string, value: boolean) {
+      matches[query] = value;
+      for (const listener of listeners.get(query) ?? []) listener();
+    },
+  };
+}
+
+let media: ReturnType<typeof stubMatchMedia>;
+let play: ReturnType<typeof vi.spyOn>;
+let pause: ReturnType<typeof vi.spyOn>;
+
 describe('Collection', () => {
   beforeEach(() => {
     // Desktop width, motion allowed, unless a test says otherwise.
     useMedia.mockReset();
     useMedia.mockImplementation(query => query === DESKTOP);
+    media = stubMatchMedia({ [REDUCED_MOTION]: false });
+    // jsdom implements neither, and the band drives both through a ref.
+    play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     // The hook logs the failure mode before falling back; keep the suite's output readable.
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -298,13 +339,25 @@ describe('Collection', () => {
     for (const video of videos) {
       expect(video.muted).toBe(true);
       expect(video).toHaveAttribute('loop');
-      expect(video).toHaveAttribute('autoplay');
       expect(video).toHaveAttribute('playsinline');
       // Decorative: no accessible content, out of the tab order.
       expect(video).toHaveAttribute('aria-hidden', 'true');
       expect(video).toHaveAttribute('tabindex', '-1');
+      // Never an autoplay attribute — see the sequence tests below.
+      expect(video).not.toHaveAttribute('autoplay');
+      expect(video).toHaveAttribute('preload', 'metadata');
     }
     expect(useMedia).toHaveBeenCalledWith(DESKTOP);
+  });
+
+  it('starts the footage imperatively once the client can answer the query', async () => {
+    media.set(REDUCED_MOTION, false);
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+    expect(play).toHaveBeenCalledTimes(3);
+    expect(pause).not.toHaveBeenCalled();
   });
 
   it('serves a phone the lead clip only, and never requests the other two', async () => {
@@ -324,20 +377,57 @@ describe('Collection', () => {
     expect(container.innerHTML).not.toContain('sp03.webm');
   });
 
-  it('does not autoplay the footage under prefers-reduced-motion', async () => {
-    useMedia.mockImplementation(query => query === DESKTOP || query === REDUCED_MOTION);
+  it('ships no autoplay in the server markup, so nothing can start before React answers', () => {
+    // The real sequence, not a resolved mock: a media query cannot be answered while
+    // rendering on the server, so `autoPlay={!prefersReducedMotion}` put `autoplay` in the
+    // HTML a reduced-motion browser acts on *before* hydration — and clearing the attribute
+    // afterwards does not pause an element that is already playing.
+    useMedia.mockImplementation(() => false); // what the server, and only the server, knows
+    const html = renderToStaticMarkup(<Collection />);
+
+    expect(html).toContain('sp01.webm');
+    expect(html).not.toContain('autoplay');
+    expect(html).not.toContain('autoPlay');
+  });
+
+  it('never starts the footage under prefers-reduced-motion', async () => {
+    // Drive the sequence: the query is unresolved during the first render (useMedia returns
+    // false before its effect), and resolves to "reduce" on the client.
+    useMedia.mockImplementation(() => false);
+    media.set(REDUCED_MOTION, true);
     mockFetch({ freshArrivals: products, shopByStyle: [] });
     const { container } = render(<Collection />);
 
     await screen.findByRole('heading', { level: 3, name: products[0].name });
-    const videos = Array.from(container.querySelectorAll('video'));
-    expect(videos).toHaveLength(3);
-    for (const video of videos) {
+    for (const video of Array.from(container.querySelectorAll('video'))) {
+      // Nothing in the markup can start playback on its own at any point in the sequence.
       expect(video).not.toHaveAttribute('autoplay');
       // Still composed, just still: enough is loaded to paint a first frame.
       expect(video).toHaveAttribute('preload', 'metadata');
     }
-    expect(useMedia).toHaveBeenCalledWith(REDUCED_MOTION);
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  it('pauses the footage when reduced motion is turned on mid-session', async () => {
+    media.set(REDUCED_MOTION, false);
+    mockFetch({ freshArrivals: products, shopByStyle: [] });
+    render(<Collection />);
+
+    await screen.findByRole('heading', { level: 3, name: products[0].name });
+    expect(play).toHaveBeenCalledTimes(3);
+
+    await act(async () => {
+      media.set(REDUCED_MOTION, true);
+    });
+    expect(pause).toHaveBeenCalledTimes(3);
+  });
+
+  it('paints a desktop band as one full-bleed clip until the breakpoint resolves', () => {
+    // The gold ground is only ever the 1px gaps between panels. Before hydration there is
+    // one clip, so the band must be a single column — not one panel beside bare gold.
+    useMedia.mockImplementation(() => false);
+    const html = renderToStaticMarkup(<Collection />);
+    expect(html).not.toContain('md:grid-cols-3');
   });
 
   it('keeps the spotlight interlude on screen in the fallback state too', async () => {
