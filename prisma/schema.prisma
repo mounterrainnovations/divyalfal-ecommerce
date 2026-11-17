@@ -33,3 +33,92 @@ enum ProductType {
   WESTERN
   OTHER
 }
+
+// ---------------------------------------------------------------------------
+// CMS (Phase 2) - additive only. `Product` above is not modified.
+// Defined by spec §10 (docs/superpowers/specs/2026-11-16-divyafal-revamp-design.md).
+// ---------------------------------------------------------------------------
+
+model MediaAsset {
+  id        String    @id @default(uuid())
+  url       String // Supabase storage public URL (or a root-relative path)
+  path      String // storage path, for deletion
+  kind      MediaKind @default(IMAGE) // hero and spotlight footage live in the library too
+  alt       String    @default("")
+  width     Int?
+  height    Int?
+  mimeType  String
+  bytes     Int
+  tags      String[]
+  createdAt DateTime  @default(now())
+  slides    Slide[]
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+model ContentBlock {
+  id        String    @id @default(uuid())
+  key       String    @unique // e.g. "home.hero.brandLine"
+  page      String // "home" | "about" | ...
+  section   String // "hero" | "collection" | ...
+  label     String // human label shown in admin
+  kind      BlockKind
+  draft     Json // editing value
+  published Json? // value the public site reads
+  updatedAt DateTime  @updatedAt
+}
+
+enum BlockKind {
+  TEXT
+  RICH_TEXT
+  IMAGE
+  IMAGE_LIST
+  VIDEO
+  NUMBER
+  LINK
+}
+
+model HomepageSection {
+  id         String   @id @default(uuid())
+  key        String   @unique // "hero" | "categories" | ...
+  label      String
+  order      Int
+  visible    Boolean  @default(true)
+  productIds String[] // hand-picked curation; empty = auto
+  updatedAt  DateTime @updatedAt
+}
+
+model Slide {
+  id      String     @id @default(uuid())
+  assetId String
+  asset   MediaAsset @relation(fields: [assetId], references: [id])
+  order   Int
+  visible Boolean    @default(true)
+}
+
+model SiteSetting {
+  key       String   @id // "whatsapp" | "seo.title" | ...
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model Enquiry {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  status    EnquiryStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+enum EnquiryStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
