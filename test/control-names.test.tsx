@@ -8,12 +8,16 @@ vi.mock('next/navigation', () => ({
 
 import Home from '@/app/page';
 
-const SLIDESHOW = ['/slideshow/a.jpg', '/slideshow/b.jpg', '/slideshow/c.jpg'];
+/**
+ * Four frames, not three: the gallery band holds three at once and draws no controls for a
+ * gallery that already fits in it. This suite is about the names of the controls, so it needs
+ * a gallery with something to page through. The live folder returns ten.
+ */
+const SLIDESHOW = ['/slideshow/a.jpg', '/slideshow/b.jpg', '/slideshow/c.jpg', '/slideshow/d.jpg'];
 
 /**
  * One stub for the homepage's two requests. `/api/homepage-sections` feeds Movements 3 and 4;
- * `/api/slideshow` feeds the gallery, which needs more than one frame before it draws its
- * controls at all.
+ * `/api/slideshow` feeds the gallery.
  */
 function stubFetch() {
   const spy = vi.fn((input: unknown) => {
