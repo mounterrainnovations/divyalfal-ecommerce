@@ -47,3 +47,5 @@ CLAUDE.md
 
 /lib/generated/prisma
 .kilocodemodes
+# product seed backups
+/prisma/backups

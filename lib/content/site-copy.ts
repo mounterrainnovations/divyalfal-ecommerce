@@ -55,8 +55,8 @@ export const siteCopy = {
     // wordmark and the two existing media sources live here -- no tagline, no est. mark.
     hero: {
       wordmark: 'Divyafal',
-      // PLACEHOLDER: interim licensed sample (public/samples/README.md), not launch content.
-      desktopImage: '/samples/hero/hero-golden-warp-on-the-loom.webp',
+      // Divyafal's own runway photography, from the gallery the Atelier section plays.
+      desktopImage: '/slideshow/dmw-136.jpg',
       mobileVideo:
         'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
     },
@@ -64,12 +64,12 @@ export const siteCopy = {
     categories: {
       heading: 'Shop by Category',
       items: [
-        { name: 'Sarees', image: '/samples/categories/category-sarees-embroidered-stole.webp' },
-        { name: 'Indo-Western', image: '/samples/categories/category-indo-western-gold-silk-daylight.webp' },
-        { name: 'Lehengas', image: '/samples/categories/category-lehengas-hung-on-the-door.webp' },
-        { name: 'Suits', image: '/samples/categories/category-suits-ivory-on-wooden-hangers.webp' },
-        { name: 'Kurta Pant', image: '/samples/categories/category-kurta-pant-hung-set.webp' },
-        { name: 'Western', image: '/samples/categories/category-western-pale-rail.webp' },
+        { name: 'Sarees', image: '/categories/saree.jpg' },
+        { name: 'Indo-Western', image: '/categories/indo_western.jpg' },
+        { name: 'Lehengas', image: '/categories/lehenga.png' },
+        { name: 'Suits', image: '/categories/suits.jpg' },
+        { name: 'Kurta Pant', image: '/categories/kurta.jpg' },
+        { name: 'Western', image: '/categories/western.png' },
       ],
     },
 
@@ -85,33 +85,32 @@ export const siteCopy = {
           body: 'Explore our latest collection of stunning pieces just added to our store — featuring the newest designs and trends.',
         },
       ],
-      // PLACEHOLDER images below (all four): interim licensed samples, see public/samples/README.md.
       bestSellers: [
-        { name: 'Red Velvet Saree Border with...', price: 10999, image: '/samples/mostrec/mostrec-1-red-banarasi-zari-border.webp' },
-        { name: 'Midnight Brown Indo Lehenga Set...', price: 21999, image: '/samples/mostrec/mostrec-2-gold-embroidery-on-brown.webp' },
-        { name: 'White Silk Kurti with Long...', price: 60000, image: '/samples/mostrec/mostrec-3-ivory-chikan-sequin-work.webp' },
-        { name: 'Indo Western Lehenga Set...', price: 12000, image: '/samples/mostrec/mostrec-4-peach-and-maroon-banarasi.webp' },
+        { name: 'Red Velvet Saree Border with...', price: 10999, image: '/mostrec/1.png' },
+        { name: 'Midnight Brown Indo Lehenga Set...', price: 21999, image: '/mostrec/2.png' },
+        { name: 'White Silk Kurti with Long...', price: 60000, image: '/mostrec/3.png' },
+        { name: 'Indo Western Lehenga Set...', price: 12000, image: '/mostrec/4.png' },
       ],
       freshArrivals: [
         {
           name: 'Emerald Green Silk Saree...',
           price: 45999,
-          image: '/mocks/mock_hero_desktop.jpg',
+          image: '/categories/saree.jpg',
         },
         {
           name: 'Rose Gold Lehenga Choli...',
           price: 85000,
-          image: '/mocks/mock_mostRecommended_common.jpg',
+          image: '/categories/lehenga.png',
         },
         {
           name: 'Coral Silk Anarkali...',
           price: 55000,
-          image: '/mocks/mock_mostRecommended_common.jpg',
+          image: '/categories/suits.jpg',
         },
         {
           name: 'Navy Blue Banarasi Saree...',
           price: 72000,
-          image: '/mocks/mock_mostRecommended_common.jpg',
+          image: '/categories/indo_western.jpg',
         },
       ],
       addToCartLabel: 'Add to Cart',
@@ -125,62 +124,58 @@ export const siteCopy = {
       ctaHref: '/products',
     },
 
-    // PLACEHOLDER images (image and backImage, all four looks): interim licensed samples,
-    // see public/samples/README.md. Not these garments.
     collection: [
       {
         title: 'Haldi & Kumkum Dress',
         description:
           'Auspicious elegance in every thread. Draped in the sacred hues of Haldi and Kumkum',
-        image: '/samples/collection/collection-1-front-embroidered-spray-on-beige.webp',
-        backImage: '/samples/collection/collection-1-back-gold-warp-threads.webp',
+        image: '/collection/1.png',
+        backImage: '/collection/1b.png',
       },
       {
         title: 'The Rajwadi Brocade',
         description: 'Rajwadi also means Royal and Brocade highlights the magnificent woven fabric',
-        image: '/samples/collection/collection-2-front-cream-satin-folds.webp',
-        backImage: '/samples/collection/collection-2-back-champagne-silk.webp',
+        image: '/collection/2.png',
+        backImage: '/collection/2b.png',
       },
       {
         title: 'Neelam Frill Lehenga',
         description:
           'Neelam for the rich sapphire blue top, paired with Frill for the modern, layered skirt',
-        image: '/samples/collection/collection-3-front-silk-afternoon-light.webp',
-        backImage: '/samples/collection/collection-3-back-swatchbook-floral.webp',
+        image: '/collection/3.png',
+        backImage: '/collection/3b.png',
       },
       {
         title: 'The Royal Cascade Lehenga',
         description:
           'Royal for that rich sapphire-blue choli, and Cascade to describe the beautiful, waterfall-like drape of the skirt.',
-        image: '/samples/collection/collection-4-front-hands-sewing.webp',
-        backImage: '/samples/collection/collection-4-back-thread-spools.webp',
+        image: '/collection/4.png',
+        backImage: '/collection/4b.png',
       },
     ],
 
     style: {
       heading: 'Shop By Style',
-      // PLACEHOLDER images (frontImage and backImage, all four): interim licensed samples,
-      // see public/samples/README.md. Not these garments.
       items: [
         {
           name: 'Raw Silk Off White Printed with Sequence Detailing',
-          frontImage: '/samples/style/style-1-front-ivory-raw-silk-folds.webp',
-          backImage: '/samples/style/style-1-back-floral-skirt-panel.webp',
+          frontImage: '/shop-by-style/f1.png',
+          backImage: '/shop-by-style/b1.png',
         },
         {
           name: 'Pure Cotton Block Print Ajragh Bagh',
-          frontImage: '/samples/style/style-2-front-cream-woven-block-design.webp',
-          backImage: '/samples/style/style-2-back-white-cloth-on-wood.webp',
+          frontImage: '/shop-by-style/f2.png',
+          backImage: '/shop-by-style/b2.png',
         },
         {
           name: 'Banarasi Anarkali Suit',
-          frontImage: '/samples/style/style-3-front-gold-medallions.webp',
-          backImage: '/samples/style/style-3-back-paisley-on-russet.webp',
+          frontImage: '/shop-by-style/f3.png',
+          backImage: '/shop-by-style/b3.png',
         },
         {
           name: 'Peach and off white Banarasi Angrakha Anarkarli',
-          frontImage: '/samples/style/style-4-front-flowing-gold-silk.webp',
-          backImage: '/samples/style/style-4-back-silk-afternoon-light.webp',
+          frontImage: '/shop-by-style/f4.png',
+          backImage: '/shop-by-style/b4.png',
         },
       ],
     },

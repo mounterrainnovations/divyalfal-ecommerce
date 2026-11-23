@@ -101,8 +101,8 @@ describe('Hero', () => {
     expect(html).toContain(mobileVideo);
     expect(html).toContain(`media="${PHONE}"`);
     // And so is the still, as a next/image srcSet.
-    expect(html).toContain('%2Fsamples%2Fhero%2Fhero-golden-warp-on-the-loom.webp');
-    expect(desktopImage).toBe('/samples/hero/hero-golden-warp-on-the-loom.webp');
+    expect(html).toContain('%2Fslideshow%2Fdmw-136.jpg');
+    expect(desktopImage).toBe('/slideshow/dmw-136.jpg');
     // Nothing in the decision is JavaScript: the markup does not differ by hook answer.
     expect(renderToStaticMarkup(<Hero />)).toBe(html);
   });
@@ -143,7 +143,7 @@ describe('Hero', () => {
     // A desktop matches no source and falls through to the img's own responsive set.
     const img = picture?.querySelector('img');
     expect(img).toHaveAttribute('alt', '');
-    expect(img?.getAttribute('srcset') ?? '').toContain('hero-golden-warp-on-the-loom');
+    expect(img?.getAttribute('srcset') ?? '').toContain('dmw-136');
     expect(img).toHaveAttribute('sizes', '100vw');
   });
 

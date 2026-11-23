@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Field, { TextInput } from '@/components/admin/Field';
-import { ACTION, ACTION_QUIET, LABEL } from '@/components/admin/styles';
+import { ACTION, ACTION_QUIET, LABEL, PANEL } from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { siteCopy } from '@/lib/content/site-copy';
 
@@ -50,7 +50,7 @@ export default function DashboardLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-[var(--gutter)] py-16">
-      <div className="w-full max-w-[320px]">
+      <div className={cn(PANEL, 'w-full max-w-[360px] px-8 py-10')}>
         <p className={cn(LABEL, 'mb-3')}>Admin portal</p>
         <p className="font-display text-[28px] font-light uppercase tracking-(--tracking-wordmark) text-ink">
           {siteCopy.home.hero.wordmark}
@@ -94,7 +94,7 @@ export default function DashboardLoginPage() {
             {error}
           </p>
 
-          <button type="submit" disabled={busy} className={ACTION}>
+          <button type="submit" disabled={busy} className={cn(ACTION, 'w-full')}>
             {busy ? 'Signing in' : 'Sign in'}
           </button>
         </form>

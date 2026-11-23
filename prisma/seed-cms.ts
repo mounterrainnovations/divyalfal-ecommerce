@@ -8,8 +8,10 @@
  *   - one `ContentBlock` per `siteCopy` leaf, keyed exactly as the committed snapshot keys it,
  *     `draft` and `published` both set to the same value;
  *   - seven `HomepageSection` rows in movement order;
- *   - a `MediaAsset` for every file `/api/slideshow` serves, plus every licensed sample under
- *     `public/samples/` (tagged `sample`), and a `Slide` per gallery file in served order;
+ *   - a `MediaAsset` for every file `/api/slideshow` serves, every licensed sample under
+ *     `public/samples/` (tagged `sample`), and every local image `siteCopy` itself points at
+ *     (tagged `storefront`) so that nothing on the public site is unmanageable from the
+ *     portal; plus a `Slide` per gallery file in served order;
  *   - `SiteSetting` rows for the contact details, the WhatsApp number and the SEO metadata.
  *
  * **Re-running is a no-op, and cannot clobber the client's edits.** Every write is an upsert on
@@ -24,7 +26,8 @@
  * seeded all-or-nothing, and once seeded it is the client's to curate: a deleted or emptied
  * gallery is not recreated.
  *
- * Counts: 383 blocks (370 string leaves + 13 numeric leaves), 7 sections, 37 assets, 10 slides,
+ * Counts: 383 blocks (370 string leaves + 13 numeric leaves), 7 sections, 71 assets (37 samples
+ * and gallery frames, 34 storefront photographs), 10 slides,
  * 9 settings (8 + the gallery marker).
  *
  * Image URLs are root-relative (`/samples/...`, `/slideshow/...`), which `next.config.ts` accepts
@@ -35,6 +38,7 @@
  * run under the cutover runbook, after the CMS migration has been deployed.
  */
 import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { PrismaClient, type BlockKind, type Prisma } from '@prisma/client';
@@ -203,6 +207,24 @@ async function planMedia(): Promise<{ assets: AssetPlan[]; slides: { id: string;
       const relativePath = `${SAMPLES_DIR}/${folder}/${file}`;
       byPath.set(relativePath, plan(relativePath, ['sample', folder], sampleAlt(folder, file)));
     }
+  }
+
+  // Every image the storefront itself points at, read off `siteCopy` rather than listed by
+  // hand. The category tiles, the collection looks, the Shop by Style pairs and the
+  // testimonial portraits live in `public/categories`, `public/collection`,
+  // `public/shop-by-style` and friends, and until they are registered here the client cannot
+  // replace any of them from the media library — which is the whole point of the portal.
+  //
+  // Deriving the list from the copy instead of naming the folders means a future image swap
+  // in `site-copy.ts` brings its file into the library automatically, and cannot quietly
+  // leave an unmanageable photograph on the public site.
+  for (const value of Object.values(flattenLeaves(siteCopy))) {
+    if (typeof value !== 'string') continue;
+    if (!value.startsWith('/') || !IMAGE_VALUE.test(value)) continue;
+    const relativePath = value.slice(1);
+    if (byPath.has(relativePath)) continue;
+    if (!existsSync(path.join(PUBLIC_DIR, relativePath))) continue; // a remote or missing file
+    byPath.set(relativePath, plan(relativePath, ['storefront'], ''));
   }
 
   // The gallery, in served order. `public/slideshow` holds the owner's own photographs:

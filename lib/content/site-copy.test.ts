@@ -92,8 +92,8 @@ describe('siteCopy', () => {
     // The brand's own spelling, not an uppercased presentation of it: Task 5 applies
     // `text-transform: uppercase` and the eyebrow tracking in CSS.
     expect(siteCopy.home.hero.wordmark).toBe('Divyafal');
-    // PLACEHOLDER sample (public/samples/README.md), not launch content.
-    expect(siteCopy.home.hero.desktopImage).toBe('/samples/hero/hero-golden-warp-on-the-loom.webp');
+    // A frame from the house's own runway gallery, the set the Atelier section plays.
+    expect(siteCopy.home.hero.desktopImage).toBe('/slideshow/dmw-136.jpg');
     expect(siteCopy.home.hero.mobileVideo).toBe(
       'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm'
     );

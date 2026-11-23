@@ -94,10 +94,11 @@ describe('seedCms (in-memory client)', () => {
     const result = await seedCms(prisma);
     expect(tables.contentBlock.size).toBe(383);
     expect(tables.homepageSection.size).toBe(7);
-    expect(tables.mediaAsset.size).toBe(37);
+    // 37 samples and gallery frames, plus the 34 storefront photographs siteCopy points at.
+    expect(tables.mediaAsset.size).toBe(71);
     expect(tables.slide.size).toBe(10);
     expect(tables.siteSetting.size).toBe(9); // eight settings + the gallery marker
-    expect(result).toEqual({ created: 383 + 7 + 37 + 10 + 9, skipped: 0 });
+    expect(result).toEqual({ created: 383 + 7 + 71 + 10 + 9, skipped: 0 });
   });
 
   it('sends no write at all on a second run', async () => {

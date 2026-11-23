@@ -259,12 +259,15 @@ describe('seedCms against the scratch schema', () => {
     expect(await size('samples/hero/hero-golden-warp-on-the-loom.webp')).toEqual({ width: 3200, height: 1900 });
   });
 
-  it('registers every /samples image that a content block points at', async () => {
+  it('registers every local image that a content block points at', async () => {
+    // Not just the samples: the storefront points at public/categories, public/collection,
+    // public/shop-by-style and public/testimonials too, and an image the library does not
+    // know about is an image the client cannot replace from the portal.
     const urls = new Set((await prisma.mediaAsset.findMany()).map(a => a.url));
     const imageBlocks = await prisma.contentBlock.findMany({ where: { kind: 'IMAGE' } });
-    const samplePointers = imageBlocks.filter(b => String(b.published).startsWith('/samples/'));
-    expect(samplePointers.length).toBeGreaterThan(0);
-    for (const block of samplePointers) expect(urls.has(String(block.published)), block.key).toBe(true);
+    const localPointers = imageBlocks.filter(b => String(b.published).startsWith('/'));
+    expect(localPointers.length).toBeGreaterThan(0);
+    for (const block of localPointers) expect(urls.has(String(block.published)), block.key).toBe(true);
   });
 
   it('seeds contact, WhatsApp and SEO settings from the values siteCopy already holds', async () => {

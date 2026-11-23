@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "test:seed": "vitest run --config vitest.seed.config.ts",
     "seed:cms": "tsx prisma/seed-cms.ts",
+    "seed:products": "tsx prisma/seed-products.ts",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build"
   },

@@ -1,3 +1,4 @@
+import { DEFAULT_IMAGE_FALLBACK } from '@/lib/common/product-interfaces';
 import type { DbProduct, Product, ProductType, ProductCategory } from '@/types';
 
 // Category mapping between database and frontend
@@ -46,7 +47,7 @@ export const transformDbProductToProduct = (dbProduct: DbProduct): Product => {
         : Number(dbProduct.salePrice)
       : undefined,
     image:
-      dbProduct.photos.length > 0 ? dbProduct.photos[0] : '/mocks/mock_mostRecommended_common.jpg',
+      dbProduct.photos.length > 0 ? dbProduct.photos[0] : DEFAULT_IMAGE_FALLBACK,
     photos: dbProduct.photos, // Include all photos
     category: CATEGORY_MAPPING_REVERSE[dbProduct.category] || 'Western',
     specifications: dbProduct.specifications,

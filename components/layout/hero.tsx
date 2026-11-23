@@ -101,10 +101,10 @@ const { props: still } = getImageProps({
  * clear of the frame's foot -- and on the phone video it stays vertically centred. The still
  * used to force a centred wordmark: `mock_hero_desktop_2.webp` was a 1100x550 composite with
  * its own headline burned into the bottom quarter, which a baseline wordmark landed on top
- * of. The stand-in that replaces it (`public/samples/hero/hero-golden-warp-on-the-loom.webp`, a
- * placeholder -- see `public/samples/README.md`) carries no text, so the baseline is free
- * again, and it was re-checked at the new photograph: the word sits over the lower-left of the
- * loom, which is the calmest part of the frame, and the wash below holds it at AA there. The
+ * of. What replaces it is `public/slideshow/dmw-136.jpg` — a frame from the house's own runway
+ * gallery, the same set the Atelier section plays — and it carries no burned-in text, so the
+ * baseline is free again. It was re-checked at the new photograph: the word sits over the
+ * lower-left of the frame, the darkest and calmest quarter, and the wash holds it at AA. The
  * video keeps its centred word because that is the position its wash was measured
  * at (below); moving it would void the 50% figure. **The alignment is CSS, `max-[768px]:`,
  * and never state** -- a JS-driven alignment painted the phone's wordmark on the baseline and

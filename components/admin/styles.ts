@@ -58,19 +58,50 @@ export const SELECT =
   FOCUS;
 
 /**
- * An action: text above a rule that darkens, never a pill and never a fill — the storefront
- * `Button`, shrunk. `ACTION` is the ordinary one, `ACTION_QUIET` a secondary, `ACTION_GRAVE`
- * the destructive one (the `--accent-sale` token, the only other colour the system has).
+ * An action.
+ *
+ * These were originally text above a rule, matching the storefront `Button` at portal size.
+ * In use that read as a link rather than a control: on the sign-in screen the only way to
+ * submit was a word with a hairline under it, and in the sheets the primary and the secondary
+ * action were the same shape. The portal is a tool somebody works in daily, not an editorial
+ * page, so the primary action is now an actual pressable surface.
+ *
+ * `ACTION` is the solid one — ink fill, paper text, a 2px radius, which is the storefront's
+ * own corner treatment rather than a new one. `ACTION_QUIET` stays a text action for the
+ * secondary (cancel, toggles, inline links). `ACTION_GRAVE` is the destructive one, outlined
+ * in `--accent-sale` so that deleting never looks like the default thing to do.
+ *
+ * Nothing here departs from the palette: ink, paper, gold and sale are the four tokens the
+ * system already had.
  */
 const ACTION_BASE =
-  'inline-flex items-center gap-1.5 border-b pb-0.5 font-ui text-eyebrow uppercase ' +
+  'inline-flex items-center justify-center gap-1.5 font-ui text-eyebrow uppercase ' +
   'transition-colors duration-200 motion-reduce:transition-none ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +
   FOCUS;
 
-export const ACTION = `${ACTION_BASE} border-gold text-ink hover:border-ink`;
-export const ACTION_QUIET = `${ACTION_BASE} border-transparent text-ink-soft hover:border-gold hover:text-ink`;
-export const ACTION_GRAVE = `${ACTION_BASE} border-transparent text-sale hover:border-sale`;
+/** Solid: the one thing this screen is for. Height matches `ROW` so toolbars line up. */
+export const ACTION =
+  `${ACTION_BASE} h-9 rounded-[2px] border border-ink bg-ink px-4 text-paper ` +
+  'hover:bg-ink-soft hover:border-ink-soft';
+
+/** Text: secondary and inline actions, the old shape, kept for exactly that job. */
+export const ACTION_QUIET =
+  `${ACTION_BASE} border-b border-transparent pb-0.5 text-ink-soft hover:border-gold hover:text-ink`;
+
+/** Outlined in sale red: destructive, and never mistakable for the primary. */
+export const ACTION_GRAVE =
+  `${ACTION_BASE} h-9 rounded-[2px] border border-sale px-4 text-sale hover:bg-sale hover:text-paper`;
+
+/**
+ * A bordered surface: the hairline box that gives a form or a table somewhere to sit.
+ *
+ * The portal had no container at all, so a sign-in form was two underlines floating in the
+ * middle of an empty page with nothing to say where the form began or ended. This is the
+ * quietest possible container — one `RULE` hairline, the storefront's 2px corner, paper
+ * inside — and it is the only box the system has.
+ */
+export const PANEL = `rounded-[2px] border ${RULE} bg-paper`;
 
 /** A row in a dense table or list: 36px, the portal's rhythm. */
 export const ROW = 'h-9';
