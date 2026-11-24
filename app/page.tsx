@@ -1,10 +1,15 @@
 import Hero from '@/components/layout/hero';
 import Categories from '@/components/sections/categories';
-import Collection from '@/components/sections/collection';
+import SpotlightCarousel from '@/components/features/carousel/spotlight-carousel';
+import MostRecommended from '@/components/sections/most-recommended';
+import Explore from '@/components/sections/explore';
+import About from '@/components/sections/about';
+import Testimonials from '@/components/sections/testimonials';
 import ShopByStyle from '@/components/sections/shop-by-style';
-import InHerWords from '@/components/sections/in-her-words';
-import Atelier from '@/components/sections/atelier';
-import Close from '@/components/sections/close';
+import Slideshow from '@/components/sections/slideshow';
+import OurValues from '@/components/sections/our-values';
+import CTABanner from '@/components/sections/cta-banner';
+import VirasatAcademy from '@/components/sections/virasat-academy';
 import Footer from '@/components/layout/footer';
 
 export default function Home() {
@@ -12,11 +17,16 @@ export default function Home() {
     <>
       <Hero />
       <Categories />
-      <Collection />
+      <SpotlightCarousel />
+      <MostRecommended />
+      <Explore />
       <ShopByStyle />
-      <Atelier />
-      <InHerWords />
-      <Close />
+      <Slideshow />
+      <Testimonials />
+      <About />
+      <CTABanner />
+      <VirasatAcademy />
+      <OurValues />
       <Footer />
     </>
   );

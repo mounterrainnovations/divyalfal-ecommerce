@@ -1,201 +1,206 @@
 'use client';
 
-import { useId, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { Plus } from 'lucide-react';
-import Button from '@/components/primitives/Button';
-import DisplayHeading from '@/components/primitives/DisplayHeading';
-import Eyebrow from '@/components/primitives/Eyebrow';
-import { siteCopy } from '@/lib/content/site-copy';
-import { discountPercent, resolvePrice } from '@/lib/utils/price';
-import { parseSpecifications } from '@/lib/utils/specifications';
-import type { SpecBlock } from '@/lib/utils/specifications';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Minus, Plus } from 'lucide-react';
 import type { Product } from '@/types';
+import { formatPrice } from '@/lib/common/product-interfaces';
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
-
-/** The boutique's WhatsApp number, from the same contact details the footer prints. */
-const WHATSAPP_NUMBER = siteCopy.footer.contact.phone.replace(/\D/g, '');
-
-const FOCUS =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink';
-
-/**
- * The enquiry the primary action opens. The product's name is always in it; a size only when
- * the visitor chose one, because the page must not put a size in their mouth.
- */
-function enquiryHref(name: string, size: string | null): string {
-  const about = size ? `"${name.trim()}" in size ${size}` : `"${name.trim()}"`;
-  const message = `Hello, I would like to enquire about ${about}.`;
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+interface CollapsibleSectionProps {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
-/** A native disclosure: no script, keyboard and screen-reader behaviour for free. */
-function Disclosure({ heading, children }: { heading: string; children: ReactNode }) {
+const CollapsibleSection = ({ title, children, defaultOpen = false }: CollapsibleSectionProps) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <details className="group border-t border-gold last:border-b">
-      <summary
-        className={`flex cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden ${FOCUS}`}
+    <div className="border-b border-gray-200">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full py-4 flex items-center justify-between font-serif text-xl hover:text-gray-600 transition"
       >
-        <h2 className="font-display text-body font-light text-ink">{heading}</h2>
+        <span>{title}</span>
         <Plus
-          size={16}
-          strokeWidth={1.5}
-          aria-hidden="true"
-          className="shrink-0 text-ink transition-transform duration-300 group-open:rotate-45 motion-reduce:transition-none"
+          className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}
         />
-      </summary>
-      <div className="flex flex-col gap-3 pb-6 font-ui text-caption text-ink-soft">{children}</div>
-    </details>
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          isOpen ? 'max-h-96 pb-4' : 'max-h-0'
+        }`}
+      >
+        <div className="text-base text-gray-700 space-y-2">{children}</div>
+      </div>
+    </div>
   );
-}
-
-/**
- * The specifications as a definition list. Consecutive term/detail groups share one `<dl>`;
- * prose with no term above it stays a paragraph. Everything is a React text node, so nothing
- * the editor stored can be interpreted as markup.
- */
-function Specifications({ blocks }: { blocks: SpecBlock[] }) {
-  const out: ReactNode[] = [];
-  let groups: Extract<SpecBlock, { type: 'group' }>[] = [];
-
-  const flushGroups = (key: string) => {
-    if (groups.length === 0) return;
-    out.push(
-      <dl key={key} className="flex flex-col gap-5">
-        {groups.map((group, g) => (
-          <div key={g} className="flex flex-col gap-1">
-            <dt className="font-ui text-eyebrow font-normal uppercase text-ink">{group.term}</dt>
-            {group.details.map((detail, d) => (
-              <dd key={d} className="m-0 font-ui text-caption text-ink-soft">
-                {detail}
-              </dd>
-            ))}
-          </div>
-        ))}
-      </dl>
-    );
-    groups = [];
-  };
-
-  blocks.forEach((block, index) => {
-    if (block.type === 'group') {
-      groups.push(block);
-      return;
-    }
-    flushGroups(`dl-${index}`);
-    out.push(
-      <p key={`p-${index}`} className="font-ui text-caption text-ink-soft">
-        {block.text}
-      </p>
-    );
-  });
-  flushGroups('dl-end');
-
-  return <div className="flex flex-col gap-5">{out}</div>;
-}
+};
 
 interface ProductDetailsProps {
   product: Product;
 }
 
 const ProductDetails = ({ product }: ProductDetailsProps) => {
-  const [size, setSize] = useState<string | null>(null);
-  const sizeGroup = useId();
-  const sizeOptionsRef = useRef<HTMLDivElement>(null);
-  const { display, compareAt, onSale } = resolvePrice(product);
-  const percent = discountPercent(product);
-  const blocks = useMemo(() => parseSpecifications(product.specifications), [product.specifications]);
-  const copy = siteCopy.product;
+  const sizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
+  const [selectedSize, setSelectedSize] = useState('XS');
+  const [quantity, setQuantity] = useState(1);
+
+  const incrementQuantity = () => setQuantity(prev => prev + 1);
+  const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
   return (
-    <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-4">
-        <Eyebrow>{product.category}</Eyebrow>
-        <DisplayHeading level={1} size={3}>
-          {product.name}
-        </DisplayHeading>
-        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-ui text-body">
-          <span className={onSale ? 'text-sale' : 'text-ink'}>{display}</span>
-          {compareAt ? (
-            <s className="text-ink-soft">
-              <span className="sr-only">Original price </span>
-              {compareAt}
-            </s>
-          ) : null}
-          {onSale ? (
-            <span className="font-ui text-eyebrow uppercase text-sale">
-              On sale · {percent}% off
-            </span>
-          ) : null}
-        </p>
-      </header>
-
-      <div className="flex flex-col gap-8">
-        <fieldset className="relative m-0 min-w-0 border-0 p-0">
-          <legend className="mb-3 p-0 font-ui text-eyebrow font-normal uppercase text-ink-soft">
-            Size
-          </legend>
-          <div ref={sizeOptionsRef} className="flex flex-wrap gap-x-2 gap-y-1">
-            {SIZES.map(option => (
-              <label key={option} className="relative cursor-pointer">
-                <input
-                  type="radio"
-                  name={sizeGroup}
-                  value={option}
-                  checked={size === option}
-                  onChange={() => setSize(option)}
-                  className="peer sr-only"
-                />
-                <span className="flex min-h-11 min-w-11 items-center justify-center border-b border-transparent px-2 font-ui text-caption text-ink-soft transition-colors duration-300 hover:text-ink peer-checked:border-gold peer-checked:text-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink motion-reduce:transition-none">
-                  {option}
-                </span>
-              </label>
-            ))}
-          </div>
-          {/* Radios cannot be unselected, so a chosen size needs its own way back. Positioned
-              over the legend row so it appearing never moves the controls below.
-
-              This is the one control on the page that unmounts itself when activated, so it
-              has to hand focus somewhere first: without this, a keyboard or screen-reader user
-              who clears the size is dropped on `<body>` and has to tab in from the top of the
-              document again (WCAG 2.4.3). Focus goes to the first radio -- where an unchecked
-              group's tab stop sits anyway -- and `.focus()` runs before `setSize`, so the
-              focused element is already elsewhere by the time this button is removed. */}
-          {size ? (
-            <Button
-              variant="quiet"
-              onClick={() => {
-                sizeOptionsRef.current?.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
-                setSize(null);
-              }}
-              className="absolute right-0 top-0"
-            >
-              Clear size
-            </Button>
-          ) : null}
-        </fieldset>
-
-        <Button href={enquiryHref(product.name, size)} className="self-start">
-          Enquire on WhatsApp
-        </Button>
+    <div className="space-y-6 lg:pt-0 font-poppins">
+      {/* Product Title */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-2">{product.name}</h1>
+        {/* Sale Badge */}
+        {product.sale && (
+          <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-black text-white rounded-full shadow-lg whitespace-nowrap">
+            ON SALE
+          </span>
+        )}
       </div>
 
-      {blocks.length > 0 ? (
-        <section className="flex flex-col gap-5">
-          <h2 className="font-display text-body font-light text-ink">{copy.description.heading}</h2>
-          <Specifications blocks={blocks} />
-        </section>
-      ) : null}
+      {/* Price */}
+      {product.sale && product.salePrice ? (
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl border-2 border-amber-200">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+              {formatPrice(product.salePrice)}
+            </p>
+            <p className="text-lg sm:text-xl text-gray-500 line-through">
+              {formatPrice(product.price)}
+            </p>
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="inline-block px-2.5 sm:px-3 py-1 bg-amber-100 text-amber-800 font-semibold text-xs sm:text-sm rounded-full">
+              Save {formatPrice(product.price - product.salePrice)}
+            </span>
+            <span className="text-amber-800 font-bold text-base sm:text-lg">
+              ({Math.round(((product.price - product.salePrice) / product.price) * 100)}% OFF)
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="text-lg sm:text-xl md:text-2xl font-bold">{formatPrice(product.price)}</p>
+        </div>
+      )}
 
+      {/* Size Chart */}
       <div>
-        {[copy.shipping, copy.care, copy.disclaimer].map(section => (
-          <Disclosure key={section.heading} heading={section.heading}>
-            {section.items.map(line => (
-              <p key={line}>{line}</p>
-            ))}
-          </Disclosure>
-        ))}
+        <Link href="#" className="text-base font-bold underline hover:no-underline">
+          Size Chart
+        </Link>
+      </div>
+
+      {/* Size Selector */}
+      <div>
+        <p className="text-base font-medium mb-4">
+          Size: <span className="font-semibold">{selectedSize}</span>
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {sizes.map(size => (
+            <button
+              key={size}
+              onClick={() => setSelectedSize(size)}
+              className={`min-w-[56px] sm:min-w-[65px] px-4 sm:px-5 py-2.5 sm:py-3 border-2 rounded-full text-sm font-medium transition min-h-[44px] ${
+                selectedSize === size
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-gray-300 hover:border-black'
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Quantity and Contact Us */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center border-2 border-gray-300 rounded-full overflow-hidden">
+          <button
+            onClick={decrementQuantity}
+            className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center hover:bg-gray-100 transition"
+            aria-label="Decrease quantity"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+          <input
+            type="number"
+            value={quantity}
+            onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-14 sm:w-16 text-center border-none focus:outline-none text-sm sm:text-base"
+          />
+          <button
+            onClick={incrementQuantity}
+            className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center hover:bg-gray-100 transition"
+            aria-label="Increase quantity"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+        <Link
+          href="/contact-us"
+          className="flex-1 py-3 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition text-center text-sm sm:text-base min-h-[44px] flex items-center justify-center"
+        >
+          Contact Us
+        </Link>
+      </div>
+
+      {/* Product Specifications */}
+      {product.specifications && (
+        <div className="pt-4 border-t">
+          <h2 className="text-lg sm:text-xl font-serif mb-4">Description</h2>
+          <div
+            className="product-description prose prose-gray max-w-none text-sm sm:text-base font-poppins"
+            dangerouslySetInnerHTML={{ __html: product.specifications }}
+          />
+        </div>
+      )}
+
+      {/* Collapsible Sections */}
+      <div className="pt-4">
+        <CollapsibleSection title="Shipping Information">
+          <p>
+            We offer free shipping on all orders above Rs. 5,000. Orders are typically processed
+            within 2-3 business days.
+          </p>
+          <p>Standard delivery takes 5-7 business days across India.</p>
+          <p>
+            For international orders, shipping time varies between 10-15 business days depending on
+            the destination.
+          </p>
+          <p>Express shipping options are available at checkout for faster delivery.</p>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Care Instruction">
+          <p>Dry clean only to maintain the fabric`&apos;`s quality and embellishments.</p>
+          <p>Store in a cool, dry place away from direct sunlight.</p>
+          <p>Avoid contact with perfumes, deodorants, and other chemicals.</p>
+          <p>
+            For silk sarees, wrap in a muslin cloth to prevent damage from moisture and insects.
+          </p>
+          <p>Iron on low heat with a cotton cloth between the iron and the fabric.</p>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Disclaimer">
+          <p>
+            Colors may vary slightly from the images due to different screen resolutions and
+            lighting conditions.
+          </p>
+          <p>
+            Each piece is handcrafted, so minor variations in embroidery and weave are natural and
+            add to the uniqueness of the product.
+          </p>
+          <p>Custom orders and Made-to-Order pieces are non-returnable and non-exchangeable.</p>
+          <p>
+            Please check the size chart carefully before placing an order. Alterations may be
+            charged separately.
+          </p>
+          <p>We do not accept returns on sale items or final sale merchandise.</p>
+        </CollapsibleSection>
       </div>
     </div>
   );

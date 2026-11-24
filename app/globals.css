@@ -3,12 +3,338 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-eb-garamond);
+  --font-poppins: var(--font-poppins);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  /* Jost and Fraunces are self-hosted below. The storefront used to name faces it never
+     shipped, so `font-serif` resolved to literal Times New Roman and `font-sans` to Segoe UI
+     -- the main reason the old pages read cheap next to the photography. */
+  --font-geist-sans: 'Jost', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-geist-mono: 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  --font-eb-garamond: 'Fraunces', 'Times New Roman', Times, serif;
+  --font-poppins: 'Jost', 'Avenir Next', 'Segoe UI', sans-serif;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shimmer animation for image loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Tiptap Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p {
+  margin: 0.5rem 0;
+}
+
+.ProseMirror h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem;
+  line-height: 1.2;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.75rem;
+  line-height: 1.3;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  line-height: 1.4;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.ProseMirror a {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  color: #2563eb;
+}
+
+.ProseMirror strong {
+  font-weight: 700;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+/* Product Description HTML Rendering Styles */
+.product-description h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  line-height: 1.2;
+  color: #111827;
+}
+
+@media (min-width: 768px) {
+  .product-description h1 {
+    font-size: 2rem;
+  }
+}
+
+.product-description h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+  line-height: 1.3;
+  color: #1f2937;
+}
+
+@media (min-width: 768px) {
+  .product-description h2 {
+    font-size: 1.5rem;
+  }
+}
+
+.product-description h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+  line-height: 1.4;
+  color: #374151;
+}
+
+@media (min-width: 768px) {
+  .product-description h3 {
+    font-size: 1.25rem;
+  }
+}
+
+.product-description p {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+  color: #4b5563;
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 768px) {
+  .product-description p {
+    font-size: 1rem;
+  }
+}
+
+.product-description ul,
+.product-description ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+
+.product-description ul {
+  list-style-type: disc;
+}
+
+.product-description ol {
+  list-style-type: decimal;
+}
+
+.product-description li {
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+}
+
+.product-description a {
+  color: #3b82f6;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.product-description a:hover {
+  color: #2563eb;
+}
+
+.product-description strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.product-description em {
+  font-style: italic;
+}
+
+.product-description u {
+  text-decoration: underline;
+}
+
+/* Text alignment */
+.product-description .ql-align-center {
+  text-align: center;
+}
+
+.product-description .ql-align-right {
+  text-align: right;
+}
+
+.product-description .ql-align-justify {
+  text-align: justify;
+}
+
 /* ============================================================================
-   ATELIER EDITORIAL — the storefront design system.
-   Source of truth: docs/superpowers/specs/2026-11-16-divyafal-revamp-design.md §7.
-   Warm paper ground, near-black ink, one hairline gold accent. Fraunces at large
-   sizes against small wide-tracked Jost. Self-hosted woff2 only — no runtime
-   font fetch (forbidden by documents/codebase-context.md).
+   ADMIN PORTAL TOKENS.
+   The storefront runs on the shadcn variables above; the dashboard runs on these.
+   They were the whole design system during the atelier revamp. That revamp is
+   gone from the storefront, but the portal still composes these tokens, and the
+   self-hosted faces are the only real typefaces the project ships -- the
+   storefront's `--font-eb-garamond` fell back to literal Times New Roman -- so
+   they are kept here and the storefront now uses them too.
+   Subsets and licences: public/fonts/README.md. No runtime font fetch.
    ========================================================================== */
 
 /* --- Self-hosted variable faces. Subsets and licences: public/fonts/README.md --- */
@@ -152,344 +478,3 @@
   --text-eyebrow--line-height: 1.2;
   --text-eyebrow--letter-spacing: 0.18em;
 }
-
-/* --- Layout utilities --- */
-
-/* 12 columns, 1440px max, gutters from the responsive token. Content sits at
-   columns 2-7 or 6-12 — asymmetry is set per section, not here. */
-@utility grid-editorial {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-  column-gap: var(--gutter);
-  width: 100%;
-  max-width: var(--content-max);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
-}
-
-@utility section-rhythm {
-  padding-block: var(--section-rhythm);
-}
-
-/* Measure capped at 68ch. */
-@utility measure {
-  max-width: var(--measure);
-}
-
-/* A scroller with no visible scrollbar. Live storefront CSS: the product hero's thumbnail
-   rail (`components/features/products/product-hero.tsx`) scrolls horizontally on a phone and
-   relies on this. It is written here, in the design system, and NOT in the deprecated legacy
-   block below -- it sat there until the final fix wave, where the deprecation comment named
-   only the dashboard files as consumers, so deleting that block would have revealed a
-   scrollbar on `/product/[id]`. `test/no-legacy-styles.test.ts` holds it above the marker. */
-.scrollbar-hide {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--atelier-ui);
-  font-size: var(--type-body);
-  line-height: var(--leading-body);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Fraunces carries an optical-size axis; let the browser drive it. */
-.font-display {
-  font-optical-sizing: auto;
-}
-
-/* --- Motion --- */
-
-@keyframes atelier-image-reveal {
-  from {
-    opacity: 0;
-    transform: scale(1.04);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes atelier-text-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Image reveal, 900ms. Put it on the image itself; its frame should clip. */
-@utility reveal-image {
-  animation: atelier-image-reveal var(--duration-image) var(--ease-atelier) both;
-  animation-delay: var(--reveal-delay, 0ms);
-}
-
-/* Text fade-up on first paint, for above-the-fold blocks. CSS-only, so it is
-   styled from the very first frame and cannot flash. Stagger with
-   --reveal-delay (the spec's step is --stagger, 60ms). */
-@utility reveal-text {
-  animation: atelier-text-reveal var(--duration-text) var(--ease-atelier) both;
-  animation-delay: var(--reveal-delay, 0ms);
-}
-
-/* Scroll-triggered text fade-up, driven by components/primitives/Reveal.tsx. A
-   block carrying [data-reveal] is readable as authored; Reveal arms it ("armed")
-   only once it has confirmed motion is allowed, an observer exists and the block
-   is off screen, then plays it ("in") when it scrolls in. No JS, a dead
-   IntersectionObserver, reduced motion and a block already in view all leave the
-   block visible. Use reveal-text above, not this, for load motion. */
-[data-reveal='armed'] {
-  opacity: 0;
-}
-
-[data-reveal='in'] {
-  animation: atelier-text-reveal var(--duration-text) var(--ease-atelier) both;
-  animation-delay: var(--reveal-delay, 0ms);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  /* Every animated element at its final state, never mid-reveal. */
-  [data-reveal],
-  [data-reveal='armed'],
-  [data-reveal='in'],
-  .reveal-text,
-  .reveal-image {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-/* DEPRECATED: the legacy shadcn token block (tokens, the `:root` / `.dark` palettes and
-   the `@layer base` reset below). Task 2 deferred its deletion to Task 13 on the condition
-   that no storefront file referenced it. The storefront is clean — `test/no-legacy-styles.test.ts`
-   holds that as a standing guard — but `app/dashboard/**`, `components/ui/button.tsx` and
-   `components/ui/rich-text-editor.tsx` still read these tokens, and Phase 2 Task 9 owns the
-   dashboard restyle. So the block stays until then: Phase 2 Task 9 removes it.
-
-   WHAT TO DELETE: everything between this comment and the `END OF THE DEPRECATED BLOCK`
-   marker, and nothing past it. `.scrollbar-hide` used to be written below that reset and is
-   live storefront CSS (the product hero's thumbnail rail); it has been moved up into the
-   design system so this deletion cannot take it. What follows the marker is the TipTap
-   editor's own `.ProseMirror` rules, which belong to `components/ui/rich-text-editor.tsx` and
-   go when it does, and an orphaned `.animate-shimmer` nothing imports. */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-eb-garamond);
-  --font-poppins: var(--font-poppins);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
-
-:root {
-  --font-geist-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-geist-mono: 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  --font-eb-garamond: 'Times New Roman', Times, serif;
-  --font-poppins: 'Avenir Next', 'Segoe UI', sans-serif;
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* END OF THE DEPRECATED BLOCK. Phase 2 Task 9 deletes everything above this line back to the
-   DEPRECATED comment, and nothing below it. */
-
-/* Shimmer animation for image loading */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-}
-
-/* Tiptap Editor Styles */
-.ProseMirror {
-  outline: none;
-}
-
-.ProseMirror p {
-  margin: 0.5rem 0;
-}
-
-.ProseMirror h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 1.5rem 0 1rem;
-  line-height: 1.2;
-}
-
-.ProseMirror h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 1.25rem 0 0.75rem;
-  line-height: 1.3;
-}
-
-.ProseMirror h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 1rem 0 0.5rem;
-  line-height: 1.4;
-}
-
-.ProseMirror ul,
-.ProseMirror ol {
-  padding-left: 1.5rem;
-  margin: 0.5rem 0;
-}
-
-.ProseMirror li {
-  margin: 0.25rem 0;
-}
-
-.ProseMirror a {
-  color: #3b82f6;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.ProseMirror a:hover {
-  color: #2563eb;
-}
-
-.ProseMirror strong {
-  font-weight: 700;
-}
-
-.ProseMirror em {
-  font-style: italic;
-}
-
