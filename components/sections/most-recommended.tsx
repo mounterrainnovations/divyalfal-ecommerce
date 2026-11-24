@@ -220,14 +220,14 @@ export default function MostRecommended() {
 
   // Main Layout
   return (
-    <section className="bg-white">
+    <section className="bg-white py-14 md:py-20">
       <div className="flex flex-col xl:flex-row xl:px-20 relative">
         {/* Left Section */}
         <aside
           className="w-full xl:w-1/3 px-6 xl:px-12 py-10 xl:py-16 border-b xl:border-b-0 border-gray-200
                           xl:sticky xl:top-24 xl:self-start h-fit"
         >
-          <h2 className="text-3xl sm:text-4xl xl:text-5xl font-serif font-light mb-10 xl:mb-16 text-black">
+          <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight mb-8 md:mb-10">
             Most Recommended
           </h2>
 

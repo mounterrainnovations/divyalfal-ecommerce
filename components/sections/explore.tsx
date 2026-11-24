@@ -152,11 +152,11 @@ const Explore = () => {
   }, []);
 
   return (
-    <section className="bg-white">
+    <section className="bg-white py-14 md:py-20">
       <div className="flex flex-col md:flex-row md:px-8 xl:px-20 relative py-10 md:pt-16">
         {/* Left Section (Heading) */}
         <aside className="w-full md:w-1/3 px-6 md:px-8 xl:px-12 mb-8 md:mb-0">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-light text-black mb-6 md:mb-12">
+          <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight mb-8 md:mb-10">
             Explore Our Collection
           </h2>
 

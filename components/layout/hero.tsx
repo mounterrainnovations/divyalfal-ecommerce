@@ -17,6 +17,10 @@ const Hero = () => {
               alt="Hero background"
               fill
               priority
+              /* The hero is the full width of the viewport at every breakpoint. Without this,
+                 next/image assumes the same thing but cannot prove it, and serves its largest
+                 render to a phone. */
+              sizes="100vw"
               className="object-cover"
             />
           </div>

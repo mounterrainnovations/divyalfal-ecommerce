@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { postEnquiry } from '@/lib/enquiries/submit';
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -18,10 +19,31 @@ const ContactForm = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /**
+   * This handler used to be a `// TODO` that did nothing, so every enquiry the old site
+   * collected was dropped on the floor. The form's markup is restored as it was, but the
+   * submit is not: it posts to `/api/enquiries`, which is what fills the Enquiries screen in
+   * the admin portal. Losing that on the way back to this design would have quietly broken a
+   * feature the client is meant to work in daily.
+   *
+   * `postEnquiry` never rejects — a failure is logged and nothing is shown to the visitor —
+   * so the only states this has to carry are "sending" and "sent".
+   */
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement form submission logic (e.g., API call)
-    // For now, form data is captured in formData state
+    if (status === 'sending') return;
+    setStatus('sending');
+    await postEnquiry({
+      name: formData.name,
+      email: formData.email || undefined,
+      phone: formData.phone || undefined,
+      message: formData.message,
+      source: 'contact',
+    });
+    setStatus('sent');
+    setFormData({ name: '', email: '', phone: '', message: '' });
   };
 
   return (
@@ -138,9 +160,10 @@ const ContactForm = () => {
               <div className="flex justify-center pt-4">
                 <button
                   type="submit"
-                  className="px-12 py-3 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition-colors duration-300"
+                  disabled={status === 'sending'}
+                  className="px-12 py-3 bg-black text-white rounded-full font-semibold transition-colors duration-300 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Submit Now
+                  {status === 'sending' ? 'Sending…' : status === 'sent' ? 'Thank you' : 'Submit Now'}
                 </button>
               </div>
             </form>

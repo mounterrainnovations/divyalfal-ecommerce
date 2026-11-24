@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const About = () => {
   return (
-    <section className="bg-white">
+    <section className="bg-white py-14 md:py-20">
       <div className="flex flex-col md:flex-row md:px-8 xl:px-20 relative py-10">
         {/* Left Section: Image with floating card */}
         <div className="w-full md:w-1/2 relative px-6 md:px-0 mb-12 md:mb-0">
@@ -28,6 +28,7 @@ const About = () => {
                 src="/About.jpeg"
                 alt="Owner"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
               />
             </div>
@@ -41,7 +42,7 @@ const About = () => {
 
         {/* Right Section: Text and Stats */}
         <div className="flex-1 px-6 md:px-8 xl:px-12 flex flex-col justify-center">
-          <h2 className="text-4xl md:text-5xl font-serif font-light text-gray-900 mb-8">
+          <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight mb-6">
             About Divyafal
           </h2>
 

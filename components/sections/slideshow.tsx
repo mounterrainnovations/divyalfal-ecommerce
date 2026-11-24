@@ -82,7 +82,7 @@ export default function Slideshow() {
   // Show loading skeleton
   if (isLoading) {
     return (
-      <section className="bg-gray-50 py-12 xl:py-20">
+      <section className="bg-gray-50 py-14 md:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="relative w-full h-64 sm:h-96 md:h-[32rem] lg:h-[40rem] xl:h-[48rem] bg-gray-200 rounded-2xl animate-pulse" />
@@ -98,7 +98,7 @@ export default function Slideshow() {
   }
 
   return (
-    <section className="bg-gray-50 py-12 xl:py-20">
+    <section className="bg-gray-50 py-14 md:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Slideshow Container */}

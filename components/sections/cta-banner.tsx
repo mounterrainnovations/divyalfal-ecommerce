@@ -5,11 +5,11 @@ import { Video, Store } from 'lucide-react';
 
 const CTABanner = () => {
   return (
-    <section className="bg-white py-12 xl:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-8">
+    <section className="bg-white py-14 md:py-20">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Virtual Styling Session Card */}
-          <div className="relative group overflow-hidden rounded-3xl bg-linear-to-br from-rose-100 via-pink-50 to-purple-100 p-6 sm:p-8 xl:p-12 transition-transform duration-300 hover:scale-[1.02]">
+          <div className="relative group overflow-hidden rounded-lg border border-gray-200 bg-[#F7F4EF] p-6 sm:p-8 xl:p-12 transition-colors duration-300 hover:border-gray-300">
             <div className="relative z-10">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/80 backdrop-blur-sm mb-6">
                 <Video className="w-7 h-7 text-rose-600" />
@@ -32,13 +32,11 @@ const CTABanner = () => {
                 Book an Appointment
               </Link>
             </div>
-
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-bl from-rose-200/40 to-transparent rounded-full blur-3xl" />
+            
           </div>
 
           {/* Store Visit Card */}
-          <div className="relative group overflow-hidden rounded-3xl bg-linear-to-br from-emerald-100 via-teal-50 to-cyan-100 p-6 sm:p-8 xl:p-12 transition-transform duration-300 hover:scale-[1.02]">
+          <div className="relative group overflow-hidden rounded-lg border border-gray-200 bg-[#F2F0EA] p-6 sm:p-8 xl:p-12 transition-colors duration-300 hover:border-gray-300">
             <div className="relative z-10">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/80 backdrop-blur-sm mb-6">
                 <Store className="w-7 h-7 text-emerald-600" />
@@ -59,9 +57,7 @@ const CTABanner = () => {
                 Visit Store
               </Link>
             </div>
-
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-bl from-emerald-200/40 to-transparent rounded-full blur-3xl" />
+            
           </div>
         </div>
       </div>

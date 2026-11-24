@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 
 const ContactUsHero = () => {
   return (
-    <section className="relative w-full py-20 md:py-32 border-b">
+    <section className="relative w-full py-14 md:py-20 border-b">
       <div className="container mx-auto px-4">
         {/* Breadcrumb Navigation */}
         <nav className="flex items-center justify-center gap-2 mb-8 text-sm md:text-base">

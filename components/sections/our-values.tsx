@@ -41,10 +41,10 @@ const values = [
 
 const OurValues = () => {
   return (
-    <section className="py-12 md:py-24 lg:py-32 bg-muted/30">
+    <section className="py-14 md:py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         {/* Heading */}
-        <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-center mb-8 md:mb-16">
+        <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight text-center mb-8 md:mb-10">
           Our Values
         </h2>
 

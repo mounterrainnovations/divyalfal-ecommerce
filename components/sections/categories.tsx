@@ -8,9 +8,9 @@ const categories = CATEGORY_CONFIG;
 
 const Categories = () => {
   return (
-    <section className="py-10 bg-gray-50">
-      <div className="max-w-7xl md:max-w-336 mx-auto px-4 sm:px-6">
-        <h2 className="text-3xl sm:text-4xl mb-6 sm:mb-8 text-center font-serif font-light">
+    <section className="py-14 md:py-20 bg-gray-50">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight text-center mb-8 md:mb-10">
           Shop by Category
         </h2>
 
