@@ -2,14 +2,18 @@
 
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { FOCUS, INPUT, LABEL, SELECT } from './styles';
+import { FOCUS, INPUT, LABEL, META, SELECT } from './styles';
 
 /**
- * A labelled field: 11px uppercase label, the control, then its error or hint. The control
- * is a rule, not a box — the storefront's form language at portal density.
+ * A labelled field: a 12px label, the control, then its error or its hint.
+ *
+ * WHAT CHANGED. The label was 11px uppercase at 0.18em and the control was a bare underline.
+ * Both are now ordinary: a sentence-case label and a real bordered input. A form is read, not
+ * admired, and an admin filling in eleven settings should be able to see where each box is.
  *
  * The error is wired with `aria-describedby`/`aria-invalid` by the caller passing the same
- * `id`; `Field` renders the message with that id so the wiring is one line at each use.
+ * `id`; `Field` renders the message with that id, so the wiring is one line at each use. The
+ * message carries a red dot *and* red type *and* the words, so it is never colour alone.
  */
 export default function Field({
   id,
@@ -30,17 +34,22 @@ export default function Field({
 }) {
   return (
     <div className={cn('min-w-0', className)}>
-      <label htmlFor={id} className={cn(LABEL, 'mb-1 block')}>
+      <label htmlFor={id} className={cn(LABEL, 'mb-1.5 block')}>
         {label}
-        {required ? <span className="text-sale"> *</span> : null}
+        {required ? (
+          <span className="text-red-600" title="Required">
+            {' '}
+            *
+          </span>
+        ) : null}
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} className="mt-1 font-ui text-eyebrow uppercase text-sale">
+        <p id={`${id}-error`} className="mt-1.5 text-[11px] leading-4 font-medium text-red-600">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1 font-ui text-eyebrow text-ink-soft">
+        <p id={`${id}-hint`} className={cn(META, 'mt-1.5')}>
           {hint}
         </p>
       ) : null}
@@ -60,13 +69,13 @@ export function TextInput({
       id={id}
       aria-invalid={invalid || undefined}
       aria-describedby={invalid ? `${id}-error` : undefined}
-      className={cn(INPUT, invalid && 'border-sale', className)}
+      className={cn(INPUT, className)}
       {...rest}
     />
   );
 }
 
-/** A native select, on the same rule as an input. Native, so a phone gets its own picker. */
+/** A native select, on the same box as an input. Native, so a phone gets its own picker. */
 export function SelectInput({
   id,
   className,
@@ -81,36 +90,54 @@ export function SelectInput({
 }
 
 /**
- * A checkbox and its label on one line. The box is a square outline that fills with ink when
- * checked — no radius, no accent colour, and the state is a mark rather than a hue.
+ * A checkbox and its label on one line.
+ *
+ * The box is drawn rather than left native: a native checkbox is 13px and a different shape on
+ * every platform, which in a dense form reads as a rendering fault. This one is a 16px rounded
+ * square that fills with ink and shows a white tick (an inline SVG as the mask, so there is no
+ * icon import and nothing to load). The whole control is one `<input>` with a real `<label>`,
+ * so clicking the words still toggles it and a screen reader still announces a checkbox.
  */
 export function CheckboxField({
   id,
   label,
   checked,
   onChange,
+  disabled,
+  hint,
 }: {
   id: string;
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  hint?: string;
 }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-start gap-2.5">
       <input
         id={id}
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={event => onChange(event.target.checked)}
         className={cn(
-          'h-3.5 w-3.5 shrink-0 appearance-none rounded-none border border-ink bg-transparent',
-          'checked:bg-ink',
+          // `ds-check` is what draws the tick; see `dashboard.css`. The mark is a background
+          // image in real CSS rather than a Tailwind arbitrary value, because a `data:` URI
+          // inside a class name is a parser hazard (slashes read as opacity modifiers).
+          'ds-check mt-px h-4 w-4 shrink-0 appearance-none rounded border border-slate-300 bg-white',
+          'checked:border-ink checked:bg-ink',
+          'hover:border-slate-400 checked:hover:border-ink-soft checked:hover:bg-ink-soft',
+          'disabled:cursor-not-allowed disabled:bg-slate-100',
           FOCUS
         )}
       />
-      <label htmlFor={id} className={cn(LABEL, 'cursor-pointer')}>
-        {label}
-      </label>
+      <span className="min-w-0">
+        <label htmlFor={id} className={cn(LABEL, 'cursor-pointer select-none')}>
+          {label}
+        </label>
+        {hint ? <span className={cn(META, 'mt-0.5 block')}>{hint}</span> : null}
+      </span>
     </div>
   );
 }

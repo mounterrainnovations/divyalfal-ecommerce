@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FOCUS, LABEL, RULE, TITLE } from './styles';
+import { FOCUS, LABEL, TITLE } from './styles';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
@@ -111,13 +111,14 @@ export default function Sheet({
 
   return (
     <div className="fixed inset-0 z-[70] flex justify-end">
-      {/* The scrim: ink, not black, and the same value the storefront's overlays use. */}
+      {/* The scrim: slate rather than pure black, so the dimmed screen behind it still reads
+          as the page it is and not as a photograph being lit. */}
       <button
         type="button"
         aria-label="Close"
         tabIndex={-1}
         onClick={close}
-        className="absolute inset-0 cursor-default bg-ink/35"
+        className="absolute inset-0 cursor-default bg-slate-900/40"
       />
       <div
         ref={panelRef}
@@ -125,15 +126,14 @@ export default function Sheet({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative flex h-full w-full flex-col border-l bg-paper',
-          RULE,
+          'relative flex h-full w-full flex-col border-l border-slate-200 bg-white shadow-xl',
           'animate-in duration-200 slide-in-from-right motion-reduce:animate-none',
-          width === 'sm' ? 'sm:w-[380px]' : 'sm:w-[520px]'
+          width === 'sm' ? 'sm:w-[400px]' : 'sm:w-[560px]'
         )}
       >
-        <div className={cn('flex shrink-0 items-start justify-between gap-4 border-b px-5 py-4', RULE)}>
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-5 py-3.5">
           <div className="min-w-0">
-            {eyebrow ? <p className={cn(LABEL, 'mb-1')}>{eyebrow}</p> : null}
+            {eyebrow ? <p className={cn(LABEL, 'mb-0.5')}>{eyebrow}</p> : null}
             <h2 className={cn(TITLE, 'truncate')}>{title}</h2>
           </div>
           <button
@@ -141,16 +141,21 @@ export default function Sheet({
             type="button"
             aria-label="Close panel"
             onClick={close}
-            className={cn('-mr-2 -mt-1 shrink-0 p-2 text-ink-soft hover:text-ink', FOCUS)}
+            className={cn(
+              '-mt-0.5 -mr-2 shrink-0 rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-ink',
+              FOCUS
+            )}
           >
-            <X size={16} strokeWidth={1.5} aria-hidden="true" />
+            <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        <div className="ds-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5">{children}</div>
 
+        {/* The footer is a surface of its own: on a long form the save button is the thing you
+            scroll looking for, and a white strip on white is nowhere. */}
         {footer ? (
-          <div className={cn('flex shrink-0 items-center gap-6 border-t px-5 py-4', RULE)}>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
             {footer}
           </div>
         ) : null}

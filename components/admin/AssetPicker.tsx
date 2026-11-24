@@ -4,7 +4,15 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Sheet from '@/components/admin/Sheet';
 import { TextInput } from '@/components/admin/Field';
-import { ACTION, ACTION_GRAVE, ACTION_QUIET, FOCUS, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_GRAVE,
+  ACTION_QUIET,
+  ACTION_SOFT,
+  FOCUS,
+  LABEL,
+  META,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { useAssetLibrary, usageLabel } from '@/lib/admin/media';
 import { uploadAsset } from '@/lib/admin/upload';
@@ -58,14 +66,14 @@ export default function AssetPicker({
   return (
     <div>
       {chosen.length > 0 ? (
-        <ul className={cn('mb-2 border-t', RULE)}>
+        <ul className="mb-2 divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
           {chosen.map((url, index) => (
             <li
               key={`${url}-${index}`}
-              className={cn('flex items-center gap-3 border-b py-2', RULE)}
+              className="flex items-center gap-3 px-2.5 py-2" 
             >
               <Thumb url={url} kind={kind} />
-              <span className="min-w-0 flex-1 truncate font-ui text-caption text-ink-soft">
+              <span className="min-w-0 flex-1 truncate text-[13px] text-slate-500">
                 {fileName(url)}
               </span>
               {multiple && chosen.length > 1 ? (
@@ -103,10 +111,15 @@ export default function AssetPicker({
           ))}
         </ul>
       ) : (
-        <p className="mb-2 font-ui text-caption text-ink-soft">No {noun} chosen.</p>
+        <p className="mb-2 text-[13px] text-slate-500">No {noun} chosen.</p>
       )}
 
-      <button type="button" disabled={disabled} onClick={() => setOpen(true)} className={ACTION}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+        className={ACTION_SOFT}
+      >
         {chosen.length > 0 && !multiple ? `Change ${noun}` : `Choose a ${noun}`}
       </button>
 
@@ -182,7 +195,7 @@ function Browser({
               onChange={event => setQuery(event.target.value)}
             />
           </div>
-          <label className={cn(ACTION, 'mb-1.5 cursor-pointer')}>
+          <label className={cn(ACTION, 'cursor-pointer')}>
             <input
               type="file"
               accept={kind === 'VIDEO' ? 'video/mp4,video/webm' : 'image/*'}
@@ -197,17 +210,17 @@ function Browser({
           </label>
         </div>
 
-        {problem ? <p className="font-ui text-caption text-sale">{problem}</p> : null}
+        {problem ? <p className="text-[13px] text-red-600">{problem}</p> : null}
 
         {library.notSetUp ? (
-          <p className="font-ui text-caption text-ink-soft">
+          <p className="text-[13px] text-slate-500">
             The media library table is not in this database yet, so there is nothing to choose
             from. A file uploaded here cannot be listed until the migration has been applied.
           </p>
         ) : library.failure ? (
-          <p className="font-ui text-caption text-sale">{library.failure}</p>
+          <p className="text-[13px] text-red-600">{library.failure}</p>
         ) : shown.length === 0 ? (
-          <p className="font-ui text-caption text-ink-soft">
+          <p className="text-[13px] text-slate-500">
             {library.loading
               ? 'Loading the library…'
               : query
@@ -229,17 +242,20 @@ function Browser({
                     onClick={() => onPick(asset.url)}
                     aria-pressed={picked.includes(asset.url)}
                     className={cn(
-                      'block w-full border p-1.5 text-left',
+                      'block w-full rounded-lg border bg-white p-2 text-left transition-colors',
                       FOCUS,
-                      picked.includes(asset.url) ? 'border-gold' : RULE,
-                      'hover:border-ink'
+                      // The chosen file carries the accent ring; everything else is a plain
+                      // card that darkens its border on hover.
+                      picked.includes(asset.url)
+                        ? 'border-gold ring-1 ring-gold'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     )}
                   >
                     <Thumb url={asset.url} kind={asset.kind} large />
-                    <span className="mt-1.5 block truncate font-ui text-caption text-ink">
+                    <span className="mt-2 block truncate text-[13px] font-medium text-ink">
                       {asset.alt || fileName(asset.url)}
                     </span>
-                    <span className={cn(LABEL, 'mt-0.5 block')}>
+                    <span className={cn(META, 'mt-0.5 block truncate')}>
                       {usageLabel(library.usage[asset.id])}
                     </span>
                   </button>
@@ -252,7 +268,7 @@ function Browser({
                 type="button"
                 disabled={library.loading}
                 onClick={library.loadMore}
-                className={ACTION_QUIET}
+                className={ACTION_SOFT}
               >
                 {library.loading ? 'Loading' : 'Show more'}
               </button>
@@ -286,15 +302,15 @@ export function Thumb({
   kind: 'IMAGE' | 'VIDEO';
   large?: boolean;
 }) {
-  const side = large ? 'h-[72px] w-full' : 'h-9 w-9 shrink-0';
+  const side = large ? 'h-[96px] w-full' : 'h-9 w-9 shrink-0';
 
   if (kind === 'VIDEO') {
     return (
       <span
         aria-hidden="true"
         className={cn(
-          'flex items-center justify-center border bg-paper-deep font-ui text-eyebrow uppercase text-ink-soft',
-          RULE,
+          'flex items-center justify-center rounded-md border border-slate-200 bg-slate-50',
+          'text-[11px] font-medium text-slate-400',
           side
         )}
       >
@@ -304,7 +320,9 @@ export function Thumb({
   }
 
   return (
-    <span className={cn('relative block overflow-hidden bg-paper-deep', side)}>
+    <span
+      className={cn('relative block overflow-hidden rounded-md border border-slate-200 bg-slate-50', side)}
+    >
       <Image src={url} alt="" fill unoptimized sizes="160px" className="object-cover" />
     </span>
   );

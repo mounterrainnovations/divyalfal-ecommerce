@@ -1,37 +1,38 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
-import { LABEL, TITLE } from './styles';
+import { SUBTITLE, TITLE } from './styles';
 
 /**
- * The head of every portal screen: the section name at 11px, the screen's title in Fraunces,
- * a gold hairline under both, and whatever primary action the screen owns on the right.
+ * The head of every portal screen: the screen's name, one line of context, and whatever primary
+ * action the screen owns on the right.
  *
- * The gold rule is the one accent on a screen — the same role it plays on the storefront,
- * where `HairlineRule` sits under a movement's heading.
+ * WHAT CHANGED. It used to carry an `eyebrow` ("Portal") above a Fraunces title and a gold
+ * hairline under both. The eyebrow is gone because the top bar's breadcrumb now says where you
+ * are, and saying it twice on every screen is noise; the hairline is gone because the content
+ * below is in cards, which draw their own edges. What is left is a heading, a sentence and the
+ * one button — which is all a page header in a working tool has ever needed.
+ *
+ * `actions` is a flex row, so a screen with two controls (a filter and a save) gets them laid
+ * out without inventing its own toolbar.
  */
 export default function ScreenHead({
-  eyebrow,
   title,
   note,
   actions,
 }: {
-  eyebrow: string;
   title: string;
   /** One line of context under the title; kept to a line on purpose. */
   note?: string;
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-5">
-      <div className="flex flex-wrap items-end justify-between gap-4 pb-3">
-        <div className="min-w-0">
-          <p className={cn(LABEL, 'mb-1.5')}>{eyebrow}</p>
-          <h1 className={TITLE}>{title}</h1>
-        </div>
-        {actions ? <div className="flex shrink-0 items-center gap-6">{actions}</div> : null}
+    <div className="mb-5 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <div className="min-w-0">
+        <h1 className={TITLE}>{title}</h1>
+        {note ? <p className={`mt-1 max-w-[68ch] ${SUBTITLE}`}>{note}</p> : null}
       </div>
-      <hr className="m-0 h-px w-full border-0 bg-gold" />
-      {note ? <p className="mt-3 font-ui text-caption text-ink-soft">{note}</p> : null}
+      {actions ? (
+        <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }

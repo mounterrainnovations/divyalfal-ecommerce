@@ -1,10 +1,23 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import ScreenHead from '@/components/admin/ScreenHead';
 import Notice from '@/components/admin/Notice';
 import Toast, { type ToastMessage } from '@/components/admin/Toast';
-import { ACTION, ACTION_QUIET, FOCUS, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_SOFT,
+  CARD,
+  FOCUS,
+  META,
+  SCREEN,
+  SECTION_TITLE,
+  TAB,
+  TAB_ON,
+  TABS,
+  badge,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { request, send } from '@/lib/admin/api';
 import BlockEditor, {
@@ -220,9 +233,8 @@ export default function ContentPage() {
   const busy = publishing.length > 0;
 
   return (
-    <div className="max-w-[1120px] px-[var(--gutter)] py-6">
+    <div className={SCREEN}>
       <ScreenHead
-        eyebrow="Portal"
         title="Content"
         note="Every word on the public pages. Edits save themselves as drafts; the shop changes only when you publish."
         actions={
@@ -250,7 +262,9 @@ export default function ContentPage() {
           {failure}
         </Notice>
       ) : loading ? (
-        <Notice label="Loading">Reading the page copy…</Notice>
+        <Notice label="Loading" tone="working">
+          Reading the page copy…
+        </Notice>
       ) : blocks.length === 0 ? (
         <Notice label="Nothing yet">
           The content tables exist but hold no copy. Run the CMS seed to fill them from the words
@@ -258,25 +272,22 @@ export default function ContentPage() {
         </Notice>
       ) : (
         <>
-          <nav aria-label="Pages" className="mb-5">
-            <ul className={cn('scrollbar-hide flex gap-1 overflow-x-auto border-b', RULE)}>
+          {/* Eleven pages, so tabs that scroll rather than wrap: a nav that reflows to three
+              rows moves the sections down the screen every time a page is renamed. The count
+              on a tab is the number of blocks on that page waiting to be published. */}
+          <nav aria-label="Pages" className="mb-4">
+            <ul className={cn(TABS, 'ds-scroll overflow-x-auto')}>
               {pages.map(name => (
                 <li key={name} className="shrink-0">
                   <button
                     type="button"
                     aria-current={name === page ? 'page' : undefined}
                     onClick={() => setPage(name)}
-                    className={cn(
-                      LABEL,
-                      FOCUS,
-                      'block whitespace-nowrap border-b-2 border-transparent px-3 py-2',
-                      'hover:text-ink',
-                      name === page && 'border-gold text-ink'
-                    )}
+                    className={cn(TAB, name === page && TAB_ON)}
                   >
                     {humanise(name)}
                     {changedPerPage[name] ? (
-                      <span className="text-ink"> · {changedPerPage[name]}</span>
+                      <span className={badge('accent')}>{changedPerPage[name]}</span>
                     ) : null}
                   </button>
                 </li>
@@ -291,8 +302,12 @@ export default function ContentPage() {
               .map(block => block.key);
 
             return (
-              <section key={`${page}.${group.name}`} className={cn('border-t', RULE)}>
-                <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-3">
+              /* One card per section, collapsed to its header until it is asked for. The
+                 header is the disclosure button, which is why the publish action sits beside
+                 it rather than inside it: nesting a button in a button is invalid markup and
+                 un-clickable with a keyboard. */
+              <section key={`${page}.${group.name}`} className={cn(CARD, 'mb-3')}>
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-2 py-2">
                   <button
                     type="button"
                     aria-expanded={open}
@@ -303,21 +318,28 @@ export default function ContentPage() {
                           : [...current, `${page}.${group.name}`]
                       )
                     }
-                    className={cn('flex items-baseline gap-3 text-left', FOCUS)}
+                    className={cn(
+                      'flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-slate-50',
+                      FOCUS
+                    )}
                   >
-                    <span className={cn(LABEL, 'w-3 shrink-0 text-ink')} aria-hidden="true">
-                      {open ? '–' : '+'}
-                    </span>
-                    <span className="font-display text-[15px] font-light text-ink">
+                    <ChevronRight
+                      size={15}
+                      strokeWidth={2}
+                      aria-hidden="true"
+                      className={cn(
+                        'shrink-0 text-slate-400 transition-transform motion-reduce:transition-none',
+                        open && 'rotate-90'
+                      )}
+                    />
+                    <span className={cn(SECTION_TITLE, 'min-w-0 truncate')}>
                       {humanise(group.name)}
                     </span>
-                    <span className={LABEL}>
+                    <span className={cn(META, 'shrink-0')}>
                       {group.blocks.length} {group.blocks.length === 1 ? 'field' : 'fields'}
                     </span>
                     {group.changed > 0 ? (
-                      <span className={cn(LABEL, 'border-b border-gold pb-px text-ink')}>
-                        {group.changed} unpublished
-                      </span>
+                      <span className={badge('accent')}>{group.changed} unpublished</span>
                     ) : null}
                   </button>
 
@@ -326,7 +348,7 @@ export default function ContentPage() {
                       type="button"
                       disabled={busy}
                       onClick={() => publish(keys, `${humanise(group.name)}`)}
-                      className={ACTION_QUIET}
+                      className={cn(ACTION_SOFT, 'mr-1')}
                     >
                       Publish section
                     </button>
@@ -334,7 +356,7 @@ export default function ContentPage() {
                 </div>
 
                 {open ? (
-                  <div className="pb-4">
+                  <div className="border-t border-slate-200 px-4 pt-1 pb-2">
                     {group.blocks.map(block => (
                       <BlockEditor
                         key={block.key}

@@ -1,12 +1,22 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { Upload } from 'lucide-react';
 import ScreenHead from '@/components/admin/ScreenHead';
 import Notice from '@/components/admin/Notice';
 import Toast, { type ToastMessage } from '@/components/admin/Toast';
 import { SelectInput, TextInput } from '@/components/admin/Field';
 import { Thumb, fileName } from '@/components/admin/AssetPicker';
-import { ACTION, ACTION_QUIET, FOCUS, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_SOFT,
+  CARD,
+  FOCUS,
+  LABEL,
+  META,
+  SCREEN,
+  badge,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import {
   SIZE_LABEL,
@@ -132,9 +142,8 @@ export default function MediaPage() {
   }
 
   return (
-    <div className="max-w-[1120px] px-[var(--gutter)] py-6">
+    <div className={SCREEN}>
       <ScreenHead
-        eyebrow="Portal"
         title="Media"
         note="Upload once, use anywhere. A file that is still on the site cannot be deleted."
         actions={
@@ -150,12 +159,13 @@ export default function MediaPage() {
                 event.target.value = '';
               }}
             />
+            <Upload size={15} strokeWidth={1.75} aria-hidden="true" />
             {progress ? 'Uploading' : 'Upload files'}
           </label>
         }
       />
 
-      <div className="mb-5 flex flex-wrap items-end gap-x-6 gap-y-4">
+      <div className={cn(CARD, 'mb-4 flex flex-wrap items-end gap-x-4 gap-y-3 px-3 py-3')}>
         <div className="min-w-0 max-w-[280px] flex-1 basis-[180px]">
           <label htmlFor="media-search" className={cn(LABEL, 'mb-1 block')}>
             Search
@@ -204,7 +214,10 @@ export default function MediaPage() {
       </div>
 
       {progress ? (
-        <p role="status" className={cn('mb-4 font-ui text-caption text-ink')}>
+        <p
+          role="status"
+          className="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-[13px] text-sky-900"
+        >
           Uploading {progress.done + 1} of {progress.total}
           {progress.current ? ` — ${progress.current}` : ''}
         </p>
@@ -240,20 +253,34 @@ export default function MediaPage() {
             setDragging(false);
             upload([...(event.dataTransfer?.files ?? [])]);
           }}
-          className={cn('border-t pt-4', RULE, dragging && 'bg-paper-deep')}
+          className={cn(
+            CARD,
+            'p-4 transition-colors motion-reduce:transition-none',
+            // The whole card is the drop target, and it says so while something is over it.
+            // A dashed outline only while dragging: a permanent one reads as an empty state.
+            dragging && 'border-dashed border-gold bg-gold/5'
+          )}
         >
-          <p className={cn(LABEL, 'mb-4')}>
-            {dragging
-              ? 'Drop the files here'
-              : shown.length === 0
-                ? ''
-                : `${shown.length} file${shown.length === 1 ? '' : 's'}${
-                    withoutAlt > 0 ? ` · ${withoutAlt} without alt text` : ''
-                  } · drop files anywhere here to add more`}
+          <p className={cn(LABEL, 'mb-3 flex flex-wrap items-center gap-2')}>
+            {dragging ? (
+              'Drop the files here'
+            ) : shown.length === 0 ? (
+              ''
+            ) : (
+              <>
+                <span>
+                  {shown.length} file{shown.length === 1 ? '' : 's'}
+                </span>
+                {withoutAlt > 0 ? (
+                  <span className={badge('warn')}>{withoutAlt} without alt text</span>
+                ) : null}
+                <span className={META}>drop files anywhere here to add more</span>
+              </>
+            )}
           </p>
 
           {shown.length === 0 ? (
-            <p className="font-ui text-caption text-ink-soft">
+            <p className="text-[13px] text-slate-500">
               {library.loading
                 ? 'Loading the library…'
                 : query || kind || tag
@@ -263,7 +290,7 @@ export default function MediaPage() {
           ) : (
             <ul
               className={cn(
-                'grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5',
+                'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
                 library.loading && 'opacity-50 transition-opacity motion-reduce:transition-none'
               )}
             >
@@ -272,20 +299,26 @@ export default function MediaPage() {
                   <button
                     type="button"
                     onClick={() => setOpen(asset)}
-                    className={cn('block w-full border p-1.5 text-left', RULE, FOCUS, 'hover:border-ink')}
+                    className={cn(
+                      'block w-full rounded-lg border border-slate-200 bg-white p-2 text-left',
+                      'transition-colors hover:border-slate-300 hover:bg-slate-50',
+                      FOCUS
+                    )}
                   >
                     <Thumb url={asset.url} kind={asset.kind} large />
-                    <span className="mt-1.5 block truncate font-ui text-caption text-ink">
+                    <span className="mt-2 block truncate text-[13px] font-medium text-ink">
                       {asset.alt || fileName(asset.url)}
                     </span>
-                    <span className={cn(LABEL, 'mt-0.5 block')}>
+                    <span className={cn(META, 'mt-0.5 block truncate')}>
                       {usageLabel(library.usage[asset.id])}
                     </span>
-                    <span className={cn(LABEL, 'block')}>
-                      {asset.kind === 'VIDEO' ? 'Film · ' : ''}
-                      {SIZE_LABEL(asset.bytes)}
+                    <span className={cn(META, 'mt-1 flex flex-wrap items-center gap-1.5')}>
+                      <span>
+                        {asset.kind === 'VIDEO' ? 'Film · ' : ''}
+                        {SIZE_LABEL(asset.bytes)}
+                      </span>
                       {asset.kind === 'IMAGE' && asset.alt.trim() === '' ? (
-                        <span className="text-sale"> · no alt text</span>
+                        <span className={badge('warn')}>no alt text</span>
                       ) : null}
                     </span>
                   </button>
@@ -299,7 +332,7 @@ export default function MediaPage() {
               type="button"
               disabled={library.loading}
               onClick={library.loadMore}
-              className={cn(ACTION_QUIET, 'mt-6')}
+              className={cn(ACTION_SOFT, 'mt-4')}
             >
               {library.loading ? 'Loading' : 'Show more'}
             </button>

@@ -3,7 +3,14 @@
 import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { GripVertical } from 'lucide-react';
-import { ACTION_GRAVE, ACTION_QUIET, FOCUS, INPUT, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION_GRAVE,
+  ACTION_QUIET,
+  ACTION_SOFT,
+  INPUT,
+  LABEL,
+  META,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 
 /**
@@ -69,13 +76,13 @@ export default function PhotoList({
   return (
     <div>
       <p className={cn(LABEL, 'mb-1')}>
-        Photographs<span className="text-sale"> *</span>
+        Photographs<span className="text-red-600"> *</span>
       </p>
-      <p className="mb-2 font-ui text-eyebrow text-ink-soft">
+      <p className={cn(META, 'mb-2')}>
         The first is the thumbnail. Drag the handle, or use Up and Down.
       </p>
 
-      <ul className={cn('border-t', RULE)}>
+      <ul className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
         {photos.map((photo, index) => (
           <li
             key={index}
@@ -95,14 +102,14 @@ export default function PhotoList({
               dragFrom.current = null;
               setDragging(null);
             }}
-            className={cn('border-b py-2.5', RULE, dragging === index && 'bg-paper-deep')}
+            className={cn('px-2.5 py-2.5', dragging === index && 'bg-slate-50')}
           >
             <div className="flex items-center gap-2.5">
               <GripVertical
                 size={14}
                 strokeWidth={1.5}
                 aria-hidden="true"
-                className="shrink-0 cursor-grab text-ink-soft"
+                className="shrink-0 cursor-grab text-slate-500"
               />
               <span className={cn(LABEL, 'w-4 shrink-0 tabular-nums')}>{index + 1}</span>
 
@@ -113,12 +120,12 @@ export default function PhotoList({
                   width={36}
                   height={36}
                   unoptimized
-                  className="h-9 w-9 shrink-0 object-cover"
+                  className="h-9 w-9 shrink-0 rounded-md border border-slate-200 object-cover"
                 />
               ) : (
                 <span
                   aria-hidden="true"
-                  className={cn('h-9 w-9 shrink-0 border bg-paper-deep', RULE)}
+                  className="h-9 w-9 shrink-0 rounded-md border border-slate-200 bg-slate-50" 
                 />
               )}
 
@@ -188,7 +195,7 @@ export default function PhotoList({
         type="button"
         disabled={disabled}
         onClick={() => onChange([...photos, ''])}
-        className={cn(ACTION_QUIET, FOCUS, 'mt-3')}
+        className={cn(ACTION_SOFT, 'mt-3')}
       >
         Add another photograph
       </button>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Sheet from '@/components/admin/Sheet';
 import Field, { CheckboxField, SelectInput, TextInput } from '@/components/admin/Field';
 import SpecEditor from '@/components/admin/SpecEditor';
-import { ACTION, ACTION_QUIET, LABEL } from '@/components/admin/styles';
+import { ACTION, ACTION_SOFT, LABEL } from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import type { Product, ProductCategory, ProductType } from '@/types';
 import { getDbCategory } from '@/lib/utils/product-utils';
@@ -180,7 +180,7 @@ export default function ProductSheet({
               setErrors({});
               onClose();
             }}
-            className={ACTION_QUIET}
+            className={ACTION_SOFT}
           >
             Cancel
           </button>
@@ -274,7 +274,7 @@ export default function ProductSheet({
             disabled={saving}
           />
           {errors.photos ? (
-            <p className="mt-2 font-ui text-eyebrow uppercase text-sale">{errors.photos}</p>
+            <p className="mt-2 text-[11px] text-red-600">{errors.photos}</p>
           ) : null}
         </div>
       </form>

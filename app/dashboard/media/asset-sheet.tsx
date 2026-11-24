@@ -4,7 +4,13 @@ import { useState } from 'react';
 import Sheet from '@/components/admin/Sheet';
 import Field, { TextInput } from '@/components/admin/Field';
 import { Thumb, fileName } from '@/components/admin/AssetPicker';
-import { ACTION, ACTION_GRAVE, ACTION_QUIET, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_DANGER,
+  ACTION_GRAVE,
+  ACTION_SOFT,
+  LABEL,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { send } from '@/lib/admin/api';
 import { SIZE_LABEL, usageSentence, type AdminAsset, type AssetUsage } from '@/lib/admin/media';
@@ -127,7 +133,7 @@ export default function AssetSheet({
           <button type="button" disabled={working} onClick={save} className={ACTION}>
             {busy === 'saving' ? 'Saving' : 'Save details'}
           </button>
-          <button type="button" disabled={working} onClick={onClose} className={ACTION_QUIET}>
+          <button type="button" disabled={working} onClick={onClose} className={ACTION_SOFT}>
             Close
           </button>
         </>
@@ -138,7 +144,7 @@ export default function AssetSheet({
           <span className="block w-[120px] shrink-0">
             <Thumb url={asset.url} kind={asset.kind} large />
           </span>
-          <dl className="min-w-0 flex-1 space-y-1 font-ui text-caption text-ink-soft">
+          <dl className="min-w-0 flex-1 space-y-1.5 text-[13px] text-slate-600">
             <div className="flex gap-2">
               <dt className={LABEL}>Kind</dt>
               <dd>{asset.kind === 'VIDEO' ? 'Film' : 'Photograph'}</dd>
@@ -185,25 +191,25 @@ export default function AssetSheet({
           />
         </Field>
 
-        <div className={cn('border-t pt-4', RULE)}>
+        <div className="border-t border-slate-200 pt-4">
           <p className={cn(LABEL, 'mb-2')}>The file itself</p>
           {shipsWithTheSite ? (
             // A seeded asset's bytes are a file in `public/`, under source control, not an
             // object in storage. The API refuses to replace one, so the button is not offered:
             // a control that always fails is worse than a sentence explaining why.
-            <p className="measure font-ui text-caption text-ink-soft">
+            <p className="max-w-[68ch] text-[13px] text-slate-500">
               This file ships with the site rather than living in storage, so its bytes cannot be
               replaced here. Upload the new photograph as its own file and use that instead. The
               address is <span className="break-all">{asset.url}</span>
             </p>
           ) : (
             <>
-              <p className="measure mb-3 font-ui text-caption text-ink-soft">
+              <p className="max-w-[68ch] mb-3 text-[13px] text-slate-500">
                 A replacement keeps this address, so every product, page and slide that shows
                 this file shows the new one. The address is{' '}
                 <span className="break-all">{asset.url}</span>
               </p>
-              <label className={cn(ACTION_QUIET, 'cursor-pointer')}>
+              <label className={cn(ACTION_SOFT, 'cursor-pointer')}>
                 <input
                   type="file"
                   accept={asset.kind === 'VIDEO' ? 'video/mp4,video/webm' : 'image/*'}
@@ -221,12 +227,12 @@ export default function AssetSheet({
           )}
         </div>
 
-        <div className={cn('border-t pt-4', RULE)}>
+        <div className="border-t border-slate-200 pt-4">
           <p className={cn(LABEL, 'mb-2')}>Delete</p>
           {refusal ? (
-            <p className="measure mb-3 font-ui text-caption text-sale">{refusal}</p>
+            <p className="max-w-[68ch] mb-3 text-[13px] text-red-600">{refusal}</p>
           ) : (
-            <p className="measure mb-3 font-ui text-caption text-ink-soft">
+            <p className="max-w-[68ch] mb-3 text-[13px] text-slate-500">
               {usage && usage.total > 0
                 ? `This file is used by ${usageSentence(usage)}, so deleting it will be refused until those are changed.`
                 : 'This file is used nowhere, so it can be deleted. The file itself goes too.'}
@@ -234,15 +240,15 @@ export default function AssetSheet({
           )}
 
           {confirming ? (
-            <div className="flex items-center gap-6">
-              <button type="button" disabled={working} onClick={remove} className={ACTION_GRAVE}>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" disabled={working} onClick={remove} className={ACTION_DANGER}>
                 {busy === 'deleting' ? 'Deleting' : 'Yes, delete it'}
               </button>
               <button
                 type="button"
                 disabled={working}
                 onClick={() => setConfirming(false)}
-                className={ACTION_QUIET}
+                className={ACTION_SOFT}
               >
                 Keep it
               </button>

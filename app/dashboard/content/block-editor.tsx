@@ -3,7 +3,7 @@
 import AssetPicker from '@/components/admin/AssetPicker';
 import SpecEditor from '@/components/admin/SpecEditor';
 import { TextInput } from '@/components/admin/Field';
-import { ACTION_QUIET, INPUT, LABEL, RULE } from '@/components/admin/styles';
+import { ACTION_QUIET, INPUT, LABEL, META, badge } from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 
 /** The seven kinds a `ContentBlock` can be. The editor is chosen by this and nothing else. */
@@ -82,25 +82,25 @@ export default function BlockEditor({
   const id = `block-${block.key.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
   return (
-    <div className={cn('border-b py-3', RULE)}>
-      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+    <div className="border-b border-slate-100 py-3 last:border-b-0">
+      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <label htmlFor={id} className={cn(LABEL, 'text-ink')}>
           {fieldName(block)}
         </label>
 
-        <div className="flex shrink-0 items-center gap-4">
-          <span className={cn(LABEL, 'tabular-nums')}>
-            {save.state === 'saving'
-              ? 'Saving'
-              : save.state === 'error'
-                ? <span className="text-sale">Not saved</span>
-                : save.state === 'saved'
-                  ? 'Saved'
-                  : ''}
-          </span>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* The autosave's own state, in words. It is the only thing on the screen that says
+              a keystroke reached the server, so it is never carried by a colour or a dot. */}
+          {save.state === 'saving' ? (
+            <span className={META}>Saving</span>
+          ) : save.state === 'error' ? (
+            <span className={badge('danger')}>Not saved</span>
+          ) : save.state === 'saved' ? (
+            <span className={badge('success')}>Saved</span>
+          ) : null}
 
           {unpublished ? (
-            <span className={cn(LABEL, 'border-b border-gold pb-px text-ink')}>
+            <span className={badge('accent')}>
               {neverPublished ? 'Not published yet' : 'Unpublished changes'}
             </span>
           ) : null}
@@ -117,12 +117,14 @@ export default function BlockEditor({
       </div>
 
       {save.state === 'error' ? (
-        <p className="mb-1.5 font-ui text-eyebrow uppercase text-sale">{save.message}</p>
+        <p className="mb-1.5 text-[11px] leading-4 font-medium text-red-600">{save.message}</p>
       ) : null}
 
       <Editor id={id} block={block} value={value} onChange={onChange} />
 
-      <p className="mt-1 font-ui text-eyebrow text-ink-soft">{block.key}</p>
+      {/* The block's key: the only way to tell two identically named fields apart, and what
+          anyone debugging the seed will ask for. */}
+      <p className={cn(META, 'mt-1 font-mono')}>{block.key}</p>
     </div>
   );
 }

@@ -6,7 +6,18 @@ import ScreenHead from '@/components/admin/ScreenHead';
 import Notice from '@/components/admin/Notice';
 import Sheet from '@/components/admin/Sheet';
 import Toast, { type ToastMessage } from '@/components/admin/Toast';
-import { ACTION_QUIET, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION_QUIET,
+  ACTION_SOFT,
+  LABEL,
+  META,
+  SCREEN,
+  TAB,
+  TAB_ON,
+  TABS,
+  badge,
+  type BadgeTone,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { request, send } from '@/lib/admin/api';
 import { announceEnquiriesChanged } from '@/lib/admin/events';
@@ -56,6 +67,17 @@ const STATUS_LABEL: Record<Status, string> = {
   UNREAD: 'Unread',
   READ: 'Read',
   ARCHIVED: 'Archived',
+};
+
+/**
+ * The badge each state wears. Unread is the accent — it is the only one that means "do
+ * something" — read is plain, and archived is quieter still. The word is in the badge either
+ * way, so the tone is reinforcement and never the information itself.
+ */
+const STATUS_TONE: Record<Status, BadgeTone> = {
+  UNREAD: 'accent',
+  READ: 'neutral',
+  ARCHIVED: 'neutral',
 };
 
 /** 17 Nov, 21:40 — a worklist needs the day and the time, not the year. */
@@ -167,7 +189,7 @@ export default function EnquiriesPage() {
       key: 'when',
       head: 'Received',
       className: 'hidden w-[104px] tabular-nums sm:table-cell',
-      cell: enquiry => <span className="text-ink-soft">{when(enquiry.createdAt)}</span>,
+      cell: enquiry => <span className="text-slate-500">{when(enquiry.createdAt)}</span>,
     },
     {
       key: 'name',
@@ -182,14 +204,14 @@ export default function EnquiriesPage() {
             if (enquiry.status === 'UNREAD') void setStatus(enquiry, 'READ');
           }}
           className={cn(
-            'block py-1 text-left hover:underline hover:decoration-gold',
-            enquiry.status === 'UNREAD' ? 'text-ink' : 'text-ink-soft'
+            'block max-w-full truncate py-1 text-left hover:underline',
+            // Unread is heavier as well as badged: in a long worklist the weight is what the
+            // eye picks up before it reads anything.
+            enquiry.status === 'UNREAD' ? 'font-semibold text-ink' : 'text-slate-600'
           )}
         >
           {enquiry.name}
-          <span className="block font-ui text-eyebrow text-ink-soft sm:hidden">
-            {when(enquiry.createdAt)}
-          </span>
+          <span className={cn(META, 'block sm:hidden')}>{when(enquiry.createdAt)}</span>
         </button>
       ),
     },
@@ -198,7 +220,7 @@ export default function EnquiriesPage() {
       head: 'Reply to',
       className: 'hidden sm:table-cell max-w-[200px] truncate',
       cell: enquiry => (
-        <span className="text-ink-soft">{enquiry.email || enquiry.phone || '—'}</span>
+        <span className="text-slate-500">{enquiry.email || enquiry.phone || '—'}</span>
       ),
     },
     {
@@ -206,7 +228,7 @@ export default function EnquiriesPage() {
       head: 'From',
       className: 'hidden md:table-cell',
       cell: enquiry => (
-        <span className="text-ink-soft">
+        <span className="text-slate-500">
           {enquiry.source ? SOURCE_LABEL[enquiry.source] : 'Not recorded'}
         </span>
       ),
@@ -214,19 +236,17 @@ export default function EnquiriesPage() {
     {
       key: 'status',
       head: 'State',
-      className: 'w-[72px]',
+      className: 'w-[96px]',
       cell: enquiry => (
-        <span className={enquiry.status === 'UNREAD' ? 'text-ink' : 'text-ink-soft'}>
-          {STATUS_LABEL[enquiry.status]}
-        </span>
+        <span className={badge(STATUS_TONE[enquiry.status])}>{STATUS_LABEL[enquiry.status]}</span>
       ),
     },
     {
       key: 'actions',
       head: '',
-      className: 'text-right',
+      className: 'w-[180px] text-right',
       cell: enquiry => (
-        <span className="inline-flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
+        <span className="inline-flex items-center justify-end gap-1">
           <button
             type="button"
             disabled={working === enquiry.id}
@@ -260,9 +280,8 @@ export default function EnquiriesPage() {
   ];
 
   return (
-    <div className="max-w-[1120px] px-[var(--gutter)] py-6">
+    <div className={SCREEN}>
       <ScreenHead
-        eyebrow="Portal"
         title="Enquiries"
         note={
           notSetUp
@@ -285,8 +304,10 @@ export default function EnquiriesPage() {
         </Notice>
       ) : (
         <>
-          <nav aria-label="Filter by state" className="mb-5">
-            <ul className={cn('flex gap-1 border-b', RULE)}>
+          {/* The worklist's filter, as tabs rather than a select: four states, and which one
+              you are in should be readable without opening anything. */}
+          <nav aria-label="Filter by state" className="mb-4">
+            <ul className={TABS}>
               {FILTERS.map(option => (
                 <li key={option.value}>
                   <button
@@ -296,15 +317,11 @@ export default function EnquiriesPage() {
                       setFilter(option.value as '' | Status);
                       setPage({ key: option.value, cursor: null });
                     }}
-                    className={cn(
-                      LABEL,
-                      'block border-b-2 border-transparent px-3 py-2 hover:text-ink',
-                      option.value === filter && 'border-gold text-ink'
-                    )}
+                    className={cn(TAB, option.value === filter && TAB_ON)}
                   >
                     {option.label}
                     {option.value === 'UNREAD' && unread > 0 ? (
-                      <span className="text-ink"> · {unread}</span>
+                      <span className={badge('accent')}>{unread}</span>
                     ) : null}
                   </button>
                 </li>
@@ -332,7 +349,7 @@ export default function EnquiriesPage() {
               type="button"
               disabled={loading}
               onClick={() => setPage({ key: filter, cursor: nextCursor })}
-              className={cn(ACTION_QUIET, 'mt-4')}
+              className={cn(ACTION_SOFT, 'mt-4')}
             >
               {loading ? 'Loading' : 'Show older'}
             </button>
@@ -352,7 +369,7 @@ export default function EnquiriesPage() {
                 type="button"
                 disabled={working === open.id}
                 onClick={() => setStatus(open, open.status === 'UNREAD' ? 'READ' : 'UNREAD')}
-                className={ACTION_QUIET}
+                className={ACTION_SOFT}
               >
                 {open.status === 'UNREAD' ? 'Mark read' : 'Mark unread'}
               </button>
@@ -361,7 +378,7 @@ export default function EnquiriesPage() {
                   type="button"
                   disabled={working === open.id}
                   onClick={() => setStatus(open, 'ARCHIVED')}
-                  className={ACTION_QUIET}
+                  className={ACTION_SOFT}
                 >
                   Archive
                 </button>
@@ -369,25 +386,29 @@ export default function EnquiriesPage() {
             </>
           }
         >
-          <dl className="space-y-3 font-ui text-caption text-ink">
+          <dl className="space-y-3 text-[13px] text-ink">
             <Line label="Received">{when(open.createdAt)}</Line>
-            <Line label="State">{STATUS_LABEL[open.status]}</Line>
+            <Line label="State">
+              <span className={badge(STATUS_TONE[open.status])}>
+                {STATUS_LABEL[open.status]}
+              </span>
+            </Line>
             <Line label="Email">
               {open.email ? (
-                <a href={`mailto:${open.email}`} className="underline decoration-gold">
+                <a href={`mailto:${open.email}`} className="underline decoration-slate-300">
                   {open.email}
                 </a>
               ) : (
-                <span className="text-ink-soft">None given</span>
+                <span className="text-slate-500">None given</span>
               )}
             </Line>
             <Line label="Phone">
               {open.phone ? (
-                <a href={`tel:${open.phone}`} className="underline decoration-gold">
+                <a href={`tel:${open.phone}`} className="underline decoration-slate-300">
                   {open.phone}
                 </a>
               ) : (
-                <span className="text-ink-soft">None given</span>
+                <span className="text-slate-500">None given</span>
               )}
             </Line>
             <Line label="From">
@@ -395,10 +416,10 @@ export default function EnquiriesPage() {
             </Line>
           </dl>
 
-          <div className={cn('mt-5 border-t pt-4', RULE)}>
+          <div className="mt-5 border-t border-slate-200 pt-4">
             <p className={cn(LABEL, 'mb-2')}>What they wrote</p>
             {/* Plain text, preserved as typed. Never rendered as markup. */}
-            <p className="measure whitespace-pre-wrap font-ui text-caption text-ink">
+            <p className="max-w-[68ch] whitespace-pre-wrap text-[13px] text-ink">
               {open.message}
             </p>
           </div>
@@ -414,7 +435,7 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
   return (
     <div className="flex gap-3">
       <dt className={cn(LABEL, 'w-[72px] shrink-0 pt-0.5')}>{label}</dt>
-      <dd className="min-w-0 flex-1 break-words">{children}</dd>
+      <dd className="min-w-0 flex-1 break-words text-slate-700">{children}</dd>
     </div>
   );
 }

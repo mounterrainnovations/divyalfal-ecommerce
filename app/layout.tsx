@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-import NavBar from '@/components/layout/navbar';
+import SiteChrome from '@/components/layout/site-chrome';
 
 export const metadata: Metadata = {
   title: 'Divyafal',
@@ -19,8 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <NavBar />
-        <main className="pt-24">{children}</main>
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

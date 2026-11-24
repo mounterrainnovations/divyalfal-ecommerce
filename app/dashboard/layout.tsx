@@ -1,80 +1,43 @@
-'use client';
-
 import type { ReactNode } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import Rail from '@/components/admin/Rail';
-import SignOutButton from '@/components/admin/SignOutButton';
-import { ACTION_QUIET, FOCUS, LABEL, RULE } from '@/components/admin/styles';
-import { cn } from '@/lib/utils';
-import { siteCopy } from '@/lib/content/site-copy';
+import { cookies } from 'next/headers';
+import AdminShell from '@/components/admin/AdminShell';
+import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth-verify';
+import '@/components/admin/dashboard.css';
 
 /**
- * The admin portal's shell: one compact header, the section rail, and the screen.
+ * The admin portal's layout.
  *
- * WHY THIS IS A CLIENT COMPONENT. Two things need the current path — the rail's
- * `aria-current`, and the fact that `/dashboard/login` must render *without* the shell
- * (a rail whose every link bounces back to the login screen is furniture, not navigation).
- * A server layout cannot read the path. `children` is still whatever the route is, so the
- * Overview screen below remains a server component that queries the database directly; only
- * this frame hydrates.
+ * WHY IT IS A SERVER COMPONENT. The top bar has to show who is signed in, and the session is a
+ * httpOnly JWT: no client code can read it, and there is no `/api/admin/me` to ask (adding one
+ * is out of this task's remit, and would be a new endpoint for a fact the server already has
+ * in hand). So the layout verifies the cookie with the same verifier the middleware uses —
+ * `lib/auth-verify.ts`, one verifier in the codebase, nothing new — and passes the address to
+ * the client shell. The path-dependent parts of the frame live in `AdminShell`.
  *
- * WHY THE `<style>` BLOCK. `app/layout.tsx` renders the storefront `NavBar` on every route,
- * including this one, and the root layout is outside this task's remit (another agent is
- * working in the tree). A portal does not want the shop's primary navigation above its own
- * header, so the two elements the navbar renders — its fixed bar and the spacer that holds
- * pages clear of it — are hidden here, by the data attributes the navbar already carries.
- * The rule ships only in the markup of `/dashboard/*`, so the storefront is untouched. When
- * the root layout can be edited, the storefront nav should be excluded from `/dashboard`
- * there and this block deleted.
+ * A failure here is not an error: `verifySessionToken` returns null for a missing, expired or
+ * unsigned token, and the shell simply shows "Signed in" instead of an address. Access itself
+ * is decided by `middleware.ts` and by `requireAdmin` in each route, never by this read.
+ *
+ * WHY `dashboard.css` IS IMPORTED HERE. It holds the portal's typeface and the rule that hides
+ * the storefront's navigation bar on these routes. `app/globals.css` belongs to the shop and
+ * the portal does not add to it, so the portal's own CSS is one file, imported once, at the
+ * root of the only routes it applies to.
  */
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const bare = pathname === '/dashboard/login';
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  const session = await verifySessionToken(token);
 
   return (
     <>
-      <style>{`
-        header[data-condensed], [data-nav-spacer] { display: none !important; }
-      `}</style>
-
-      {bare ? (
-        children
-      ) : (
-        <div className="min-h-screen bg-paper font-ui text-caption text-ink">
-          <header
-            className={cn(
-              'flex h-11 items-center justify-between gap-4 border-b px-[var(--gutter)]',
-              RULE
-            )}
-          >
-            <div className="flex min-w-0 items-baseline gap-3">
-              <Link
-                href="/dashboard"
-                className={cn(
-                  'font-display text-[13px] uppercase tracking-(--tracking-wordmark) text-ink',
-                  FOCUS
-                )}
-              >
-                {siteCopy.home.hero.wordmark}
-              </Link>
-              <span className={cn(LABEL, 'hidden sm:inline')}>Portal</span>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-6">
-              <Link href="/" className={cn(ACTION_QUIET)}>
-                View site
-              </Link>
-              <SignOutButton />
-            </div>
-          </header>
-
-          <div className="flex flex-col md:flex-row">
-            <Rail />
-            <div className="min-w-0 flex-1">{children}</div>
-          </div>
-        </div>
-      )}
+      {/* Every screen is a sidebar and a top bar away from its content; one link past both is
+          the difference between a keyboard-usable portal and twelve tab stops per screen. */}
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-white"
+      >
+        Skip to content
+      </a>
+      <AdminShell admin={session?.email}>{children}</AdminShell>
     </>
   );
 }

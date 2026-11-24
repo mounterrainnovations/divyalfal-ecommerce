@@ -1,18 +1,44 @@
 import type { ReactNode } from 'react';
+import { AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LABEL, RULE } from './styles';
 
 /**
- * One line under a hairline: what state this screen is in and why.
+ * A callout: what state this screen is in, and why.
  *
- * It is the shape every screen reaches for three times — the tables are not there yet, there
- * is nothing in this list, or a request failed — and writing it three times per screen is how
- * a portal ends up telling the same story five different ways. `label` is the 11px word
- * ("Not set up yet", "Nothing yet", "Problem"), `children` the sentence.
+ * It is the shape every screen reaches for three times — the tables are not there yet, there is
+ * nothing in this list, or a request failed — and writing it three times per screen is how a
+ * portal ends up telling the same story five different ways. `label` is the heading ("Not set
+ * up yet", "Nothing yet", "Problem"), `children` the sentence.
  *
- * `tone="problem"` marks the label with the sale token, and the word itself carries the same
- * fact, so the difference is never colour alone.
+ * WHAT CHANGED. It was a line of 11px uppercase under a hairline. It is now a bordered,
+ * tinted panel with an icon, which is what a dashboard uses to say something out of the
+ * ordinary — and, more usefully, it no longer looks identical to the screen's own content.
+ *
+ * `tone` is carried by the icon and the heading as well as by the fill, so the difference is
+ * never colour alone. `role="alert"` on a problem, and nothing on an explanation: a 503 that
+ * was expected is not an alert, and announcing it as one on every screen is noise.
  */
+const TONES = {
+  quiet: {
+    panel: 'border-slate-200 bg-slate-50',
+    icon: 'text-slate-400',
+    head: 'text-ink',
+    Icon: Info,
+  },
+  problem: {
+    panel: 'border-red-200 bg-red-50',
+    icon: 'text-red-500',
+    head: 'text-red-800',
+    Icon: AlertTriangle,
+  },
+  working: {
+    panel: 'border-slate-200 bg-white',
+    icon: 'animate-spin text-slate-400 motion-reduce:animate-none',
+    head: 'text-ink',
+    Icon: Loader2,
+  },
+} as const;
+
 export default function Notice({
   label,
   tone = 'quiet',
@@ -20,14 +46,27 @@ export default function Notice({
   className,
 }: {
   label: string;
-  tone?: 'quiet' | 'problem';
+  tone?: keyof typeof TONES;
   children: ReactNode;
   className?: string;
 }) {
+  const { panel, icon, head, Icon } = TONES[tone];
+
   return (
-    <div className={cn('border-t pt-4', RULE, className)}>
-      <p className={cn(LABEL, 'mb-2', tone === 'problem' && 'text-sale')}>{label}</p>
-      <p className="measure font-ui text-caption text-ink-soft">{children}</p>
+    <div
+      role={tone === 'problem' ? 'alert' : undefined}
+      className={cn('flex items-start gap-3 rounded-lg border p-4', panel, className)}
+    >
+      <Icon
+        size={16}
+        strokeWidth={1.75}
+        aria-hidden="true"
+        className={cn('mt-px shrink-0', icon)}
+      />
+      <div className="min-w-0">
+        <p className={cn('text-[13px] leading-5 font-semibold', head)}>{label}</p>
+        <p className="mt-1 max-w-[68ch] text-[13px] leading-5 text-slate-600">{children}</p>
+      </div>
     </div>
   );
 }
@@ -36,7 +75,7 @@ export default function Notice({
 export function NotSetUp({ message, what }: { message: string; what: string }) {
   return (
     <Notice label="Not set up yet">
-      {message}{' '}
+      {message}
       <span className="block pt-1.5">Until then, {what}</span>
     </Notice>
   );

@@ -1,12 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
 import ScreenHead from '@/components/admin/ScreenHead';
 import Notice from '@/components/admin/Notice';
 import Toast, { type ToastMessage } from '@/components/admin/Toast';
 import { CheckboxField } from '@/components/admin/Field';
-import { ACTION, ACTION_QUIET, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_QUIET,
+  ACTION_SOFT,
+  CARD,
+  META,
+  SCREEN,
+  badge,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { request, send } from '@/lib/admin/api';
 import type { Product } from '@/types';
@@ -155,9 +163,8 @@ export default function HomepagePage() {
   }
 
   return (
-    <div className="max-w-[1120px] px-[var(--gutter)] py-6">
+    <div className={SCREEN}>
       <ScreenHead
-        eyebrow="Portal"
         title="Homepage"
         note="The seven movements of the homepage, top to bottom."
         actions={
@@ -178,23 +185,27 @@ export default function HomepagePage() {
           {failure}
         </Notice>
       ) : loading ? (
-        <Notice label="Loading">Reading the homepage arrangement…</Notice>
+        <Notice label="Loading" tone="working">
+          Reading the homepage arrangement…
+        </Notice>
       ) : sections.length === 0 ? (
         <Notice label="Nothing yet">
           The homepage table exists but holds no movements. Run the CMS seed to create the seven.
         </Notice>
       ) : (
         <>
-          <Notice label="What the shop reads today" className="mb-6">
+          <Notice label="What the shop reads today" className="mb-4">
             Hand-picked garments are live: the shop uses them the moment they are saved. The{' '}
-            <strong className="font-normal text-ink">order</strong> and the{' '}
-            <strong className="font-normal text-ink">shown/hidden</strong> switch are saved here
+            <strong className="font-semibold text-ink">order</strong> and the{' '}
+            <strong className="font-semibold text-ink">shown/hidden</strong> switch are saved here
             but are not read by the public homepage yet — it renders all seven movements in their
             built-in order. Hiding a movement by emptying it is worse than leaving it: an empty
             product band falls back to placeholder garments rather than disappearing.
           </Notice>
 
-          <ul className={cn('border-t', RULE)}>
+          {/* One card holding seven rows rather than seven cards: the thing being edited is
+              the order, and an order reads as a list. */}
+          <ul className={cn(CARD, 'divide-y divide-slate-100')}>
             {sections.map((section, index) => {
               const automatic = AUTOMATIC[section.key];
               return (
@@ -216,67 +227,82 @@ export default function HomepagePage() {
                     dragFrom.current = null;
                     setDragging(null);
                   }}
-                  className={cn('border-b py-3', RULE, dragging === index && 'bg-paper-deep')}
+                  className={cn(
+                    'px-3 py-3',
+                    dragging === index ? 'bg-slate-50' : 'hover:bg-slate-50/60'
+                  )}
                 >
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <GripVertical
-                      size={14}
-                      strokeWidth={1.5}
+                      size={15}
+                      strokeWidth={1.75}
                       aria-hidden="true"
-                      className="shrink-0 cursor-grab text-ink-soft"
+                      className="shrink-0 cursor-grab text-slate-300"
                     />
-                    <span className={cn(LABEL, 'w-4 shrink-0 tabular-nums')}>{index + 1}</span>
-                    <span className="min-w-0 flex-1 basis-[120px] font-ui text-caption text-ink">
+                    <span className={cn(META, 'w-4 shrink-0 text-right tabular-nums')}>
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 basis-[120px] text-[13px] font-medium text-ink">
                       {section.label}
                     </span>
 
-                    <button
-                      type="button"
-                      disabled={index === 0}
-                      onClick={() => move(index, index - 1)}
-                      aria-label={`Move ${section.label} up`}
-                      className={ACTION_QUIET}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      disabled={index === sections.length - 1}
-                      onClick={() => move(index, index + 1)}
-                      aria-label={`Move ${section.label} down`}
-                      className={ACTION_QUIET}
-                    >
-                      Down
-                    </button>
+                    {/* Up and Down are the keyboard-and-touch path to the same reorder that
+                        dragging does. Icon-only, with their names on `aria-label`: a row
+                        already carrying a checkbox and a picker has no room for two more
+                        words, and the arrows are unambiguous. */}
+                    <span className="flex shrink-0 items-center">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={() => move(index, index - 1)}
+                        aria-label={`Move ${section.label} up`}
+                        className={cn(ACTION_QUIET, 'w-7 px-0')}
+                      >
+                        <ChevronUp size={15} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === sections.length - 1}
+                        onClick={() => move(index, index + 1)}
+                        aria-label={`Move ${section.label} down`}
+                        className={cn(ACTION_QUIET, 'w-7 px-0')}
+                      >
+                        <ChevronDown size={15} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                    </span>
 
-                    <CheckboxField
-                      id={`visible-${section.key}`}
-                      label="Shown"
-                      checked={section.visible}
-                      onChange={checked => update(section.key, { visible: checked })}
-                    />
+                    <span className="shrink-0">
+                      <CheckboxField
+                        id={`visible-${section.key}`}
+                        label="Shown"
+                        checked={section.visible}
+                        onChange={checked => update(section.key, { visible: checked })}
+                      />
+                    </span>
 
                     {automatic ? (
                       <button
                         type="button"
                         onClick={() => setPicking(section.key)}
-                        className={ACTION_QUIET}
+                        className={ACTION_SOFT}
                       >
                         {section.productIds.length > 0
                           ? `${section.productIds.length} garments chosen`
                           : 'Choose garments'}
                       </button>
-                    ) : null}
+                    ) : (
+                      <span className={badge('neutral')}>Copy only</span>
+                    )}
                   </div>
 
                   {automatic ? (
-                    <p className="mt-1.5 pl-[52px] font-ui text-eyebrow text-ink-soft">
+                    <p className={cn(META, 'mt-1.5 pl-[46px]')}>
                       {section.productIds.length > 0
                         ? `Hand-picked, in the chosen order.`
                         : `Automatic: ${automatic}.`}
                     </p>
                   ) : (
-                    <p className="mt-1.5 pl-[52px] font-ui text-eyebrow text-ink-soft">
+                    <p className={cn(META, 'mt-1.5 pl-[46px]')}>
                       Copy and photography only — no garments. Its words are in Content.
                     </p>
                   )}

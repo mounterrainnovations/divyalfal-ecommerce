@@ -2,11 +2,22 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { ImageOff, Plus, Search } from 'lucide-react';
 import DataTable, { type Column } from '@/components/admin/DataTable';
 import ScreenHead from '@/components/admin/ScreenHead';
+import Notice from '@/components/admin/Notice';
 import Toast, { type ToastMessage } from '@/components/admin/Toast';
 import { SelectInput, TextInput } from '@/components/admin/Field';
-import { ACTION, ACTION_GRAVE, ACTION_QUIET, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_GRAVE,
+  ACTION_QUIET,
+  ACTION_SOFT,
+  LABEL,
+  META,
+  SCREEN,
+  badge,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 import ProductSheet, { draftFrom, emptyDraft, type Draft } from './product-sheet';
@@ -33,10 +44,12 @@ const rupees = (value: number) => `₹${value.toLocaleString('en-IN')}`;
  * Products: the shop's catalogue as a working table.
  *
  * This replaces the product half of the old 1,220-line `dashboard-client.tsx` — the same
- * endpoints, a different screen. Rows are 36px and one line each, the thumbnail is in the
- * row rather than in a card, and editing happens in a slide-over beside the table instead of
- * a modal over it. Search, sort and paging are all one query against `/api/products`, so the
- * list on screen is always a server result and never a client-side filter of a stale page.
+ * endpoints, a different screen. The filters live in the table's own toolbar and the paging in
+ * its footer, so the catalogue is one object on the page rather than three stacked blocks.
+ * Editing happens in a slide-over beside the table instead of a modal over it.
+ *
+ * Search, sort and paging are all one query against `/api/products`, so the list on screen is
+ * always a server result and never a client-side filter of a stale page.
  */
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -108,77 +121,85 @@ export default function ProductsPage() {
     {
       key: 'photo',
       head: '',
-      className: 'w-10',
+      className: 'w-[52px]',
       cell: product =>
         product.photos.length > 0 ? (
           <Image
             src={product.photos[0]}
             alt=""
-            width={32}
-            height={32}
+            width={36}
+            height={36}
             unoptimized
-            className="h-8 w-8 object-cover"
+            className="h-9 w-9 rounded-md border border-slate-200 object-cover"
           />
         ) : (
           <span
             title="No photographs"
             aria-label="No photographs"
-            className={cn(
-              'flex h-8 w-8 items-center justify-center border bg-paper-deep font-ui text-eyebrow text-ink-soft',
-              RULE
-            )}
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-400"
           >
-            —
+            <ImageOff size={14} strokeWidth={1.75} aria-hidden="true" />
           </span>
         ),
     },
     {
       key: 'name',
-      head: 'Name',
+      head: 'Product',
       wrap: true,
-      className: 'min-w-[120px] sm:min-w-[160px]',
+      className: 'min-w-[160px]',
       cell: product => (
-        <button type="button" onClick={() => openEdit(product)} className="text-left hover:underline hover:decoration-gold">
-          {product.name}
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => openEdit(product)}
+            className="block max-w-full truncate text-left text-[13px] font-medium text-ink hover:underline"
+          >
+            {product.name}
+          </button>
+          {/* The category rides under the name where its own column is hidden, rather than
+              being scrolled off the right edge with the actions. */}
+          <span className={cn(META, 'block sm:hidden')}>{product.category}</span>
+        </>
       ),
     },
     {
       key: 'category',
       head: 'Category',
       className: 'hidden sm:table-cell',
-      cell: product => <span className="text-ink-soft">{product.category}</span>,
+      cell: product => <span className="text-slate-600">{product.category}</span>,
     },
     {
       key: 'price',
       head: 'Price',
-      className: 'text-right tabular-nums',
+      className: 'text-right',
       cell: product =>
         product.sale && product.salePrice ? (
-          <span>
-            <span className="text-sale">{rupees(product.salePrice)}</span>{' '}
-            <s className="text-ink-soft">{rupees(product.price)}</s>
+          <span className="inline-flex items-center justify-end gap-2 tabular-nums">
+            <s className="text-slate-400">{rupees(product.price)}</s>
+            <span className="font-medium text-ink">{rupees(product.salePrice)}</span>
+            <span className={badge('danger')}>Sale</span>
           </span>
         ) : (
-          rupees(product.price)
+          <span className="tabular-nums">{rupees(product.price)}</span>
         ),
     },
     {
       key: 'photos',
       head: 'Photos',
-      className: 'hidden text-right tabular-nums sm:table-cell',
-      cell: product => (
-        <span className={product.photos.length === 0 ? 'text-sale' : undefined}>
-          {product.photos.length}
-        </span>
-      ),
+      className: 'hidden text-right sm:table-cell',
+      cell: product =>
+        product.photos.length === 0 ? (
+          <span className={badge('warn')}>None</span>
+        ) : (
+          <span className="tabular-nums text-slate-600">{product.photos.length}</span>
+        ),
     },
     {
       key: 'actions',
       head: '',
-      className: 'text-right',
+      className: 'w-[120px] text-right',
       cell: product => (
-        <span className="inline-flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
+        <span className="inline-flex items-center justify-end gap-1">
           <button type="button" onClick={() => openEdit(product)} className={ACTION_QUIET}>
             Edit
           </button>
@@ -194,124 +215,139 @@ export default function ProductsPage() {
   const to = Math.min(page * PER_PAGE, total);
 
   return (
-    <div className="max-w-[1120px] px-[var(--gutter)] py-6">
+    <div className={SCREEN}>
       <ScreenHead
-        eyebrow="Portal"
         title="Products"
+        note="The shop's catalogue. A product goes live the moment it is saved."
         actions={
           <button type="button" onClick={openCreate} className={ACTION}>
+            <Plus size={15} strokeWidth={2} aria-hidden="true" />
             Add a product
           </button>
         }
       />
 
-      <form
-        onSubmit={event => {
-          event.preventDefault();
-          setPage(1);
-          setSearch(searchInput.trim());
-        }}
-        className="mb-5 flex flex-wrap items-end gap-x-6 gap-y-4"
-      >
-        <div className="min-w-0 max-w-[320px] flex-1 basis-[200px]">
-          <label htmlFor="product-search" className={cn(LABEL, 'mb-1 block')}>
-            Search
-          </label>
-          <TextInput
-            id="product-search"
-            type="search"
-            value={searchInput}
-            placeholder="Name or specification"
-            onChange={event => setSearchInput(event.target.value)}
-          />
-        </div>
-
-        <div className="w-[160px]">
-          <label htmlFor="product-sort" className={cn(LABEL, 'mb-1 block')}>
-            Sort
-          </label>
-          <SelectInput
-            id="product-sort"
-            value={sort}
-            onChange={event => {
-              setPage(1);
-              setSort(event.target.value);
-            }}
-          >
-            {SORTS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </SelectInput>
-        </div>
-
-        <button type="submit" className={cn(ACTION, 'mb-1.5')}>
-          Search
-        </button>
-        {search ? (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setPage(1);
-            }}
-            className={cn(ACTION_QUIET, 'mb-1.5')}
-          >
-            Clear
-          </button>
-        ) : null}
-      </form>
-
       {failure ? (
-        <p className={cn('border-t py-6 font-ui text-caption text-sale', RULE)}>{failure}</p>
+        <Notice label="Problem" tone="problem">
+          {failure}
+        </Notice>
       ) : (
-        <>
-          <DataTable
-            columns={columns}
-            rows={products}
-            rowKey={product => product.id}
-            busy={loading}
-            caption="Products, with thumbnail, category, price and photograph count"
-            empty={
-              loading
-                ? 'Loading the catalogue…'
-                : search
-                  ? `Nothing matches “${search}”.`
-                  : 'The catalogue is empty. Add the first product.'
-            }
-          />
+        <DataTable
+          columns={columns}
+          rows={products}
+          rowKey={product => product.id}
+          busy={loading}
+          caption="Products, with thumbnail, category, price and photograph count"
+          toolbar={
+            <>
+              <form
+                onSubmit={event => {
+                  event.preventDefault();
+                  setPage(1);
+                  setSearch(searchInput.trim());
+                }}
+                className="flex flex-wrap items-end gap-2"
+              >
+                <div className="w-[200px] min-w-0 sm:w-[240px]">
+                  <label htmlFor="product-search" className="sr-only">
+                    Search products
+                  </label>
+                  <div className="relative">
+                    <Search
+                      size={14}
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400"
+                    />
+                    <TextInput
+                      id="product-search"
+                      type="search"
+                      value={searchInput}
+                      placeholder="Name or specification"
+                      onChange={event => setSearchInput(event.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-            <p className={LABEL}>
-              {total === 0 ? 'No products' : `${from}–${to} of ${total}`}
-            </p>
-            {totalPages > 1 ? (
-              <div className="flex items-center gap-6">
-                <button
-                  type="button"
-                  disabled={page <= 1 || loading}
-                  onClick={() => setPage(value => Math.max(1, value - 1))}
-                  className={ACTION_QUIET}
-                >
-                  Previous
+                <button type="submit" className={ACTION_SOFT}>
+                  Search
                 </button>
-                <span className={LABEL}>
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => setPage(value => Math.min(totalPages, value + 1))}
-                  className={ACTION_QUIET}
+                {search ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput('');
+                      setSearch('');
+                      setPage(1);
+                    }}
+                    className={ACTION_QUIET}
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </form>
+
+              <div className="flex items-center gap-2">
+                <label htmlFor="product-sort" className={cn(LABEL, 'shrink-0')}>
+                  Sort
+                </label>
+                <SelectInput
+                  id="product-sort"
+                  value={sort}
+                  onChange={event => {
+                    setPage(1);
+                    setSort(event.target.value);
+                  }}
+                  className="w-[160px]"
                 >
-                  Next
-                </button>
+                  {SORTS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </SelectInput>
               </div>
-            ) : null}
-          </div>
-        </>
+            </>
+          }
+          footer={
+            <>
+              <p className={LABEL}>
+                {total === 0 ? 'No products' : `${from}–${to} of ${total}`}
+              </p>
+              {totalPages > 1 ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1 || loading}
+                    onClick={() => setPage(value => Math.max(1, value - 1))}
+                    className={ACTION_SOFT}
+                  >
+                    Previous
+                  </button>
+                  <span className={cn(LABEL, 'tabular-nums')}>
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= totalPages || loading}
+                    onClick={() => setPage(value => Math.min(totalPages, value + 1))}
+                    className={ACTION_SOFT}
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : null}
+            </>
+          }
+          empty={
+            loading
+              ? 'Loading the catalogue…'
+              : search
+                ? `Nothing matches “${search}”.`
+                : 'The catalogue is empty. Add the first product.'
+          }
+        />
       )}
 
       <ProductSheet

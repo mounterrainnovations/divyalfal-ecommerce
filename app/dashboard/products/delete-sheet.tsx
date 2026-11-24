@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Sheet from '@/components/admin/Sheet';
 import Field, { TextInput } from '@/components/admin/Field';
-import { ACTION_GRAVE, ACTION_QUIET } from '@/components/admin/styles';
+import { ACTION_DANGER, ACTION_SOFT } from '@/components/admin/styles';
 import type { Product } from '@/types';
 
 /**
@@ -69,11 +69,11 @@ export default function DeleteSheet({
             type="button"
             disabled={!matches || deleting}
             onClick={onDelete}
-            className={ACTION_GRAVE}
+            className={ACTION_DANGER}
           >
             {deleting ? 'Deleting' : 'Delete permanently'}
           </button>
-          <button type="button" disabled={deleting} onClick={close} className={ACTION_QUIET}>
+          <button type="button" disabled={deleting} onClick={close} className={ACTION_SOFT}>
             Cancel
           </button>
         </>
@@ -81,8 +81,8 @@ export default function DeleteSheet({
     >
       {product ? (
         <div className="space-y-5">
-          <p className="font-ui text-caption text-ink">
-            This removes <span className="font-display">{product.name}</span> and its
+          <p className="text-[13px] text-ink">
+            This removes <span className="font-semibold text-ink">{product.name}</span> and its
             photographs from the shop. It cannot be undone.
           </p>
           <Field

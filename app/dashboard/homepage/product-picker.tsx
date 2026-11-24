@@ -2,7 +2,14 @@
 
 import Image from 'next/image';
 import Sheet from '@/components/admin/Sheet';
-import { ACTION, ACTION_GRAVE, ACTION_QUIET, FOCUS, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  ACTION_GRAVE,
+  ACTION_QUIET,
+  ACTION_SOFT,
+  FOCUS,
+  LABEL,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -57,7 +64,7 @@ export default function ProductPicker({
             Done
           </button>
           {picked.length > 0 ? (
-            <button type="button" onClick={() => onChange([])} className={ACTION_QUIET}>
+            <button type="button" onClick={() => onChange([])} className={ACTION_SOFT}>
               Clear the selection
             </button>
           ) : null}
@@ -65,7 +72,7 @@ export default function ProductPicker({
       }
     >
       <div className="space-y-6">
-        <p className="measure font-ui text-caption text-ink-soft">
+        <p className="max-w-[68ch] text-[13px] text-slate-500">
           {picked.length === 0
             ? `Nothing is chosen, so this movement shows ${automatic}. Choose garments below to fix the selection instead.`
             : `${picked.length} chosen, shown in this order. Clear the selection to go back to ${automatic}.`}
@@ -74,17 +81,17 @@ export default function ProductPicker({
         {picked.length > 0 ? (
           <div>
             <p className={cn(LABEL, 'mb-2')}>Chosen, in order</p>
-            <ul className={cn('border-t', RULE)}>
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
               {picked.map((id, index) => {
                 const product = byId.get(id)!;
                 return (
                   <li
                     key={id}
-                    className={cn('flex items-center gap-3 border-b py-2', RULE)}
+                    className="flex items-center gap-3 px-2.5 py-2" 
                   >
                     <span className={cn(LABEL, 'w-4 shrink-0 tabular-nums')}>{index + 1}</span>
                     <Photo product={product} />
-                    <span className="min-w-0 flex-1 truncate font-ui text-caption text-ink">
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
                       {product.name}
                     </span>
                     <button
@@ -123,25 +130,25 @@ export default function ProductPicker({
         <div>
           <p className={cn(LABEL, 'mb-2')}>The catalogue</p>
           {rest.length === 0 ? (
-            <p className="font-ui text-caption text-ink-soft">
+            <p className="text-[13px] text-slate-500">
               {products.length === 0
                 ? 'The catalogue is empty, so there is nothing to pick.'
                 : 'Every garment in the catalogue is already chosen.'}
             </p>
           ) : (
-            <ul className={cn('border-t', RULE)}>
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
               {rest.map(product => (
-                <li key={product.id} className={cn('border-b', RULE)}>
+                <li key={product.id}>
                   <button
                     type="button"
                     onClick={() => onChange([...picked, product.id])}
                     className={cn(
-                      'flex w-full items-center gap-3 py-2 text-left hover:bg-paper-deep',
+                      'flex w-full items-center gap-3 px-2.5 py-2 text-left hover:bg-slate-50',
                       FOCUS
                     )}
                   >
                     <Photo product={product} />
-                    <span className="min-w-0 flex-1 truncate font-ui text-caption text-ink">
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
                       {product.name}
                     </span>
                     <span className={cn(LABEL, 'shrink-0')}>{product.category}</span>
@@ -165,8 +172,8 @@ function Photo({ product }: { product: Product }) {
         title="No photographs"
         aria-label="No photographs"
         className={cn(
-          'flex h-9 w-9 shrink-0 items-center justify-center border bg-paper-deep font-ui text-eyebrow text-ink-soft',
-          RULE
+          'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200',
+          'bg-slate-50 text-[11px] text-slate-400'
         )}
       >
         —
@@ -180,7 +187,7 @@ function Photo({ product }: { product: Product }) {
       width={36}
       height={36}
       unoptimized
-      className="h-9 w-9 shrink-0 object-cover"
+      className="h-9 w-9 shrink-0 rounded-md border border-slate-200 object-cover"
     />
   );
 }

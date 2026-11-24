@@ -6,7 +6,16 @@ import Notice from '@/components/admin/Notice';
 import Toast, { type ToastMessage } from '@/components/admin/Toast';
 import Field, { TextInput } from '@/components/admin/Field';
 import AssetPicker from '@/components/admin/AssetPicker';
-import { ACTION, INPUT, LABEL, RULE } from '@/components/admin/styles';
+import {
+  ACTION,
+  CARD,
+  CARD_BODY,
+  INPUT,
+  LABEL,
+  META,
+  SCREEN,
+  SECTION_TITLE,
+} from '@/components/admin/styles';
 import { cn } from '@/lib/utils';
 import { request, send } from '@/lib/admin/api';
 
@@ -234,9 +243,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-[1120px] px-[var(--gutter)] py-6">
+    <div className={SCREEN}>
       <ScreenHead
-        eyebrow="Portal"
         title="Settings"
         note="The shop's own details, in one place."
         actions={
@@ -265,27 +273,32 @@ export default function SettingsPage() {
           {failure}
         </Notice>
       ) : loading ? (
-        <Notice label="Loading">Reading the shop’s details…</Notice>
+        <Notice label="Loading" tone="working">
+          Reading the shop’s details…
+        </Notice>
       ) : (
         <>
-          <Notice label="What the shop reads today" className="mb-8">
+          <Notice label="What the shop reads today" className="mb-4">
             These values are stored, and nothing on the public pages reads them yet — the phone
             number, the address and the page title are still the ones the site was built with.
             Changing them here is safe and will take effect when the storefront is switched over
             to the content system.
           </Notice>
 
-          <div className="space-y-10">
+          {/* One card per group of settings. The group's note lives in the card's header
+              rather than above the whole form, so the warning about a key nobody reads yet
+              sits on the fields it is about. */}
+          <div className="space-y-4">
             {GROUPS.map(group => (
-              <section key={group.title}>
-                <div className={cn('mb-4 border-t pt-3', RULE)}>
-                  <h2 className="font-display text-[15px] font-light text-ink">{group.title}</h2>
+              <section key={group.title} className={CARD}>
+                <div className="border-b border-slate-200 px-4 py-3">
+                  <h2 className={SECTION_TITLE}>{group.title}</h2>
                   {group.note ? (
-                    <p className="measure mt-1 font-ui text-eyebrow text-ink-soft">{group.note}</p>
+                    <p className={cn(META, 'mt-1 max-w-[68ch]')}>{group.note}</p>
                   ) : null}
                 </div>
 
-                <div className="grid max-w-[640px] gap-6">
+                <div className={cn(CARD_BODY, 'grid max-w-[640px] gap-5')}>
                   {group.rows.map(row => {
                     const id = `setting-${row.key.replace(/\./g, '-')}`;
                     const value = values[row.key] ?? '';
@@ -293,7 +306,7 @@ export default function SettingsPage() {
                     if (row.kind === 'image') {
                       return (
                         <div key={row.key}>
-                          <p className={cn(LABEL, 'mb-1')}>{row.label}</p>
+                          <p className={cn(LABEL, 'mb-1.5')}>{row.label}</p>
                           <AssetPicker
                             kind="IMAGE"
                             label="sharing image"
@@ -302,9 +315,7 @@ export default function SettingsPage() {
                               setValues(current => ({ ...current, [row.key]: urls[0] ?? '' }))
                             }
                           />
-                          {row.hint ? (
-                            <p className="mt-1 font-ui text-eyebrow text-ink-soft">{row.hint}</p>
-                          ) : null}
+                          {row.hint ? <p className={cn(META, 'mt-1.5')}>{row.hint}</p> : null}
                         </div>
                       );
                     }

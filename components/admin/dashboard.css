@@ -1,0 +1,112 @@
+/* ============================================================================================
+   The admin portal's own stylesheet.
+
+   WHY THIS FILE EXISTS AT ALL. Everything the portal needs is a Tailwind utility except the
+   three things below, and `app/globals.css` is the storefront's file: the portal is not allowed
+   to add to it (two agents edit this tree, and the token block there belongs to the shop). So
+   the portal's real CSS lives here and is imported once, by `app/dashboard/layout.tsx`.
+
+   It deliberately contains no `@theme`, no `@apply` and no Tailwind at-rules. It is plain CSS
+   that PostCSS passes straight through, which keeps it independent of how the storefront's
+   Tailwind entry point is configured.
+   ========================================================================================== */
+
+/* --------------------------------------------------------------------------------------------
+   1. THE PORTAL'S TYPEFACE.
+
+   The storefront is set in Jost and Fraunces, the two faces the project self-hosts. A dashboard
+   set in them reads as a page of the shop, and the owner asked for the opposite. So the portal
+   uses the operating system's own UI face — the same choice Linear, Stripe and the GitHub and
+   Vercel dashboards make — which is also why it feels native and costs nothing to load.
+
+   It is declared on the shell rather than on components so that nothing can opt out of it, and
+   every `font-ui`/`font-display` class has been removed from the portal's files. If the brand
+   face is ever wanted back for the chrome, this is the one declaration to change.
+   ------------------------------------------------------------------------------------------ */
+
+.ds-root {
+  --ds-font:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+
+  font-family: var(--ds-font);
+  /* 13px type on white is where hinting shows; smoothing keeps it from looking heavy. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Tabular figures are set per element (counts, prices, dates); proportional elsewhere. */
+  font-feature-settings: 'cv11';
+}
+
+/* --------------------------------------------------------------------------------------------
+   2. HIDING THE STOREFRONT NAVIGATION.
+
+   `app/layout.tsx` renders the shop's `NavBar` and a padded `<main>` on every route, including
+   `/dashboard`, and the root layout is outside this task's remit. A portal does not want the
+   shop's primary navigation above its own top bar, so while a dashboard route is mounted the
+   fixed bar is hidden and the 96px of padding that holds pages clear of it is removed.
+
+   MATCHED STRUCTURALLY, NOT BY A DATA ATTRIBUTE. The previous version of this rule targeted
+   `header[data-condensed]` and `[data-nav-spacer]`, which were the atelier navbar's own hooks.
+   The storefront has since been reverted to the conventional shop, whose navbar is a plain
+   `body > nav` with no such attributes — so that rule silently stopped working and the shop's
+   logo sat on top of the portal. These two selectors are the shape of the root layout's own
+   markup (`<nav>` then `<main class="pt-24">`), and `:has()` keeps them scoped to the routes
+   that mount `.ds-root`. If the root layout's structure changes, this is what to revisit.
+
+   When the root layout can be edited, exclude the storefront nav from `/dashboard` there and
+   delete this block.
+   ------------------------------------------------------------------------------------------ */
+
+/* The storefront's navbar is no longer hidden from here. `components/layout/site-chrome.tsx`
+   decides that the shop chrome does not render on /dashboard at all, so there is nothing to
+   override and no selector in this file reaching into the root layout's markup. */
+
+/* --------------------------------------------------------------------------------------------
+   3. SCROLLBARS INSIDE THE SHELL.
+
+   The sidebar and the sheets scroll independently of the page. The platform's default
+   scrollbar is 15px of grey that lands right on a hairline border; a thin one keeps the
+   chrome quiet without hiding the fact that there is more to see (which `scrollbar-hide`,
+   used by the storefront, does).
+   ------------------------------------------------------------------------------------------ */
+
+.ds-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.ds-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.ds-scroll::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+
+.ds-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+.ds-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --------------------------------------------------------------------------------------------
+   4. THE CHECKBOX'S TICK.
+
+   `CheckboxField` draws its own box — a native checkbox is a different size and shape on every
+   platform, which in a dense form reads as a rendering fault. The box itself is Tailwind
+   utilities; only the mark needs real CSS, because a `data:` URI inside a Tailwind class name
+   is a parser hazard (the slashes in a URL read as opacity modifiers).
+   ------------------------------------------------------------------------------------------ */
+
+.ds-check:checked {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 8.5l3 3 6-6'/></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+}
