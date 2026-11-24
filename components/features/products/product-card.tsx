@@ -42,7 +42,14 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
   return (
     <Link
       href={`/product/${product.id}`}
-      className={`group block bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg ${className}`}
+      /*
+       * `h-full flex flex-col` is what keeps a row of cards level. The grid already stretches
+       * its items, but the card was sized by its own content, so a product with a two-line
+       * name, or a sale price with a "Save ..." line under it, made its card taller than its
+       * neighbours and the row's bottom edge came out ragged. The card now fills the track and
+       * the meta block below absorbs the difference.
+       */
+      className={`group flex h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg ${className}`}
     >
       <div className="relative aspect-3/4 overflow-hidden bg-gray-100">
         {/* Loading Skeleton */}
@@ -85,7 +92,7 @@ const ProductCard = ({ product, className = '', priority = false }: ProductCardP
         )}
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
         {/* Product Name */}
         <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-2 line-clamp-2 leading-relaxed">
           {product.name}
