@@ -49,3 +49,6 @@ CLAUDE.md
 .kilocodemodes
 # product seed backups
 /prisma/backups
+
+.vercel
+.env*
