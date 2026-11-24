@@ -1,6 +1,17 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  /**
+   * Hosts allowed to reach the dev server from an origin other than localhost.
+   *
+   * `next dev` refuses cross-origin requests for its internal endpoints — HMR, the dev
+   * overlay, `/_next/*` — so a page served through a tunnel loads its HTML and then fails to
+   * fetch anything else. These two patterns cover the throwaway tunnels used to put the site
+   * in front of someone on another machine.
+   *
+   * Development only; `next build` ignores it, and it grants nothing in production.
+   */
+  allowedDevOrigins: ['*.trycloudflare.com', '*.loca.lt', '*.ngrok-free.app', '*.ngrok.io'],
   images: {
     remotePatterns: [
       {
