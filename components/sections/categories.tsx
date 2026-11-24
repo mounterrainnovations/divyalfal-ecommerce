@@ -10,7 +10,7 @@ const Categories = () => {
   return (
     <section className="py-14 md:py-20 bg-gray-50">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight text-center mb-8 md:mb-10">
+        <h2 className="font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900 text-center mb-8 md:mb-10">
           Shop by Category
         </h2>
 

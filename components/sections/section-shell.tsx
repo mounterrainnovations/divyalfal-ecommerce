@@ -25,14 +25,19 @@ export const SECTION = 'py-14 md:py-20';
 export const CONTAINER = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
 
 /**
- * One section heading: Fraunces at the display sizes, light, near-black.
+ * One section heading: Cormorant Garamond at the display sizes, near-black.
  *
- * `font-serif` resolves to Fraunces now that the token points at a face the project actually
- * ships — it used to fall through to Times New Roman, which is most of why these headings
- * read cheap against the photography.
+ * Two deliberate departures from the sizes this replaces, both to suit the face rather than
+ * taste. Cormorant has a notably small x-height, so a heading set at the same pixel size as
+ * the Fraunces it replaces reads visibly smaller — hence one step up at every breakpoint.
+ * And its 300 is genuinely fragile at these sizes, thin enough to break up on a low-density
+ * phone screen, so headings sit at 400 and keep the lightness in the letterforms instead of
+ * the weight.
+ *
+ * `tracking-tight` is gone for the same reason: an old-style serif is drawn with its own
+ * fitting, and pulling it tighter closes the counters that give it its air.
  */
-export const HEADING =
-  'font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight';
+export const HEADING = 'font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900';
 
 /** The supporting line under a heading, where a section has one. */
 export const SUBHEADING = 'mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-gray-600';

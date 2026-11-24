@@ -12,7 +12,7 @@ export default function CancellationPolicyPage() {
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-16 sm:py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl sm:text-5xl font-serif font-bold mb-4">Cancellation Policy</h1>
+            <h1 className="text-5xl sm:text-6xl font-serif font-semibold mb-4">Cancellation Policy</h1>
             <p className="text-gray-300 text-lg">Flexible options for order modifications</p>
           </div>
         </div>

@@ -42,7 +42,7 @@ const About = () => {
 
         {/* Right Section: Text and Stats */}
         <div className="flex-1 px-6 md:px-8 xl:px-12 flex flex-col justify-center">
-          <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight mb-6">
+          <h2 className="font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900 mb-6">
             About Divyafal
           </h2>
 

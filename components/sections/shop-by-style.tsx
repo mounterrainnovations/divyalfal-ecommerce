@@ -165,7 +165,7 @@ export default function ShopByStyle() {
       <div className="w-full">
         {/* Section Header */}
         <div className="mb-8 xl:mb-12 px-4">
-          <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight text-center">
+          <h2 className="font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900 text-center">
             Shop By Style
           </h2>
         </div>

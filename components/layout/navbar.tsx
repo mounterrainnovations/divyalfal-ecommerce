@@ -106,7 +106,7 @@ const NavBar = () => {
 
       {/* Mobile slide-in menu (always rendered) */}
       <div
-        className={`fixed inset-0 z-50 flex transition-opacity duration-300 ${
+        className={`fixed inset-0 z-50 flex overflow-hidden transition-opacity duration-300 ${
           isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
         }`}
       >

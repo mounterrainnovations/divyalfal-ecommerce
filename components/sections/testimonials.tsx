@@ -65,7 +65,7 @@ const Testimonials = () => {
   return (
     <section className="py-14 md:py-20 bg-white">
       <div className="w-full">
-        <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight text-center mb-8 md:mb-10 px-4">
+        <h2 className="font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900 text-center mb-8 md:mb-10 px-4">
           What Our Customers Say
         </h2>
 

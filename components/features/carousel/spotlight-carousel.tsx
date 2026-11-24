@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
+import { HEADING, HEADING_GAP } from '@/components/sections/section-shell';
+import { cn } from '@/lib/utils';
 
 interface SpotlightItem {
   id: number;
@@ -36,7 +38,7 @@ const SpotlightCarousel = () => {
   return (
     <section className="py-6 bg-white">
       <div className="px-4 md:px-8 xl:px-20">
-        <h2 className="text-3xl font-semibold mb-6 text-center font-serif font-light">Our Spotlight</h2>
+        <h2 className={cn(HEADING, 'text-center', HEADING_GAP)}>Our Spotlight</h2>
 
         <div
           ref={scrollRef}

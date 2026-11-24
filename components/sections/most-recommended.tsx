@@ -227,7 +227,7 @@ export default function MostRecommended() {
           className="w-full xl:w-1/3 px-6 xl:px-12 py-10 xl:py-16 border-b xl:border-b-0 border-gray-200
                           xl:sticky xl:top-24 xl:self-start h-fit"
         >
-          <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight mb-8 md:mb-10">
+          <h2 className="font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900 mb-8 md:mb-10">
             Most Recommended
           </h2>
 
@@ -279,7 +279,7 @@ export default function MostRecommended() {
         </aside>
 
         {/* Right Section */}
-        <div className="flex-1 px-6 sm:px-4 xl:px-8 py-8 xl:py-16 overflow-x-auto xl:overflow-x-visible">
+        <div className="min-w-0 flex-1 px-6 sm:px-4 xl:px-8 py-8 xl:py-16 overflow-x-auto xl:overflow-x-clip">
           {isLoading ? (
             <>
               {/* Mobile - Horizontal Skeleton */}

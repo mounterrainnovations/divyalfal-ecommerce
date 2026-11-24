@@ -13,7 +13,7 @@ const VirasatAcademy = () => {
               <GraduationCap className="w-9 h-9 text-amber-600" />
             </div>
 
-            <h2 className="font-serif font-light text-3xl sm:text-4xl xl:text-5xl text-gray-900 tracking-tight mb-4">
+            <h2 className="font-serif font-normal text-4xl sm:text-5xl xl:text-6xl text-gray-900 mb-4">
               Virasat Academy
             </h2>
             <p className="text-gray-700 mb-8 text-base sm:text-lg xl:text-xl leading-relaxed">
