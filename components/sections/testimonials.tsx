@@ -3,53 +3,19 @@
 import Image from 'next/image';
 import { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useShowcase } from '@/lib/hooks/useShowcase';
 
-interface Testimonial {
-  name: string;
-  message: string;
-  image: string;
-  rating: number;
-}
-
-const testimonials: Testimonial[] = [
-  {
-    name: '',
-    message:
-      'Wearing Divyafal by Alpa Rawat was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.',
-    image: '/testimonials/1.png',
-    rating: 5,
-  },
-  {
-    name: '',
-    message:
-      'Alpa Rawat’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.',
-    image: '/testimonials/2.png',
-    rating: 5,
-  },
-  {
-    name: '',
-    message:
-      'Divyafal’ lives up to its name. My outfit felt like a rare treasure timeless, personal, and heirloom-worthy.',
-    image: '/testimonials/3.png',
-    rating: 5,
-  },
-  {
-    name: '',
-    message:
-      'My Divyafal engagement outfit was pure magic. Alpa captured the emotion perfectly the fit, color, and grace were flawless.',
-    image: '/testimonials/4.png',
-    rating: 5,
-  },
-  {
-    name: '',
-    message:
-      'Designing with Alpa was a dream. She transformed my vision into a stunning reality with her heartfelt artistry',
-    image: '/testimonials/5.png',
-    rating: 5,
-  },
-];
-
+/**
+ * The client quotes.
+ *
+ * The five quotes used to be an array in this file. They now come from `useShowcase`, which
+ * starts from that same array and swaps in whatever the owner has saved in the portal — so the
+ * section renders identically on the first frame and the database can only ever change it, not
+ * empty it. An owner who deliberately removes every quote gets no section rather than a
+ * heading over a blank strip.
+ */
 const Testimonials = () => {
+  const { testimonials } = useShowcase();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -61,6 +27,8 @@ const Testimonials = () => {
       });
     }
   };
+
+  if (testimonials.length === 0) return null;
 
   return (
     <section className="py-14 md:py-20 bg-white">
@@ -92,20 +60,25 @@ const Testimonials = () => {
           {/* Horizontal Scrolling Container */}
           <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide">
             <div className="flex gap-4 sm:gap-6 xl:gap-8 pb-4 px-6 sm:px-8 xl:px-20 snap-x snap-mandatory w-fit mx-auto scrollbar-hide">
-              {testimonials.map((t, i) => (
+              {testimonials.map(t => (
                 <div
-                  key={i}
+                  key={t.id}
                   className="shrink-0 w-64 sm:w-72 xl:w-96 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 snap-center"
                 >
-                  <div className="relative h-96 xl:h-146 bg-gray-50">
-                    <Image
-                      src={t.image}
-                      alt={t.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
+                  {/* A quote with no portrait renders no frame at all: `<Image src="">` is a
+                      request to the current page, which Next logs as a failed image and the
+                      browser draws as a broken box. */}
+                  {t.image ? (
+                    <div className="relative h-96 xl:h-146 bg-gray-50">
+                      <Image
+                        src={t.image}
+                        alt={t.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  ) : null}
                   <div className="p-4 xl:p-6 bg-white">
                     <h3 className="font-medium text-gray-900 text-sm sm:text-base xl:text-lg">
                       {t.name}

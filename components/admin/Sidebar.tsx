@@ -8,7 +8,9 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   Mail,
+  Quote,
   Settings,
+  Shapes,
   ShoppingBag,
   Type,
   X,
@@ -29,20 +31,25 @@ export interface NavItem {
 }
 
 /**
- * The portal's seven screens, in the order an admin works through them.
+ * The portal's nine screens, in the order an admin works through them.
  *
  * WHY THE LIST IS FLAT. It used to be three labelled groups (Shop / Site / nothing). The
  * reference admin the owner asked this portal to follow lists sixteen screens flat, with
- * nothing but an icon and a word, and at seven items the grouping was costing two heading
- * rows to explain an order that is already obvious. Flat it is — and it stays the single
- * source of truth for the shell's title, which looks the current screen up here rather than
- * keeping a second list of names.
+ * nothing but an icon and a word, and the grouping was costing two heading rows to explain an
+ * order that is already obvious. Flat it is — and it stays the single source of truth for the
+ * shell's title, which looks the current screen up here rather than keeping a second list of
+ * names.
+ *
+ * Categories and Testimonials are the two most recent: both are sections that have always been
+ * on the public homepage and were, until now, arrays in source that only a deploy could change.
  */
 export const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Products', href: '/dashboard/products', icon: ShoppingBag },
+  { label: 'Categories', href: '/dashboard/categories', icon: Shapes },
   { label: 'Enquiries', href: '/dashboard/enquiries', icon: Mail },
   { label: 'Media', href: '/dashboard/media', icon: Images },
+  { label: 'Testimonials', href: '/dashboard/testimonials', icon: Quote },
   { label: 'Content', href: '/dashboard/content', icon: Type },
   { label: 'Homepage', href: '/dashboard/homepage', icon: LayoutTemplate },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
@@ -106,7 +113,7 @@ function useUnreadEnquiries(pathname: string | null): number {
 }
 
 /**
- * The portal's sidebar: the brand lockup, then the seven screens.
+ * The portal's sidebar: the brand lockup, then the nine screens.
  *
  * It is one element at every width rather than a sidebar plus a separate mobile menu, so there
  * is one nav in the accessibility tree and one active state to keep right. Below `lg` it is

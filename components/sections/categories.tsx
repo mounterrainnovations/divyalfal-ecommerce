@@ -2,11 +2,25 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { CATEGORY_CONFIG } from '@/lib/common/product-interfaces';
+import { useShowcase } from '@/lib/hooks/useShowcase';
 
-const categories = CATEGORY_CONFIG;
-
+/**
+ * The category strip.
+ *
+ * The six tiles used to be `CATEGORY_CONFIG`, a constant. They now come from `useShowcase`,
+ * which starts from that same constant and swaps in whatever the owner has saved in the portal
+ * — so this section renders identically on the first frame and can only ever be *changed*, not
+ * emptied, by the database. Tiles the owner has hidden are filtered out here rather than in the
+ * hook, because the Categories screen in the portal needs the hidden ones too.
+ */
 const Categories = () => {
+  const { categories: all } = useShowcase();
+  const categories = all.filter(category => category.visible);
+
+  // Every tile hidden is a deliberate choice, and an empty strip with a heading above it reads
+  // as a broken section. Draw nothing at all instead.
+  if (categories.length === 0) return null;
+
   return (
     <section className="py-14 md:py-20 bg-gray-50">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
