@@ -88,12 +88,11 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
         </div>
       )}
 
-      {/* Size Chart */}
-      <div>
-        <Link href="#" className="text-base font-bold underline hover:no-underline">
-          Size Chart
-        </Link>
-      </div>
+      {/* The "Size Chart" link that used to sit here went to `#` — it had never been wired to
+          anything. There is now a real one: `components/features/products/size-chart.tsx`
+          renders a "Size guide" dialog from the chart the shop configured for this garment's
+          category, and `app/product/[id]/page.tsx` places it below these details. Two
+          size-chart affordances, one of them dead, is worse than one that works. */}
 
       {/* Size Selector */}
       <div>

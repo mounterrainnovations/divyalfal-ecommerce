@@ -20,20 +20,30 @@ import { cn } from '@/lib/utils';
 import { request, send } from '@/lib/admin/api';
 
 /**
- * Settings: the shop's own details — how to reach it, where it is, and what a search engine
- * and a shared link show.
+ * Settings: the shop's own details — how to reach it, where it is, what delivery costs, and
+ * what a search engine and a shared link show.
  *
  * **`seed.gallery` is not here, and must not be.** `SiteSetting` is a key/value table, so a
  * screen that listed whatever it found would list that row too — and it is not a setting. It
  * is the seed's marker that the slideshow has been seeded once, and it is the only thing
  * stopping a later seed run from reviving a gallery the client deliberately emptied. Deleting
  * it would re-arm a side effect nobody would connect to the deletion. The repository filters
- * it from every read and refuses every write to it; this screen renders the twelve keys it
+ * it from every read and refuses every write to it; this screen renders the sixteen keys it
  * knows by name and nothing else, so the row cannot appear here even if that changed.
  *
- * **Four of those keys have no row yet.** The social addresses and the Open Graph image were
+ * **Eight of those keys have no row yet.** The social addresses and the Open Graph image were
  * never supplied — `siteCopy.footer.social` is an empty array for exactly that reason — so
- * they are offered as empty fields rather than invented. See `EDITABLE_SETTING_KEYS`.
+ * they are offered as empty fields rather than invented. The four shipping keys are blank for
+ * the sharper version of the same reason: a seeded delivery charge would be a price the shop
+ * never agreed to, and a seeded free-shipping threshold a promise on a live site. Blank here
+ * means the shop has not said, and the fields say so rather than suggesting a figure. See
+ * `EDITABLE_SETTING_KEYS`.
+ *
+ * **A rupee figure is validated before it is saved.** These are strings in a JSON column, so
+ * nothing downstream can stop "₹99 approx" from landing in a shipping rate except this screen;
+ * `problemWith` holds a money field to digits and at most two decimal places, and the save
+ * additionally refuses a free-shipping threshold with no standard charge under it, which would
+ * silently make every order below the threshold free.
  *
  * **What reads these today.** Nothing on the storefront does: Phase 1 holds the phone number,
  * the address and the page title as constants, and the switch-over is Task 14. Saving here is
@@ -48,7 +58,8 @@ interface Row {
   key: string;
   label: string;
   hint?: string;
-  kind: 'text' | 'lines' | 'url' | 'phone' | 'email' | 'image';
+  /** `money` is a rupee figure: validated as a number, stored as the text that was typed. */
+  kind: 'text' | 'lines' | 'url' | 'phone' | 'email' | 'image' | 'money';
   placeholder?: string;
 }
 
@@ -90,6 +101,36 @@ const GROUPS: { title: string; note?: string; rows: Row[] }[] = [
       { key: 'social.instagram', label: 'Instagram', kind: 'url', placeholder: 'https://instagram.com/…' },
       { key: 'social.facebook', label: 'Facebook', kind: 'url', placeholder: 'https://facebook.com/…' },
       { key: 'social.youtube', label: 'YouTube', kind: 'url', placeholder: 'https://youtube.com/…' },
+    ],
+  },
+  {
+    title: 'Shipping',
+    note: 'What delivery costs, and when it is free. Every field starts blank, and blank means the shop has not set a figure — not zero, and not free. Nothing on the storefront charges these yet; they are the shop’s stated rates, in the one place the till will read them from.',
+    rows: [
+      {
+        key: 'shipping.freeOver',
+        label: 'Free delivery above',
+        kind: 'money',
+        hint: 'Order value, in rupees, at or above which delivery costs nothing. Leave blank if delivery is never free.',
+      },
+      {
+        key: 'shipping.standardRate',
+        label: 'Standard delivery',
+        kind: 'money',
+        hint: 'The flat charge on an order below that threshold.',
+      },
+      {
+        key: 'shipping.expressRate',
+        label: 'Express delivery',
+        kind: 'money',
+        hint: 'Optional. Leave blank if the shop offers one speed only.',
+      },
+      {
+        key: 'shipping.note',
+        label: 'What the customer is told',
+        kind: 'text',
+        hint: 'One line, e.g. “Delivered in 5 to 7 working days across India.”',
+      },
     ],
   },
   {
@@ -146,6 +187,16 @@ function problemWith(row: Row, text: string): string {
     } catch {
       return 'That is not a complete web address. It should begin with https://';
     }
+  }
+
+  /*
+   * A rupee figure is stored as the text that was typed, so this is the only thing standing
+   * between a shipping charge and a column holding "₹99 or so". Digits, optionally two
+   * decimal places, and nothing else: no currency sign (the site adds it), no thousands
+   * commas (they would not survive `Number`), no words. Zero is allowed and means free.
+   */
+  if (row.kind === 'money' && !/^\d+(\.\d{1,2})?$/.test(value)) {
+    return 'A rupee figure in digits — 2500, or 2500.50. No ₹ sign and no commas.';
   }
 
   if (row.kind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -208,6 +259,21 @@ export default function SettingsPage() {
       const problem = problemWith(row, values[row.key] ?? '');
       if (problem) found[row.key] = problem;
     }
+
+    /*
+     * The one thing the two shipping figures mean together, and the one way to set them that
+     * says nothing at all: a free-shipping threshold with no standard rate under it. Saved
+     * like that, an order below the threshold has no delivery charge stated anywhere, which
+     * reads as free — so the threshold the owner just set would be giving away exactly the
+     * deliveries it was meant to charge for.
+     */
+    const freeOver = (values['shipping.freeOver'] ?? '').trim();
+    const standard = (values['shipping.standardRate'] ?? '').trim();
+    if (freeOver && !standard && !found['shipping.standardRate']) {
+      found['shipping.standardRate'] =
+        'Set the standard charge too, or an order below the threshold has no delivery price at all.';
+    }
+
     setProblems(found);
     if (Object.keys(found).length > 0) {
       setToast({ text: 'Nothing was saved: check the fields marked below.', tone: 'error' });
@@ -343,7 +409,13 @@ export default function SettingsPage() {
                           <TextInput
                             id={id}
                             type={row.kind === 'url' ? 'url' : row.kind === 'email' ? 'email' : 'text'}
-                            inputMode={row.kind === 'phone' ? 'tel' : undefined}
+                            inputMode={
+                              row.kind === 'phone'
+                                ? 'tel'
+                                : row.kind === 'money'
+                                  ? 'decimal'
+                                  : undefined
+                            }
                             value={value}
                             placeholder={row.placeholder}
                             invalid={Boolean(problems[row.key])}

@@ -2,7 +2,7 @@ import { Prisma, type SiteSetting } from '@prisma/client';
 import { prisma } from '@/lib/db';
 
 /**
- * Site settings: contact details, the WhatsApp number, SEO metadata.
+ * Site settings: contact details, the WhatsApp number, SEO metadata, shipping rates.
  *
  * Two rules hold this table down.
  *
@@ -23,12 +23,27 @@ export const INTERNAL_SETTING_KEYS = new Set(['seed.gallery']);
 /**
  * Every key the admin may read and write.
  *
- * The first eight are what `prisma/seed-cms.ts` writes. The four after them are **not
- * seeded**, and that is deliberate: `siteCopy.footer.social` is an empty array because no
- * Instagram or Facebook address has ever been supplied, and there is no Open Graph image in
- * the site today. A seed cannot invent them, but the Settings screen can offer the rows so
- * that the client can supply them once, in the obvious place, instead of someone editing a
- * constant. A key with no row simply reads as absent until it is first saved.
+ * The first eight are what `prisma/seed-cms.ts` writes. The four after them — the Open Graph
+ * image and the three social addresses — are **not seeded**, and that is deliberate:
+ * `siteCopy.footer.social` is an empty array because no Instagram or Facebook address has ever
+ * been supplied, and there is no Open Graph image in the site today. A seed cannot invent them,
+ * but the Settings screen can offer the rows so that the client can supply them once, in the
+ * obvious place, instead of someone editing a constant. A key with no row simply reads as
+ * absent until it is first saved.
+ *
+ * **The four `shipping.*` keys are unseeded for a stronger reason: a shipping price is money.**
+ * A seeded ₹99 would be a real rate the shop had never agreed to, and a seeded free-shipping
+ * threshold would be a promise on a live site. So all four stay absent until the owner types
+ * them, and absent means exactly that — no rate, no threshold, no promise — rather than a
+ * default anyone could mistake for the shop's own figure. They are stored as the strings the
+ * fields hold (this is a JSON column, and the screen round-trips text); the Settings screen
+ * refuses to save one that is not a sensible number, so what lands in the column is a number
+ * written as text and never "₹99 approx".
+ *
+ * `shipping.freeOver` blank means shipping is never free, not free always: a blank threshold
+ * that meant "free above ₹0" would give away every delivery the moment the key was offered.
+ * Whatever eventually reads these must treat an absent key as "the shop has not said", and ask,
+ * rather than assume a zero.
  */
 export const EDITABLE_SETTING_KEYS = [
   'whatsapp',
@@ -43,6 +58,10 @@ export const EDITABLE_SETTING_KEYS = [
   'social.instagram',
   'social.facebook',
   'social.youtube',
+  'shipping.freeOver',
+  'shipping.standardRate',
+  'shipping.expressRate',
+  'shipping.note',
 ] as const;
 
 export type SettingKey = (typeof EDITABLE_SETTING_KEYS)[number];

@@ -15,9 +15,16 @@ const prismaSpies = vi.hoisted(() => ({
   findUnique: vi.fn(),
   findMany: vi.fn(),
   count: vi.fn(),
+  // DELETE now counts the orders that reference the product before removing it, so that a
+  // product an order depends on is refused in words rather than by a foreign-key 500. The spy
+  // is part of this record so `expectDatabaseUntouched` covers that read too: a 401 must not
+  // reach the orders table either.
+  orderItemFindMany: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => ({ prisma: { product: prismaSpies } }));
+vi.mock('@/lib/db', () => ({
+  prisma: { product: prismaSpies, orderItem: { findMany: prismaSpies.orderItemFindMany } },
+}));
 
 import { POST } from '@/app/api/products/route';
 import { GET as getOne, PATCH, DELETE } from '@/app/api/products/[id]/route';
@@ -86,10 +93,25 @@ describe('product writes with a valid admin session', () => {
   });
 
   it('DELETE reaches the database', async () => {
+    prismaSpies.orderItemFindMany.mockResolvedValue([]);
     prismaSpies.delete.mockResolvedValue({});
     const res = await DELETE(req('DELETE', token()), ctx);
     expect(res.status).toBe(200);
     expect(prismaSpies.delete).toHaveBeenCalledTimes(1);
+  });
+
+  it('DELETE refuses a product an order references, and names the orders', async () => {
+    // The database would refuse this anyway, with a foreign-key error the portal used to
+    // report as "Failed to delete product". An admin needs to read how many orders are
+    // involved and what to do instead, which is archive it.
+    prismaSpies.orderItemFindMany.mockResolvedValue([{ orderId: 'o1' }, { orderId: 'o2' }]);
+    const res = await DELETE(req('DELETE', token()), ctx);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.orders).toBe(2);
+    expect(body.error).toContain('appears on 2 orders');
+    expect(body.error).toContain('Archive it instead');
+    expect(prismaSpies.delete).not.toHaveBeenCalled();
   });
 
   it('POST keeps its own validation (missing fields is a 400, not a 401)', async () => {

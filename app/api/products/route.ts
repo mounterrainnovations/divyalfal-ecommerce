@@ -1,14 +1,11 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import {
-  transformDbProductToProduct,
-  transformDbProductsToProducts,
-  getDbCategory,
-} from '@/lib/utils/product-utils';
+import { transformDbProductToProduct, getDbCategory } from '@/lib/utils/product-utils';
 import type { ProductCategory, ProductType } from '@/types';
 import { retryDatabaseOperation } from '@/lib/utils/database';
 import { requireAdmin, unauthorizedResponse } from '@/lib/auth-guard';
+import { archivedWhere, productTypeFromParam } from './filters';
 
 export async function GET(request: Request) {
   try {
@@ -22,6 +19,11 @@ export async function GET(request: Request) {
     // Parse query parameters
     const search = searchParams.get('search') || undefined;
     const categories = searchParams.get('categories')?.split(',').filter(Boolean) || [];
+    // The admin catalogue's two filters. Both are optional and both parse in `./filters.ts`,
+    // where the defaults — live products only, no category constraint — are stated once and
+    // tested, because this endpoint answers the public storefront as well as the portal.
+    const singleCategory = productTypeFromParam(searchParams.get('category'));
+    const archived = archivedWhere(searchParams.get('archived'));
     const minPrice = searchParams.get('minPrice')
       ? Number(searchParams.get('minPrice'))
       : undefined;
@@ -33,8 +35,13 @@ export async function GET(request: Request) {
     const page = Number(searchParams.get('page')) || 1;
     const limit = Math.min(Number(searchParams.get('limit')) || 20, 100); // Cap at 100
 
-    // Build where clause
-    const where: Prisma.ProductWhereInput = {};
+    // Build where clause.
+    //
+    // `archived` is spread first and is `{}` for `?archived=all`, so "everything" is the
+    // absence of a constraint rather than a second code path. With no parameter it is
+    // `{ isArchived: false }` — see the note on `archivedMode`: the storefront must never be
+    // handed a garment the shop has taken down.
+    const where: Prisma.ProductWhereInput = { ...archived };
 
     if (search) {
       where.OR = [
@@ -51,6 +58,19 @@ export async function GET(request: Request) {
       if (dbCategories.length > 0) {
         where.category = { in: dbCategories };
       }
+    }
+
+    // The singular `?category=` *narrows* whatever the plural parameter already set rather
+    // than replacing it. Assigning `where.category` twice would silently discard the
+    // storefront's multi-category filter if a caller ever sent both, and a filter that quietly
+    // widens its own result is the kind of bug nobody reports because the page still looks
+    // fine. Nothing sends both today; this is so nothing has to remember not to.
+    if (singleCategory) {
+      const alreadyNarrowed = categories.length > 0 && where.category !== undefined;
+      const allowed = alreadyNarrowed
+        ? (where.category as { in: ProductType[] }).in.filter(type => type === singleCategory)
+        : [singleCategory];
+      where.category = { in: allowed };
     }
 
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -91,8 +111,48 @@ export async function GET(request: Request) {
       ])
     );
 
-    const products = transformDbProductsToProducts(dbProducts);
+    /*
+     * `isArchived` travels beside the transformed product rather than inside it.
+     *
+     * The shared `Product` shape lives in `types/index.ts` and the transform in
+     * `lib/utils/product-utils.ts`; neither is this change's to edit, and the admin catalogue
+     * still has to know which rows are archived in order to badge them and offer Restore. An
+     * added field is additive for the storefront, which reads the fields it knows by name and
+     * has never seen this one — and it is the truth about the row either way.
+     */
+    const products = dbProducts.map(row => ({
+      ...transformDbProductToProduct(row),
+      isArchived: row.isArchived,
+    }));
     const totalPages = Math.ceil(total / limit);
+
+    /*
+     * `?counts=1` adds how the *unfiltered-by-archive* catalogue splits — live against
+     * archived, under the same search and category — so the admin header can say "8 of 15
+     * products · 6 archived not shown" instead of leaving an admin to wonder where the rest
+     * of the catalogue went.
+     *
+     * BEHIND A PARAMETER ON PURPOSE. This is the storefront's listing endpoint and it is hit
+     * on every filter change there; two counts nobody asked for are a cost paid on the public
+     * path for a header only the portal draws.
+     *
+     * Each count spreads `where` and then states `isArchived` itself, which overrides whatever
+     * the archive filter put there — so the split is measured across both halves while the
+     * search and category still apply, whichever half is being listed. A failure here is not
+     * fatal: the list is the screen's job, and a missing count costs it one clause.
+     */
+    let counts: { live: number; archived: number } | undefined;
+    if (searchParams.get('counts') === '1') {
+      try {
+        const [live, archivedCount] = await Promise.all([
+          prisma.product.count({ where: { ...where, isArchived: false } }),
+          prisma.product.count({ where: { ...where, isArchived: true } }),
+        ]);
+        counts = { live, archived: archivedCount };
+      } catch (error) {
+        console.error('[API] GET /api/products could not count the archive split:', error);
+      }
+    }
 
     return NextResponse.json({
       products,
@@ -100,6 +160,7 @@ export async function GET(request: Request) {
       page,
       limit,
       totalPages,
+      ...(counts ? { counts } : {}),
     });
   } catch (error) {
     console.error('[API] Error fetching products:', error);

@@ -5,6 +5,40 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { HomepageProduct } from '@/lib/common/product-interfaces';
+import { useCollections } from '@/lib/hooks/useCollections';
+import { visibleCollections, type Collection } from '@/lib/content/collections';
+import { SIZES } from '@/components/sections/section-shell';
+
+/**
+ * "Explore our collection" — the strip that shows what the collections *are*.
+ *
+ * ## Why this section has two behaviours
+ *
+ * It used to show four individual dresses, and the owner's complaint was exactly that: the
+ * heading says "collection", the strip showed garments, and there was no way to see what the
+ * collections were or what was inside one. The category strip below it already does the right
+ * thing — a picture, a name, a click through to the contents — so this section now does the
+ * same with collections, and `/collections/[slug]` is where the garments are.
+ *
+ * **But there are no default collections, so the old behaviour is the fallback and that is
+ * deliberate.** A collection cannot be derived from the catalogue: "Bridal" is a set of
+ * garments the shop chooses, not a query, so there is nothing truthful to show until the owner
+ * has curated one in the portal (`/dashboard/collections`). Inventing three collections with
+ * borrowed copy and a stock photograph would put words on a real shop's homepage that nobody
+ * there wrote. The alternative — rendering an empty strip under the heading — would be a
+ * visible regression on the live site the moment this deploys.
+ *
+ * So: **if any visible collection exists, the strip shows collections. If none does, the strip
+ * keeps showing the garments it shows today, unchanged, down to the placeholder cards.** The
+ * section flips over by itself the moment the first collection is saved, and nothing has to be
+ * deployed for it to happen.
+ *
+ * `ready` from `useCollections` is why the two paths do not flash. The hook's default is an
+ * empty list, and an empty list is not "nothing to draw" here, it is "draw the other thing" —
+ * so committing to a layout before the fetch has answered would show the garment strip for a
+ * frame on every shop that has collections. The skeleton covers the wait, which is the state
+ * this section was already in while it fetched its products.
+ */
 
 interface HomepageSectionsResponse {
   exploreCollection?: Array<HomepageProduct & { photos?: string[] }>;
@@ -99,6 +133,42 @@ const ProductCard = ({ product }: { product: HomepageProduct }) => {
   return <Link href={`/product/${product.id}`}>{cardContent}</Link>;
 };
 
+/**
+ * One collection in the strip: its photograph, its name, and the click into it.
+ *
+ * The tile is the category strip's language at card scale — a picture, a name centred under it,
+ * nothing else competing for the click — rather than the product card's, because this is a
+ * grouping and not a garment: there is no price to show and no second photograph to reveal on
+ * hover. It keeps the product strip's card geometry (the same widths and the same 3:4 crop) so
+ * the section's shape on the page does not change when it flips between the two.
+ *
+ * A collection with no photograph gets an empty frame, not a borrowed one. The portal says what
+ * it is for, and an obviously unfinished tile is better than one dressed in someone else's
+ * picture.
+ */
+const CollectionTile = ({ collection }: { collection: Collection }) => (
+  <Link
+    href={`/collections/${collection.slug}`}
+    className="shrink-0 w-[280px] sm:w-64 md:w-72 snap-start rounded-lg text-center transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gray-900"
+  >
+    <div className="relative aspect-3/4 overflow-hidden rounded-2xl bg-gray-100">
+      {collection.image ? (
+        <Image
+          src={collection.image}
+          alt={collection.name}
+          fill
+          sizes={SIZES.card}
+          className="object-cover"
+        />
+      ) : null}
+    </div>
+    <h3 className="mt-3 font-serif text-lg text-gray-900 sm:text-xl">{collection.name}</h3>
+    {collection.blurb ? (
+      <p className="mt-1 line-clamp-2 text-xs text-gray-600 sm:text-sm">{collection.blurb}</p>
+    ) : null}
+  </Link>
+);
+
 const SkeletonCard = () => (
   <div className="shrink-0 w-[280px] sm:w-64 md:w-72 rounded-2xl overflow-hidden shadow-sm snap-start">
     <div className="relative aspect-3/4 bg-gray-200 animate-pulse" />
@@ -110,14 +180,25 @@ const SkeletonCard = () => (
 );
 
 const Explore = () => {
+  const { collections, ready } = useCollections();
   const [products, setProducts] = useState<HomepageProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const curated = visibleCollections(collections);
+  const showCollections = ready && curated.length > 0;
+
   useEffect(() => {
+    // Nothing to fetch until we know which strip this is, and nothing to fetch at all when the
+    // shop has collections: the garments are only the fallback, and requesting them anyway
+    // would be a round trip on every homepage load for a result that is thrown away.
+    if (!ready || curated.length > 0) return;
+
+    const controller = new AbortController();
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/homepage-sections');
+        const response = await fetch('/api/homepage-sections', { signal: controller.signal });
 
         if (!response.ok) {
           throw new Error('Failed to fetch homepage sections');
@@ -140,16 +221,22 @@ const Explore = () => {
           setProducts(dbProducts.slice(0, 4));
         }
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error('Error fetching explore collection:', error);
         // Use all mock data on error
         setProducts(mockProducts);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+    return () => controller.abort();
+  }, [ready, curated.length]);
+
+  // The skeleton covers both waits: the collections answering, and — only when there are none
+  // — the garments that stand in for them.
+  const waiting = !ready || (!showCollections && isLoading);
 
   return (
     <section className="bg-white py-14 md:py-20">
@@ -179,19 +266,15 @@ const Explore = () => {
 
         {/* Right Section */}
         <div className="flex-1 overflow-x-hidden px-6 md:px-4 xl:px-8 xl:pr-12">
-          {isLoading ? (
-            <div className="flex gap-4 sm:gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto scrollbar-hide">
-              {[1, 2, 3, 4].map(i => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex gap-4 sm:gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto scrollbar-hide">
-              {products.map(p => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
+          <div className="flex gap-4 sm:gap-6 pb-4 snap-x snap-mandatory overflow-x-auto max-w-5xl mx-auto scrollbar-hide">
+            {waiting
+              ? [1, 2, 3, 4].map(i => <SkeletonCard key={i} />)
+              : showCollections
+                ? curated.map(collection => (
+                    <CollectionTile key={collection.id} collection={collection} />
+                  ))
+                : products.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
         </div>
       </div>
     </section>

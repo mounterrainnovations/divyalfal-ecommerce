@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Sheet from '@/components/admin/Sheet';
 import Field, { TextInput } from '@/components/admin/Field';
-import { ACTION_DANGER, ACTION_SOFT } from '@/components/admin/styles';
+import { ACTION_DANGER, ACTION_SOFT, META } from '@/components/admin/styles';
 import type { Product } from '@/types';
 
 /**
@@ -84,6 +84,13 @@ export default function DeleteSheet({
           <p className="text-[13px] text-[var(--ds-ink)]">
             This removes <span className="font-semibold text-[var(--ds-ink)]">{product.name}</span> and its
             photographs from the shop. It cannot be undone.
+          </p>
+          {/* Said here because this is where the decision is made. Archiving takes a garment
+              off the shop at once and is reversible, and a product that appears on an order
+              cannot be deleted at all — the order would lose the record of what was sold. */}
+          <p className={META}>
+            Archive it instead to take it off the shop while keeping its orders and
+            photographs. A product that appears on an order cannot be deleted.
           </p>
           <Field
             id="delete-confirm"
