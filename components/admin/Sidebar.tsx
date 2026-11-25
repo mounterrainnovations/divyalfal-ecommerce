@@ -4,14 +4,20 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  BarChart3,
+  Boxes,
   Images,
+  Layers,
   LayoutDashboard,
   LayoutTemplate,
   Mail,
   Quote,
+  Receipt,
+  Ruler,
   Settings,
   Shapes,
   ShoppingBag,
+  TicketPercent,
   Type,
   X,
   type LucideIcon,
@@ -31,7 +37,7 @@ export interface NavItem {
 }
 
 /**
- * The portal's nine screens, in the order an admin works through them.
+ * The portal's fifteen screens, in the order an admin works through them.
  *
  * WHY THE LIST IS FLAT. It used to be three labelled groups (Shop / Site / nothing). The
  * reference admin the owner asked this portal to follow lists sixteen screens flat, with
@@ -45,13 +51,19 @@ export interface NavItem {
  */
 export const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Orders', href: '/dashboard/orders', icon: Receipt },
   { label: 'Products', href: '/dashboard/products', icon: ShoppingBag },
+  { label: 'Inventory', href: '/dashboard/inventory', icon: Boxes },
   { label: 'Categories', href: '/dashboard/categories', icon: Shapes },
+  { label: 'Collections', href: '/dashboard/collections', icon: Layers },
+  { label: 'Size charts', href: '/dashboard/size-charts', icon: Ruler },
+  { label: 'Coupons', href: '/dashboard/coupons', icon: TicketPercent },
   { label: 'Enquiries', href: '/dashboard/enquiries', icon: Mail },
   { label: 'Media', href: '/dashboard/media', icon: Images },
   { label: 'Testimonials', href: '/dashboard/testimonials', icon: Quote },
   { label: 'Content', href: '/dashboard/content', icon: Type },
   { label: 'Homepage', href: '/dashboard/homepage', icon: LayoutTemplate },
+  { label: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -113,7 +125,7 @@ function useUnreadEnquiries(pathname: string | null): number {
 }
 
 /**
- * The portal's sidebar: the brand lockup, then the nine screens.
+ * The portal's sidebar: the brand lockup, then the fifteen screens.
  *
  * It is one element at every width rather than a sidebar plus a separate mobile menu, so there
  * is one nav in the accessibility tree and one active state to keep right. Below `lg` it is
