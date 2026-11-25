@@ -1,0 +1,31 @@
+# What must never be uploaded to a Vercel deployment.
+#
+# `vercel deploy` from a terminal uploads the working directory, and unlike a git-based deploy
+# it does not honour .gitignore. The first CLI deploy of this project therefore carried the
+# local `.env` — live database credentials, the service-role key, the admin password — into the
+# build, where Next loaded it ("Environment variables loaded from .env" in the build log) and
+# baked it into the serverless bundle.
+#
+# That worked, which was the problem: the site came up, so nothing looked wrong, while the
+# secrets sat in a deployment artifact instead of Vercel's encrypted environment store. It also
+# broke the admin portal in a way that looked like a rejected password — a bundled .env reaches
+# the Node runtime but NOT the edge runtime, so `/api/admin/login` could sign a session token
+# that `middleware.ts` could not verify, and every /dashboard request bounced back to the
+# sign-in screen.
+#
+# Every variable the app needs is now a real Vercel environment variable, which is injected
+# into both runtimes. This file is what stops a stray .env from quietly overriding that
+# arrangement on the next CLI deploy.
+.env
+.env.*
+
+# Local build output and caches. Vercel builds from source; uploading these wastes the upload
+# and can confuse the build with a stale .next from a different Next version.
+.next
+node_modules
+coverage
+
+# Local-only tooling artefacts that have no business in a deployment.
+.playwright-mcp
+prisma/backups
+*.log
