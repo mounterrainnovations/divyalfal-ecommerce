@@ -125,10 +125,10 @@ export function CheckboxField({
           // `ds-check` is what draws the tick; see `dashboard.css`. The mark is a background
           // image in real CSS rather than a Tailwind arbitrary value, because a `data:` URI
           // inside a class name is a parser hazard (slashes read as opacity modifiers).
-          'ds-check mt-px h-4 w-4 shrink-0 appearance-none rounded border border-slate-300 bg-white',
-          'checked:border-ink checked:bg-ink',
-          'hover:border-slate-400 checked:hover:border-ink-soft checked:hover:bg-ink-soft',
-          'disabled:cursor-not-allowed disabled:bg-slate-100',
+          'ds-check mt-px h-4 w-4 shrink-0 appearance-none rounded border border-[var(--ds-line-strong)] bg-[var(--ds-surface)]',
+          'checked:border-[var(--ds-ink)] checked:bg-[var(--ds-ink)]',
+          'hover:border-[var(--ds-line-strong)] checked:hover:border-[var(--ds-ink)] checked:hover:bg-[var(--ds-ink)]',
+          'disabled:cursor-not-allowed disabled:bg-[var(--ds-surface-sunk)]',
           FOCUS
         )}
       />

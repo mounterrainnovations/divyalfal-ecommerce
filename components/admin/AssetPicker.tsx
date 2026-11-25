@@ -66,14 +66,14 @@ export default function AssetPicker({
   return (
     <div>
       {chosen.length > 0 ? (
-        <ul className="mb-2 divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
+        <ul className="mb-2 divide-y divide-[var(--ds-line)] overflow-hidden rounded-md border border-[var(--ds-line)]">
           {chosen.map((url, index) => (
             <li
               key={`${url}-${index}`}
               className="flex items-center gap-3 px-2.5 py-2" 
             >
               <Thumb url={url} kind={kind} />
-              <span className="min-w-0 flex-1 truncate text-[13px] text-slate-500">
+              <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--ds-faint)]">
                 {fileName(url)}
               </span>
               {multiple && chosen.length > 1 ? (
@@ -111,7 +111,7 @@ export default function AssetPicker({
           ))}
         </ul>
       ) : (
-        <p className="mb-2 text-[13px] text-slate-500">No {noun} chosen.</p>
+        <p className="mb-2 text-[13px] text-[var(--ds-faint)]">No {noun} chosen.</p>
       )}
 
       <button
@@ -213,14 +213,14 @@ function Browser({
         {problem ? <p className="text-[13px] text-red-600">{problem}</p> : null}
 
         {library.notSetUp ? (
-          <p className="text-[13px] text-slate-500">
+          <p className="text-[13px] text-[var(--ds-faint)]">
             The media library table is not in this database yet, so there is nothing to choose
             from. A file uploaded here cannot be listed until the migration has been applied.
           </p>
         ) : library.failure ? (
           <p className="text-[13px] text-red-600">{library.failure}</p>
         ) : shown.length === 0 ? (
-          <p className="text-[13px] text-slate-500">
+          <p className="text-[13px] text-[var(--ds-faint)]">
             {library.loading
               ? 'Loading the library…'
               : query
@@ -242,17 +242,17 @@ function Browser({
                     onClick={() => onPick(asset.url)}
                     aria-pressed={picked.includes(asset.url)}
                     className={cn(
-                      'block w-full rounded-lg border bg-white p-2 text-left transition-colors',
+                      'block w-full rounded-lg border bg-[var(--ds-surface)] p-2 text-left transition-colors',
                       FOCUS,
                       // The chosen file carries the accent ring; everything else is a plain
                       // card that darkens its border on hover.
                       picked.includes(asset.url)
-                        ? 'border-gold ring-1 ring-gold'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-[var(--ds-accent-solid)] ring-1 ring-gold'
+                        : 'border-[var(--ds-line)] hover:border-[var(--ds-line-strong)] hover:bg-[var(--ds-surface-sunk)]'
                     )}
                   >
                     <Thumb url={asset.url} kind={asset.kind} large />
-                    <span className="mt-2 block truncate text-[13px] font-medium text-ink">
+                    <span className="mt-2 block truncate text-[13px] font-medium text-[var(--ds-ink)]">
                       {asset.alt || fileName(asset.url)}
                     </span>
                     <span className={cn(META, 'mt-0.5 block truncate')}>
@@ -309,8 +309,8 @@ export function Thumb({
       <span
         aria-hidden="true"
         className={cn(
-          'flex items-center justify-center rounded-md border border-slate-200 bg-slate-50',
-          'text-[11px] font-medium text-slate-400',
+          'flex items-center justify-center rounded-md border border-[var(--ds-line)] bg-[var(--ds-surface-sunk)]',
+          'text-[11px] font-medium text-[var(--ds-faint)]',
           side
         )}
       >
@@ -321,7 +321,7 @@ export function Thumb({
 
   return (
     <span
-      className={cn('relative block overflow-hidden rounded-md border border-slate-200 bg-slate-50', side)}
+      className={cn('relative block overflow-hidden rounded-md border border-[var(--ds-line)] bg-[var(--ds-surface-sunk)]', side)}
     >
       <Image src={url} alt="" fill unoptimized sizes="160px" className="object-cover" />
     </span>

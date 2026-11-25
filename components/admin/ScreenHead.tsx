@@ -5,11 +5,12 @@ import { SUBTITLE, TITLE } from './styles';
  * The head of every portal screen: the screen's name, one line of context, and whatever primary
  * action the screen owns on the right.
  *
- * WHAT CHANGED. It used to carry an `eyebrow` ("Portal") above a Fraunces title and a gold
- * hairline under both. The eyebrow is gone because the top bar's breadcrumb now says where you
- * are, and saying it twice on every screen is noise; the hairline is gone because the content
- * below is in cards, which draw their own edges. What is left is a heading, a sentence and the
- * one button — which is all a page header in a working tool has ever needed.
+ * WHAT CHANGED. It used to carry an `eyebrow` ("Portal") above a display-face title and a
+ * gold hairline under both. The eyebrow is gone because the sidebar's highlighted row already
+ * says where you are, and saying it twice on every screen is noise; the hairline is gone
+ * because the content below is in cards, which draw their own edges. What is left is a 24px
+ * heading, a sentence and the one button — which is the reference admin's header exactly, and
+ * all a page header in a working tool has ever needed.
  *
  * `actions` is a flex row, so a screen with two controls (a filter and a save) gets them laid
  * out without inventing its own toolbar.

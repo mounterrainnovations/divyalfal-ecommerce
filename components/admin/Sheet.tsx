@@ -118,7 +118,7 @@ export default function Sheet({
         aria-label="Close"
         tabIndex={-1}
         onClick={close}
-        className="absolute inset-0 cursor-default bg-slate-900/40"
+        className="absolute inset-0 cursor-default bg-[#2a211b]/40"
       />
       <div
         ref={panelRef}
@@ -126,12 +126,12 @@ export default function Sheet({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative flex h-full w-full flex-col border-l border-slate-200 bg-white shadow-xl',
+          'relative flex h-full w-full flex-col border-l border-[var(--ds-line)] bg-[var(--ds-surface)] shadow-xl',
           'animate-in duration-200 slide-in-from-right motion-reduce:animate-none',
           width === 'sm' ? 'sm:w-[400px]' : 'sm:w-[560px]'
         )}
       >
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-5 py-3.5">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[var(--ds-line)] px-5 py-3.5">
           <div className="min-w-0">
             {eyebrow ? <p className={cn(LABEL, 'mb-0.5')}>{eyebrow}</p> : null}
             <h2 className={cn(TITLE, 'truncate')}>{title}</h2>
@@ -142,7 +142,7 @@ export default function Sheet({
             aria-label="Close panel"
             onClick={close}
             className={cn(
-              '-mt-0.5 -mr-2 shrink-0 rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-ink',
+              '-mt-0.5 -mr-2 shrink-0 rounded-md p-2 text-[var(--ds-faint)] hover:bg-[var(--ds-surface-sunk)] hover:text-[var(--ds-ink)]',
               FOCUS
             )}
           >
@@ -155,7 +155,7 @@ export default function Sheet({
         {/* The footer is a surface of its own: on a long form the save button is the thing you
             scroll looking for, and a white strip on white is nowhere. */}
         {footer ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-[var(--ds-line)] bg-[var(--ds-surface-sunk)] px-5 py-3">
             {footer}
           </div>
         ) : null}

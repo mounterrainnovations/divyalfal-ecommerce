@@ -49,14 +49,14 @@ export default function AdminShell({
   // still carries `ds-root`, which is what sets the portal's typeface and hides the shop's
   // navigation bar (see `dashboard.css`).
   if (pathname === '/dashboard/login') {
-    return <div className="ds-root min-h-screen bg-slate-50">{children}</div>;
+    return <div className="ds-root min-h-screen bg-[var(--ds-ground)]">{children}</div>;
   }
 
   return (
-    <div className="ds-root min-h-screen bg-slate-50 text-slate-700">
-      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} admin={admin} />
+    <div className="ds-root min-h-screen bg-[var(--ds-ground)] text-[var(--ds-muted)]">
+      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
 
-      <div className="lg:pl-[244px]">
+      <div className="lg:pl-64">
         <TopBar onOpenNav={() => setNavOpen(true)} admin={admin} />
         {/* `id` so the skip link in `layout.tsx` has somewhere to go. */}
         <main id="admin-main">{children}</main>

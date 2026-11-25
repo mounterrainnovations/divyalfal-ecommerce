@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import {
   Activity,
-  ArrowUpRight,
+  ImageOff,
   Images,
   Mail,
+  MailOpen,
   Plus,
   ShoppingBag,
+  Tag,
   Type,
   Upload,
   type LucideIcon,
@@ -13,6 +15,7 @@ import {
 import { prisma } from '@/lib/db';
 import ScreenHead from '@/components/admin/ScreenHead';
 import Notice from '@/components/admin/Notice';
+import TrendChart, { type TrendPoint } from '@/components/admin/TrendChart';
 import {
   ACTION_SOFT,
   CARD,
@@ -29,26 +32,28 @@ import {
 import { cn } from '@/lib/utils';
 
 /**
- * Overview: the state of the shop in one screen, no charts.
+ * Dashboard: the state of the shop in one screen.
  *
- * Two products and a handful of photographs do not need a reporting suite; they need four
- * figures, the one thing that is wrong, and a short way to the work. So: four stat cards, an
- * attention card that only exists when there is something to attend to, and the half-dozen
- * actions an admin starts a session with.
+ * It follows the shape of the admin the owner asked this portal to match — a row of figures,
+ * a trend, a summary beside it, and the recent activity underneath — but every figure is a
+ * `count()` on a table this portal already manages. There is no revenue line because this shop
+ * does not take payments, and no orders panel because it has no orders; enquiries are the work
+ * that comes in, so enquiries are what the trend plots.
  *
  * It reads the database directly rather than calling its own API over HTTP — this is a server
  * component, the queries are one round trip, and a fetch to `/api/products` from the server
  * would have to forward the session cookie to get past the middleware.
  *
- * NOTHING HERE IS INVENTED. Every figure is a `count()` on a table the portal already manages,
- * and a table that does not exist yet shows an em dash with a line saying so, rather than a
- * zero. A dashboard that reports 0 products when the database is unreachable is worse than one
- * that reports nothing.
+ * NOTHING HERE IS INVENTED. A table that does not exist yet shows an em dash and a line saying
+ * so, rather than a zero. A dashboard that reports 0 products when the database is unreachable
+ * is worse than one that reports nothing.
  *
  * `force-dynamic` because every figure is live. Without it the build would prerender this
  * screen, which means querying the database at build time and then serving yesterday's counts.
  */
 export const dynamic = 'force-dynamic';
+
+const WEEKS = 12;
 
 interface Counts {
   products: number;
@@ -56,11 +61,19 @@ interface Counts {
   withoutPhotos: number;
 }
 
+interface RecentEnquiry {
+  id: string;
+  name: string;
+  source: string | null;
+  status: 'UNREAD' | 'READ' | 'ARCHIVED';
+  createdAt: Date;
+}
+
 /**
  * Products are not optional — if that query fails the screen says so and points at the health
- * endpoint. The other three tables arrived with the CMS migration, which is not applied in
- * every database this runs against, so a failure there is an expected state and not an error:
- * each reader answers null and its card says "not set up yet".
+ * endpoint. The other tables arrived with the CMS migration, which is not applied in every
+ * database this runs against, so a failure there is an expected state and not an error: each
+ * reader answers null and its card says "not set up yet".
  */
 async function readCounts(): Promise<Counts | null> {
   try {
@@ -112,8 +125,58 @@ async function readContent(): Promise<{ total: number; pages: number } | null> {
   }
 }
 
+async function readRecentEnquiries(): Promise<RecentEnquiry[] | null> {
+  try {
+    return await prisma.enquiry.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true, name: true, source: true, status: true, createdAt: true },
+    });
+  } catch {
+    return null;
+  }
+}
+
 /**
- * One stat card, and it is a link: a figure nobody can act on is decoration, so every card
+ * Enquiries per week for the last twelve weeks, oldest first.
+ *
+ * Bucketed in JavaScript rather than in SQL on purpose: a shop of this size has tens of rows
+ * in the window, `GROUP BY date_trunc` is dialect-specific, and doing it here keeps the week
+ * boundaries in the same timezone as the labels beside them.
+ */
+async function readWeekly(): Promise<TrendPoint[] | null> {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  // Monday of the week that is WEEKS-1 weeks back, so the last bucket is the current week.
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - (WEEKS - 1) * 7);
+
+  let rows: { createdAt: Date }[];
+  try {
+    rows = await prisma.enquiry.findMany({
+      where: { createdAt: { gte: start } },
+      select: { createdAt: true },
+    });
+  } catch {
+    return null;
+  }
+
+  const buckets = Array.from({ length: WEEKS }, (_, index) => {
+    const from = new Date(start);
+    from.setDate(from.getDate() + index * 7);
+    return { from, value: 0 };
+  });
+
+  for (const row of rows) {
+    const week = Math.floor((row.createdAt.getTime() - start.getTime()) / (7 * 86_400_000));
+    if (week >= 0 && week < WEEKS) buckets[week].value += 1;
+  }
+
+  const label = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+  return buckets.map(bucket => ({ label: label.format(bucket.from), value: bucket.value }));
+}
+
+/**
+ * One stat tile, and it is a link: a figure nobody can act on is decoration, so every tile
  * goes to the screen that figure came from. The arrow is the only affordance it needs.
  */
 function Stat({
@@ -122,7 +185,7 @@ function Stat({
   note,
   href,
   icon: Icon,
-  mark,
+  tone,
 }: {
   label: string;
   /** Already formatted, or an em dash when the table could not be read. */
@@ -130,34 +193,39 @@ function Stat({
   note: string;
   href: string;
   icon: LucideIcon;
-  /** A badge beside the figure — unread enquiries, and nothing else so far. */
-  mark?: string;
+  /** `attention` sets the note in the accent — the tile that wants doing something about. */
+  tone?: 'attention';
 }) {
   return (
     <Link
       href={href}
       className={cn(
         CARD,
-        CARD_BODY,
-        'group block transition-colors hover:border-slate-300 hover:bg-slate-50/60',
+        'block px-5 py-4 transition-colors',
+        'hover:border-[var(--ds-line-strong)] hover:bg-[var(--ds-surface-sunk)]',
         FOCUS
       )}
     >
       <div className="mb-3 flex items-center gap-2">
-        <Icon size={15} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-slate-400" />
         <span className={cn(LABEL, 'min-w-0 truncate')}>{label}</span>
-        <ArrowUpRight
-          size={14}
+        <Icon
+          size={16}
           strokeWidth={1.75}
           aria-hidden="true"
-          className="ml-auto shrink-0 text-slate-300 transition-colors group-hover:text-ink"
+          className="ml-auto shrink-0 text-[var(--ds-faint)]"
         />
       </div>
-      <p className="flex items-baseline gap-2">
-        <span className={FIGURE}>{value}</span>
-        {mark ? <span className={badge('accent')}>{mark}</span> : null}
+      <p className={FIGURE}>{value}</p>
+      <p
+        className={cn(
+          'mt-2 truncate text-[12px] leading-4',
+          tone === 'attention'
+            ? 'font-medium text-[var(--ds-accent)]'
+            : 'text-[var(--ds-faint)]'
+        )}
+      >
+        {note}
       </p>
-      <p className={cn(META, 'mt-2')}>{note}</p>
     </Link>
   );
 }
@@ -166,24 +234,50 @@ function Stat({
 function Quick({ label, href, icon: Icon }: { label: string; href: string; icon: LucideIcon }) {
   return (
     <Link href={href} className={ACTION_SOFT}>
-      <Icon size={15} strokeWidth={1.75} aria-hidden="true" className="text-slate-400" />
+      <Icon
+        size={15}
+        strokeWidth={1.75}
+        aria-hidden="true"
+        className="text-[var(--ds-faint)]"
+      />
       {label}
     </Link>
   );
 }
 
+/** One line of the catalogue summary: a condition, and what it currently says. */
+function Health({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5 text-[14px] leading-5 text-[var(--ds-muted)]">
+      <span
+        aria-hidden="true"
+        className={cn(
+          'mt-1.5 h-2 w-2 shrink-0 rounded-full',
+          ok ? 'bg-emerald-500' : 'bg-[var(--ds-accent-solid)]'
+        )}
+      />
+      <span className="min-w-0">{children}</span>
+    </li>
+  );
+}
+
 export default async function OverviewPage() {
-  const [counts, enquiries, media, content] = await Promise.all([
+  const [counts, enquiries, media, content, recent, weekly] = await Promise.all([
     readCounts(),
     readEnquiries(),
     readMedia(),
     readContent(),
+    readRecentEnquiries(),
+    readWeekly(),
   ]);
+
+  const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+  const plotted = weekly && enquiries && enquiries.total > 0 ? weekly : null;
 
   return (
     <div className={SCREEN}>
       <ScreenHead
-        title="Overview"
+        title="Dashboard"
         note={
           counts
             ? 'Everything the shop is showing right now.'
@@ -201,7 +295,9 @@ export default async function OverviewPage() {
         </Notice>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Six figures across, which is the reference admin's row exactly — and six is as many
+          as fit before a tile's number stops being readable at a glance. */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <Stat
           label="Products"
           value={counts ? String(counts.products) : '—'}
@@ -209,10 +305,23 @@ export default async function OverviewPage() {
           icon={ShoppingBag}
           note={
             !counts
-              ? 'the catalogue could not be read'
+              ? 'catalogue unreadable'
               : counts.products === 0
-                ? 'nothing in the catalogue yet'
-                : `${counts.onSale} on sale`
+                ? 'nothing in the catalogue'
+                : 'in the catalogue'
+          }
+        />
+        <Stat
+          label="On sale"
+          value={counts ? String(counts.onSale) : '—'}
+          href="/dashboard/products"
+          icon={Tag}
+          note={
+            !counts
+              ? 'catalogue unreadable'
+              : counts.onSale === 0
+                ? 'no sale prices set'
+                : 'showing a sale price'
           }
         />
         <Stat
@@ -220,12 +329,19 @@ export default async function OverviewPage() {
           value={enquiries ? String(enquiries.total) : '—'}
           href="/dashboard/enquiries"
           icon={Mail}
-          mark={enquiries && enquiries.unread > 0 ? `${enquiries.unread} unread` : undefined}
+          note={enquiries ? 'received all time' : 'table not in this database'}
+        />
+        <Stat
+          label="To reply"
+          value={enquiries ? String(enquiries.unread) : '—'}
+          href="/dashboard/enquiries"
+          icon={MailOpen}
+          tone={enquiries && enquiries.unread > 0 ? 'attention' : undefined}
           note={
             !enquiries
-              ? 'the enquiries table is not in this database yet'
+              ? 'table not in this database'
               : enquiries.unread > 0
-                ? 'reply by email or WhatsApp'
+                ? 'waiting for an answer'
                 : 'nothing unread'
           }
         />
@@ -236,59 +352,153 @@ export default async function OverviewPage() {
           icon={Images}
           note={
             !media
-              ? 'the media library is not in this database yet'
+              ? 'library not in this database'
               : media.total === 0
                 ? 'the library is empty'
-                : `${media.total - media.films} photographs, ${media.films} films`
+                : `${media.total - media.films} photos, ${media.films} films`
           }
         />
         <Stat
-          label="Content blocks"
-          value={content ? String(content.total) : '—'}
-          href="/dashboard/content"
-          icon={Type}
+          label="Needs photos"
+          value={counts ? String(counts.withoutPhotos) : '—'}
+          href="/dashboard/products"
+          icon={ImageOff}
+          tone={counts && counts.withoutPhotos > 0 ? 'attention' : undefined}
           note={
-            !content
-              ? 'the content tables are not in this database yet'
-              : content.total === 0
-                ? 'nothing seeded yet'
-                : `across ${content.pages} public ${content.pages === 1 ? 'page' : 'pages'}`
+            !counts
+              ? 'catalogue unreadable'
+              : counts.withoutPhotos > 0
+                ? 'showing a placeholder'
+                : 'every product has one'
           }
         />
       </div>
 
-      {/* Only ever rendered when there is something to do about it. An empty "all clear" panel
-          is a panel an admin learns to stop reading. */}
-      {counts && counts.withoutPhotos > 0 ? (
-        <Notice label="Needs attention" tone="problem" className="mt-4">
-          {counts.withoutPhotos === 1
-            ? 'One product has no photographs and is showing a placeholder image in the shop. '
-            : `${counts.withoutPhotos} products have no photographs and are showing a placeholder image in the shop. `}
-          <Link href="/dashboard/products" className="font-medium text-ink underline">
-            Open Products
-          </Link>
-        </Notice>
-      ) : null}
-
-      <div className={cn(CARD, 'mt-4')}>
-        <div className={CARD_HEAD}>
-          <h2 className={SECTION_TITLE}>Quick actions</h2>
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className={cn(CARD, 'lg:col-span-2')}>
+          <div className={CARD_HEAD}>
+            <h2 className={SECTION_TITLE}>Enquiries received</h2>
+            <span className={META}>Last {WEEKS} weeks, by week</span>
+          </div>
+          <div className={CARD_BODY}>
+            {plotted ? (
+              <TrendChart
+                points={plotted}
+                caption={`Enquiries received per week over the last ${WEEKS} weeks`}
+                unit={value => (value === 1 ? 'enquiry' : 'enquiries')}
+              />
+            ) : (
+              <p className={cn(META, 'py-10 text-center')}>
+                {enquiries
+                  ? 'No enquiries have come in yet, so there is no trend to plot.'
+                  : 'The enquiries table is not in this database yet.'}
+              </p>
+            )}
+          </div>
         </div>
-        <div className={cn(CARD_BODY, 'flex flex-wrap gap-2')}>
-          <Quick label="Add a product" href="/dashboard/products" icon={Plus} />
-          <Quick label="Upload media" href="/dashboard/media" icon={Upload} />
-          <Quick label="Edit page copy" href="/dashboard/content" icon={Type} />
-          <Quick label="Read enquiries" href="/dashboard/enquiries" icon={Mail} />
-          {/* Not a styled screen on purpose: the raw health payload is the diagnostic. */}
-          <a href="/api/health" target="_blank" rel="noopener noreferrer" className={ACTION_SOFT}>
-            <Activity
-              size={15}
-              strokeWidth={1.75}
-              aria-hidden="true"
-              className="text-slate-400"
-            />
-            Database health
-          </a>
+
+        <div className={CARD}>
+          <div className={CARD_HEAD}>
+            <h2 className={SECTION_TITLE}>Catalogue summary</h2>
+          </div>
+          <div className={CARD_BODY}>
+            {counts ? (
+              <ul className="space-y-3">
+                <Health ok={counts.products > 0}>
+                  {counts.products === 0
+                    ? 'The catalogue is empty — the shop has nothing to show.'
+                    : `${counts.products} ${counts.products === 1 ? 'product is' : 'products are'} live in the shop.`}
+                </Health>
+                <Health ok={counts.withoutPhotos === 0}>
+                  {counts.withoutPhotos === 0
+                    ? 'Every product has at least one photograph.'
+                    : `${counts.withoutPhotos} ${counts.withoutPhotos === 1 ? 'product is' : 'products are'} showing a placeholder image.`}
+                </Health>
+                <Health ok={!enquiries || enquiries.unread === 0}>
+                  {!enquiries
+                    ? 'Enquiries are not set up in this database.'
+                    : enquiries.unread === 0
+                      ? 'No enquiry is waiting for a reply.'
+                      : `${enquiries.unread} ${enquiries.unread === 1 ? 'enquiry needs' : 'enquiries need'} a reply.`}
+                </Health>
+                <Health ok={Boolean(content && content.total > 0)}>
+                  {!content
+                    ? 'Page copy is not set up in this database.'
+                    : `${content.total} editable blocks across ${content.pages} ${content.pages === 1 ? 'page' : 'pages'}.`}
+                </Health>
+              </ul>
+            ) : (
+              <p className={META}>The catalogue could not be read.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className={CARD}>
+          <div className={CARD_HEAD}>
+            <h2 className={SECTION_TITLE}>Recent enquiries</h2>
+            <Link
+              href="/dashboard/enquiries"
+              className={cn('rounded text-[13px] font-medium text-[var(--ds-accent)] hover:underline', FOCUS)}
+            >
+              View all
+            </Link>
+          </div>
+          {recent && recent.length > 0 ? (
+            <ul className="divide-y divide-[var(--ds-line)]">
+              {recent.map(enquiry => (
+                <li key={enquiry.id} className="flex items-center gap-3 px-5 py-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[14px] leading-5 font-medium text-[var(--ds-ink)]">
+                      {enquiry.name}
+                    </span>
+                    <span className={cn(META, 'block truncate')}>
+                      {enquiry.source === 'academy' ? 'Virasat Academy' : 'Contact form'} ·{' '}
+                      {day.format(enquiry.createdAt)}
+                    </span>
+                  </span>
+                  <span className={badge(enquiry.status === 'UNREAD' ? 'accent' : 'neutral')}>
+                    {enquiry.status === 'UNREAD'
+                      ? 'Unread'
+                      : enquiry.status === 'READ'
+                        ? 'Read'
+                        : 'Archived'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className={CARD_BODY}>
+              <p className={META}>
+                {recent
+                  ? 'Nothing has come in through the contact form yet.'
+                  : 'The enquiries table is not in this database yet.'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className={CARD}>
+          <div className={CARD_HEAD}>
+            <h2 className={SECTION_TITLE}>Quick actions</h2>
+          </div>
+          <div className={cn(CARD_BODY, 'flex flex-wrap gap-2')}>
+            <Quick label="Add a product" href="/dashboard/products" icon={Plus} />
+            <Quick label="Upload media" href="/dashboard/media" icon={Upload} />
+            <Quick label="Edit page copy" href="/dashboard/content" icon={Type} />
+            <Quick label="Read enquiries" href="/dashboard/enquiries" icon={Mail} />
+            {/* Not a styled screen on purpose: the raw health payload is the diagnostic. */}
+            <a href="/api/health" target="_blank" rel="noopener noreferrer" className={ACTION_SOFT}>
+              <Activity
+                size={15}
+                strokeWidth={1.75}
+                aria-hidden="true"
+                className="text-[var(--ds-faint)]"
+              />
+              Database health
+            </a>
+          </div>
         </div>
       </div>
     </div>

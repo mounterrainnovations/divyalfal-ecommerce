@@ -20,9 +20,9 @@ import { cn } from '@/lib/utils';
  */
 const TONES = {
   quiet: {
-    panel: 'border-slate-200 bg-slate-50',
-    icon: 'text-slate-400',
-    head: 'text-ink',
+    panel: 'border-[var(--ds-line)] bg-[var(--ds-surface-sunk)]',
+    icon: 'text-[var(--ds-faint)]',
+    head: 'text-[var(--ds-ink)]',
     Icon: Info,
   },
   problem: {
@@ -32,9 +32,9 @@ const TONES = {
     Icon: AlertTriangle,
   },
   working: {
-    panel: 'border-slate-200 bg-white',
-    icon: 'animate-spin text-slate-400 motion-reduce:animate-none',
-    head: 'text-ink',
+    panel: 'border-[var(--ds-line)] bg-[var(--ds-surface)]',
+    icon: 'animate-spin text-[var(--ds-faint)] motion-reduce:animate-none',
+    head: 'text-[var(--ds-ink)]',
     Icon: Loader2,
   },
 } as const;
@@ -65,7 +65,7 @@ export default function Notice({
       />
       <div className="min-w-0">
         <p className={cn('text-[13px] leading-5 font-semibold', head)}>{label}</p>
-        <p className="mt-1 max-w-[68ch] text-[13px] leading-5 text-slate-600">{children}</p>
+        <p className="mt-1 max-w-[68ch] text-[13px] leading-5 text-[var(--ds-muted)]">{children}</p>
       </div>
     </div>
   );

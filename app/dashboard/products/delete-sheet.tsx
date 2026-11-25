@@ -81,8 +81,8 @@ export default function DeleteSheet({
     >
       {product ? (
         <div className="space-y-5">
-          <p className="text-[13px] text-ink">
-            This removes <span className="font-semibold text-ink">{product.name}</span> and its
+          <p className="text-[13px] text-[var(--ds-ink)]">
+            This removes <span className="font-semibold text-[var(--ds-ink)]">{product.name}</span> and its
             photographs from the shop. It cannot be undone.
           </p>
           <Field

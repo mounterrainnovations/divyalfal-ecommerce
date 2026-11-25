@@ -82,7 +82,7 @@ export default function PhotoList({
         The first is the thumbnail. Drag the handle, or use Up and Down.
       </p>
 
-      <ul className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
+      <ul className="divide-y divide-[var(--ds-line)] overflow-hidden rounded-md border border-[var(--ds-line)]">
         {photos.map((photo, index) => (
           <li
             key={index}
@@ -102,14 +102,14 @@ export default function PhotoList({
               dragFrom.current = null;
               setDragging(null);
             }}
-            className={cn('px-2.5 py-2.5', dragging === index && 'bg-slate-50')}
+            className={cn('px-2.5 py-2.5', dragging === index && 'bg-[var(--ds-surface-sunk)]')}
           >
             <div className="flex items-center gap-2.5">
               <GripVertical
                 size={14}
                 strokeWidth={1.5}
                 aria-hidden="true"
-                className="shrink-0 cursor-grab text-slate-500"
+                className="shrink-0 cursor-grab text-[var(--ds-faint)]"
               />
               <span className={cn(LABEL, 'w-4 shrink-0 tabular-nums')}>{index + 1}</span>
 
@@ -120,12 +120,12 @@ export default function PhotoList({
                   width={36}
                   height={36}
                   unoptimized
-                  className="h-9 w-9 shrink-0 rounded-md border border-slate-200 object-cover"
+                  className="h-9 w-9 shrink-0 rounded-md border border-[var(--ds-line)] object-cover"
                 />
               ) : (
                 <span
                   aria-hidden="true"
-                  className="h-9 w-9 shrink-0 rounded-md border border-slate-200 bg-slate-50" 
+                  className="h-9 w-9 shrink-0 rounded-md border border-[var(--ds-line)] bg-[var(--ds-surface-sunk)]" 
                 />
               )}
 

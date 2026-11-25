@@ -33,7 +33,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           the difference between a keyboard-usable portal and twelve tab stops per screen. */}
       <a
         href="#admin-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-[var(--ds-ink)] focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-white"
       >
         Skip to content
       </a>

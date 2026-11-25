@@ -65,13 +65,13 @@ export default function DataTable<T>({
   return (
     <div className={CARD}>
       {toolbar ? (
-        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 border-b border-slate-200 px-3 py-3">
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 border-b border-[var(--ds-line)] px-3 py-3">
           {toolbar}
         </div>
       ) : null}
 
       {rows.length === 0 ? (
-        <div className="px-4 py-12 text-center text-[13px] text-slate-500">{empty}</div>
+        <div className="px-4 py-12 text-center text-[13px] text-[var(--ds-faint)]">{empty}</div>
       ) : (
         <div className={cn('ds-scroll overflow-auto', maxHeight)}>
           <table className="w-full border-collapse text-left">
@@ -92,14 +92,14 @@ export default function DataTable<T>({
             <tbody
               aria-busy={busy || undefined}
               className={cn(
-                'divide-y divide-slate-100',
+                'divide-y divide-[var(--ds-line)]',
                 busy && 'opacity-60 transition-opacity motion-reduce:transition-none'
               )}
             >
               {rows.map(row => (
                 <tr
                   key={rowKey(row)}
-                  className={cn(ROW, 'align-middle transition-colors hover:bg-slate-50')}
+                  className={cn(ROW, 'align-middle transition-colors hover:bg-[var(--ds-surface-sunk)]')}
                 >
                   {columns.map(column => (
                     <td
@@ -124,7 +124,7 @@ export default function DataTable<T>({
       )}
 
       {footer ? (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-slate-200 px-4 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-[var(--ds-line)] px-4 py-2.5">
           {footer}
         </div>
       ) : null}

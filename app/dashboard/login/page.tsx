@@ -54,25 +54,25 @@ export default function DashboardLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--ds-surface-sunk)] px-4 py-12">
       <div className="w-full max-w-[380px]">
         <div className="mb-6 flex items-center gap-2.5">
           <span
             aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ink text-[15px] font-semibold text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--ds-ink)] text-[15px] font-semibold text-white"
           >
             {siteCopy.home.hero.wordmark.charAt(0)}
           </span>
           <span>
-            <span className="block text-[15px] leading-5 font-semibold text-ink">
+            <span className="block text-[15px] leading-5 font-semibold text-[var(--ds-ink)]">
               {siteCopy.home.hero.wordmark}
             </span>
-            <span className="block text-[12px] leading-4 text-slate-500">Admin portal</span>
+            <span className="block text-[12px] leading-4 text-[var(--ds-faint)]">Admin portal</span>
           </span>
         </div>
 
         <div className={cn(CARD, 'p-6')}>
-          <h1 className="text-[17px] leading-6 font-semibold tracking-[-0.01em] text-ink">
+          <h1 className="text-[17px] leading-6 font-semibold tracking-[-0.01em] text-[var(--ds-ink)]">
             Sign in
           </h1>
           <p className={cn(META, 'mt-1 mb-5')}>
@@ -110,7 +110,7 @@ export default function DashboardLoginPage() {
                   aria-pressed={reveal}
                   aria-label={reveal ? 'Hide password' : 'Show password'}
                   className={cn(
-                    'absolute inset-y-0 right-0 flex w-9 items-center justify-center rounded-r-md text-slate-400 hover:text-ink',
+                    'absolute inset-y-0 right-0 flex w-9 items-center justify-center rounded-r-md text-[var(--ds-faint)] hover:text-[var(--ds-ink)]',
                     FOCUS
                   )}
                 >

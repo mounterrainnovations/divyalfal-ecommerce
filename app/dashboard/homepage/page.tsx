@@ -196,8 +196,8 @@ export default function HomepagePage() {
         <>
           <Notice label="What the shop reads today" className="mb-4">
             Hand-picked garments are live: the shop uses them the moment they are saved. The{' '}
-            <strong className="font-semibold text-ink">order</strong> and the{' '}
-            <strong className="font-semibold text-ink">shown/hidden</strong> switch are saved here
+            <strong className="font-semibold text-[var(--ds-ink)]">order</strong> and the{' '}
+            <strong className="font-semibold text-[var(--ds-ink)]">shown/hidden</strong> switch are saved here
             but are not read by the public homepage yet — it renders all seven movements in their
             built-in order. Hiding a movement by emptying it is worse than leaving it: an empty
             product band falls back to placeholder garments rather than disappearing.
@@ -205,7 +205,7 @@ export default function HomepagePage() {
 
           {/* One card holding seven rows rather than seven cards: the thing being edited is
               the order, and an order reads as a list. */}
-          <ul className={cn(CARD, 'divide-y divide-slate-100')}>
+          <ul className={cn(CARD, 'divide-y divide-[var(--ds-line)]')}>
             {sections.map((section, index) => {
               const automatic = AUTOMATIC[section.key];
               return (
@@ -229,7 +229,7 @@ export default function HomepagePage() {
                   }}
                   className={cn(
                     'px-3 py-3',
-                    dragging === index ? 'bg-slate-50' : 'hover:bg-slate-50/60'
+                    dragging === index ? 'bg-[var(--ds-surface-sunk)]' : 'hover:bg-[var(--ds-surface-sunk)]'
                   )}
                 >
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -237,12 +237,12 @@ export default function HomepagePage() {
                       size={15}
                       strokeWidth={1.75}
                       aria-hidden="true"
-                      className="shrink-0 cursor-grab text-slate-300"
+                      className="shrink-0 cursor-grab text-[var(--ds-faint)]"
                     />
                     <span className={cn(META, 'w-4 shrink-0 text-right tabular-nums')}>
                       {index + 1}
                     </span>
-                    <span className="min-w-0 flex-1 basis-[120px] text-[13px] font-medium text-ink">
+                    <span className="min-w-0 flex-1 basis-[120px] text-[13px] font-medium text-[var(--ds-ink)]">
                       {section.label}
                     </span>
 

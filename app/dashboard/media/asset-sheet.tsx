@@ -144,7 +144,7 @@ export default function AssetSheet({
           <span className="block w-[120px] shrink-0">
             <Thumb url={asset.url} kind={asset.kind} large />
           </span>
-          <dl className="min-w-0 flex-1 space-y-1.5 text-[13px] text-slate-600">
+          <dl className="min-w-0 flex-1 space-y-1.5 text-[13px] text-[var(--ds-muted)]">
             <div className="flex gap-2">
               <dt className={LABEL}>Kind</dt>
               <dd>{asset.kind === 'VIDEO' ? 'Film' : 'Photograph'}</dd>
@@ -191,20 +191,20 @@ export default function AssetSheet({
           />
         </Field>
 
-        <div className="border-t border-slate-200 pt-4">
+        <div className="border-t border-[var(--ds-line)] pt-4">
           <p className={cn(LABEL, 'mb-2')}>The file itself</p>
           {shipsWithTheSite ? (
             // A seeded asset's bytes are a file in `public/`, under source control, not an
             // object in storage. The API refuses to replace one, so the button is not offered:
             // a control that always fails is worse than a sentence explaining why.
-            <p className="max-w-[68ch] text-[13px] text-slate-500">
+            <p className="max-w-[68ch] text-[13px] text-[var(--ds-faint)]">
               This file ships with the site rather than living in storage, so its bytes cannot be
               replaced here. Upload the new photograph as its own file and use that instead. The
               address is <span className="break-all">{asset.url}</span>
             </p>
           ) : (
             <>
-              <p className="max-w-[68ch] mb-3 text-[13px] text-slate-500">
+              <p className="max-w-[68ch] mb-3 text-[13px] text-[var(--ds-faint)]">
                 A replacement keeps this address, so every product, page and slide that shows
                 this file shows the new one. The address is{' '}
                 <span className="break-all">{asset.url}</span>
@@ -227,12 +227,12 @@ export default function AssetSheet({
           )}
         </div>
 
-        <div className="border-t border-slate-200 pt-4">
+        <div className="border-t border-[var(--ds-line)] pt-4">
           <p className={cn(LABEL, 'mb-2')}>Delete</p>
           {refusal ? (
             <p className="max-w-[68ch] mb-3 text-[13px] text-red-600">{refusal}</p>
           ) : (
-            <p className="max-w-[68ch] mb-3 text-[13px] text-slate-500">
+            <p className="max-w-[68ch] mb-3 text-[13px] text-[var(--ds-faint)]">
               {usage && usage.total > 0
                 ? `This file is used by ${usageSentence(usage)}, so deleting it will be refused until those are changed.`
                 : 'This file is used nowhere, so it can be deleted. The file itself goes too.'}

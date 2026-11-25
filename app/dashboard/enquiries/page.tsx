@@ -189,7 +189,7 @@ export default function EnquiriesPage() {
       key: 'when',
       head: 'Received',
       className: 'hidden w-[104px] tabular-nums sm:table-cell',
-      cell: enquiry => <span className="text-slate-500">{when(enquiry.createdAt)}</span>,
+      cell: enquiry => <span className="text-[var(--ds-faint)]">{when(enquiry.createdAt)}</span>,
     },
     {
       key: 'name',
@@ -207,7 +207,7 @@ export default function EnquiriesPage() {
             'block max-w-full truncate py-1 text-left hover:underline',
             // Unread is heavier as well as badged: in a long worklist the weight is what the
             // eye picks up before it reads anything.
-            enquiry.status === 'UNREAD' ? 'font-semibold text-ink' : 'text-slate-600'
+            enquiry.status === 'UNREAD' ? 'font-semibold text-[var(--ds-ink)]' : 'text-[var(--ds-muted)]'
           )}
         >
           {enquiry.name}
@@ -220,7 +220,7 @@ export default function EnquiriesPage() {
       head: 'Reply to',
       className: 'hidden sm:table-cell max-w-[200px] truncate',
       cell: enquiry => (
-        <span className="text-slate-500">{enquiry.email || enquiry.phone || '—'}</span>
+        <span className="text-[var(--ds-faint)]">{enquiry.email || enquiry.phone || '—'}</span>
       ),
     },
     {
@@ -228,7 +228,7 @@ export default function EnquiriesPage() {
       head: 'From',
       className: 'hidden md:table-cell',
       cell: enquiry => (
-        <span className="text-slate-500">
+        <span className="text-[var(--ds-faint)]">
           {enquiry.source ? SOURCE_LABEL[enquiry.source] : 'Not recorded'}
         </span>
       ),
@@ -386,7 +386,7 @@ export default function EnquiriesPage() {
             </>
           }
         >
-          <dl className="space-y-3 text-[13px] text-ink">
+          <dl className="space-y-3 text-[13px] text-[var(--ds-ink)]">
             <Line label="Received">{when(open.createdAt)}</Line>
             <Line label="State">
               <span className={badge(STATUS_TONE[open.status])}>
@@ -395,20 +395,20 @@ export default function EnquiriesPage() {
             </Line>
             <Line label="Email">
               {open.email ? (
-                <a href={`mailto:${open.email}`} className="underline decoration-slate-300">
+                <a href={`mailto:${open.email}`} className="underline decoration-[var(--ds-line-strong)]">
                   {open.email}
                 </a>
               ) : (
-                <span className="text-slate-500">None given</span>
+                <span className="text-[var(--ds-faint)]">None given</span>
               )}
             </Line>
             <Line label="Phone">
               {open.phone ? (
-                <a href={`tel:${open.phone}`} className="underline decoration-slate-300">
+                <a href={`tel:${open.phone}`} className="underline decoration-[var(--ds-line-strong)]">
                   {open.phone}
                 </a>
               ) : (
-                <span className="text-slate-500">None given</span>
+                <span className="text-[var(--ds-faint)]">None given</span>
               )}
             </Line>
             <Line label="From">
@@ -416,10 +416,10 @@ export default function EnquiriesPage() {
             </Line>
           </dl>
 
-          <div className="mt-5 border-t border-slate-200 pt-4">
+          <div className="mt-5 border-t border-[var(--ds-line)] pt-4">
             <p className={cn(LABEL, 'mb-2')}>What they wrote</p>
             {/* Plain text, preserved as typed. Never rendered as markup. */}
-            <p className="max-w-[68ch] whitespace-pre-wrap text-[13px] text-ink">
+            <p className="max-w-[68ch] whitespace-pre-wrap text-[13px] text-[var(--ds-ink)]">
               {open.message}
             </p>
           </div>
@@ -435,7 +435,7 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
   return (
     <div className="flex gap-3">
       <dt className={cn(LABEL, 'w-[72px] shrink-0 pt-0.5')}>{label}</dt>
-      <dd className="min-w-0 flex-1 break-words text-slate-700">{children}</dd>
+      <dd className="min-w-0 flex-1 break-words text-[var(--ds-muted)]">{children}</dd>
     </div>
   );
 }

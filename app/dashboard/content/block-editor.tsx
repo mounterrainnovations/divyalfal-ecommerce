@@ -82,9 +82,9 @@ export default function BlockEditor({
   const id = `block-${block.key.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
   return (
-    <div className="border-b border-slate-100 py-3 last:border-b-0">
+    <div className="border-b border-[var(--ds-line)] py-3 last:border-b-0">
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <label htmlFor={id} className={cn(LABEL, 'text-ink')}>
+        <label htmlFor={id} className={cn(LABEL, 'text-[var(--ds-ink)]')}>
           {fieldName(block)}
         </label>
 

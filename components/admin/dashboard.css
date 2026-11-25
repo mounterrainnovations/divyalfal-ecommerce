@@ -2,9 +2,9 @@
    The admin portal's own stylesheet.
 
    WHY THIS FILE EXISTS AT ALL. Everything the portal needs is a Tailwind utility except the
-   three things below, and `app/globals.css` is the storefront's file: the portal is not allowed
-   to add to it (two agents edit this tree, and the token block there belongs to the shop). So
-   the portal's real CSS lives here and is imported once, by `app/dashboard/layout.tsx`.
+   blocks below, and `app/globals.css` is the storefront's file: the portal is not allowed to
+   add to it (two agents edit this tree, and the token block there belongs to the shop). So the
+   portal's real CSS lives here and is imported once, by `app/dashboard/layout.tsx`.
 
    It deliberately contains no `@theme`, no `@apply` and no Tailwind at-rules. It is plain CSS
    that PostCSS passes straight through, which keeps it independent of how the storefront's
@@ -12,16 +12,59 @@
    ========================================================================================== */
 
 /* --------------------------------------------------------------------------------------------
-   1. THE PORTAL'S TYPEFACE.
+   1. THE PALETTE.
 
-   The storefront is set in Jost and Fraunces, the two faces the project self-hosts. A dashboard
-   set in them reads as a page of the shop, and the owner asked for the opposite. So the portal
-   uses the operating system's own UI face — the same choice Linear, Stripe and the GitHub and
-   Vercel dashboards make — which is also why it feels native and costs nothing to load.
+   The portal was previously set on Tailwind's cool `slate` scale. The owner then pointed at a
+   working admin they liked — warm paper, one terracotta accent — and asked for this portal to
+   read the same way. Those are not Tailwind colours, so they are declared once here and every
+   token in `components/admin/styles.ts` refers to them through `var()`. Nothing in the portal
+   states a colour of its own.
 
-   It is declared on the shell rather than on components so that nothing can opt out of it, and
-   every `font-ui`/`font-display` class has been removed from the portal's files. If the brand
-   face is ever wanted back for the chrome, this is the one declaration to change.
+   WHY CUSTOM PROPERTIES RATHER THAN A TAILWIND THEME. `@theme` belongs to the storefront's
+   entry point, which this file may not touch. Plain custom properties on `.ds-root` are scoped
+   to the portal by construction: the shop cannot inherit them, and a stray admin class loaded
+   on a shop page resolves to nothing rather than to the wrong colour.
+
+   The accent has three steps and they are not interchangeable:
+     --ds-accent        the terracotta that type is set in (6.1:1 on surface — safe for text)
+     --ds-accent-solid  the fill behind white type on the one primary button per screen
+     --ds-accent-soft   the pale wash behind the current sidebar item, which carries no text
+                        contrast duty because the label on it is --ds-accent, not the wash.
+   ------------------------------------------------------------------------------------------ */
+
+.ds-root {
+  /* Surfaces */
+  --ds-ground: #fcf7ef; /* the page itself */
+  --ds-surface: #fffdf9; /* cards, the sidebar, the top bar */
+  --ds-surface-sunk: #faf4ea; /* table heads, hovers, the search field */
+
+  /* Lines */
+  --ds-line: #e7ddce;
+  --ds-line-strong: #d8c9b4;
+
+  /* Type */
+  --ds-ink: #2a211b;
+  --ds-muted: #5b5048;
+  --ds-faint: #8a7a6d;
+
+  /* The one accent */
+  --ds-accent: #8b3f22;
+  --ds-accent-solid: #b5542c;
+  --ds-accent-solid-hover: #99451f;
+  --ds-accent-soft: #f3dccb;
+  --ds-accent-wash: #fbeee3;
+}
+
+/* --------------------------------------------------------------------------------------------
+   2. THE PORTAL'S TYPEFACE.
+
+   The storefront is set in Cormorant Garamond and Geist. A dashboard set in them reads as a
+   page of the shop, and the owner asked for the opposite. So the portal uses the operating
+   system's own UI face — the same choice Linear, Stripe and the GitHub and Vercel dashboards
+   make, and the same one the reference admin makes — which is also why it feels native and
+   costs nothing to load.
+
+   It is declared on the shell rather than on components so that nothing can opt out of it.
    ------------------------------------------------------------------------------------------ */
 
 .ds-root {
@@ -30,49 +73,31 @@
     'Noto Sans', sans-serif;
 
   font-family: var(--ds-font);
-  /* 13px type on white is where hinting shows; smoothing keeps it from looking heavy. */
+  color: var(--ds-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Tabular figures are set per element (counts, prices, dates); proportional elsewhere. */
   font-feature-settings: 'cv11';
 }
 
 /* --------------------------------------------------------------------------------------------
-   2. HIDING THE STOREFRONT NAVIGATION.
+   3. HIDING THE STOREFRONT NAVIGATION.
 
-   `app/layout.tsx` renders the shop's `NavBar` and a padded `<main>` on every route, including
-   `/dashboard`, and the root layout is outside this task's remit. A portal does not want the
-   shop's primary navigation above its own top bar, so while a dashboard route is mounted the
-   fixed bar is hidden and the 96px of padding that holds pages clear of it is removed.
-
-   MATCHED STRUCTURALLY, NOT BY A DATA ATTRIBUTE. The previous version of this rule targeted
-   `header[data-condensed]` and `[data-nav-spacer]`, which were the atelier navbar's own hooks.
-   The storefront has since been reverted to the conventional shop, whose navbar is a plain
-   `body > nav` with no such attributes — so that rule silently stopped working and the shop's
-   logo sat on top of the portal. These two selectors are the shape of the root layout's own
-   markup (`<nav>` then `<main class="pt-24">`), and `:has()` keeps them scoped to the routes
-   that mount `.ds-root`. If the root layout's structure changes, this is what to revisit.
-
-   When the root layout can be edited, exclude the storefront nav from `/dashboard` there and
-   delete this block.
+   `components/layout/site-chrome.tsx` decides that the shop chrome does not render on
+   /dashboard at all, so there is nothing to override and no selector in this file reaching
+   into the root layout's markup.
    ------------------------------------------------------------------------------------------ */
 
-/* The storefront's navbar is no longer hidden from here. `components/layout/site-chrome.tsx`
-   decides that the shop chrome does not render on /dashboard at all, so there is nothing to
-   override and no selector in this file reaching into the root layout's markup. */
-
 /* --------------------------------------------------------------------------------------------
-   3. SCROLLBARS INSIDE THE SHELL.
+   4. SCROLLBARS INSIDE THE SHELL.
 
    The sidebar and the sheets scroll independently of the page. The platform's default
-   scrollbar is 15px of grey that lands right on a hairline border; a thin one keeps the
-   chrome quiet without hiding the fact that there is more to see (which `scrollbar-hide`,
-   used by the storefront, does).
+   scrollbar is 15px of grey that lands right on a hairline border; a thin warm one keeps the
+   chrome quiet without hiding the fact that there is more to see.
    ------------------------------------------------------------------------------------------ */
 
 .ds-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: var(--ds-line-strong) transparent;
 }
 
 .ds-scroll::-webkit-scrollbar {
@@ -81,14 +106,14 @@
 }
 
 .ds-scroll::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--ds-line-strong);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 9999px;
 }
 
 .ds-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: var(--ds-faint);
 }
 
 .ds-scroll::-webkit-scrollbar-track {
@@ -96,7 +121,7 @@
 }
 
 /* --------------------------------------------------------------------------------------------
-   4. THE CHECKBOX'S TICK.
+   5. THE CHECKBOX'S TICK.
 
    `CheckboxField` draws its own box — a native checkbox is a different size and shape on every
    platform, which in a dense form reads as a rendering fault. The box itself is Tailwind
@@ -109,4 +134,20 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: 12px 12px;
+}
+
+/* --------------------------------------------------------------------------------------------
+   6. THE NATIVE SELECT'S ARROW.
+
+   A `<select>` on a warm surface still draws the platform's grey chevron on a white strip in
+   some engines. Drawing our own in the muted ink and hiding the native one keeps the filter
+   row on the Products and Enquiries screens looking like one set of controls.
+   ------------------------------------------------------------------------------------------ */
+
+.ds-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235b5048' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4 6.5l4 4 4-4'/></svg>");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
 }

@@ -258,7 +258,7 @@ export default function MediaPage() {
             'p-4 transition-colors motion-reduce:transition-none',
             // The whole card is the drop target, and it says so while something is over it.
             // A dashed outline only while dragging: a permanent one reads as an empty state.
-            dragging && 'border-dashed border-gold bg-gold/5'
+            dragging && 'border-dashed border-[var(--ds-accent-solid)] bg-[var(--ds-accent-wash)]'
           )}
         >
           <p className={cn(LABEL, 'mb-3 flex flex-wrap items-center gap-2')}>
@@ -280,7 +280,7 @@ export default function MediaPage() {
           </p>
 
           {shown.length === 0 ? (
-            <p className="text-[13px] text-slate-500">
+            <p className="text-[13px] text-[var(--ds-faint)]">
               {library.loading
                 ? 'Loading the library…'
                 : query || kind || tag
@@ -300,13 +300,13 @@ export default function MediaPage() {
                     type="button"
                     onClick={() => setOpen(asset)}
                     className={cn(
-                      'block w-full rounded-lg border border-slate-200 bg-white p-2 text-left',
-                      'transition-colors hover:border-slate-300 hover:bg-slate-50',
+                      'block w-full rounded-lg border border-[var(--ds-line)] bg-[var(--ds-surface)] p-2 text-left',
+                      'transition-colors hover:border-[var(--ds-line-strong)] hover:bg-[var(--ds-surface-sunk)]',
                       FOCUS
                     )}
                   >
                     <Thumb url={asset.url} kind={asset.kind} large />
-                    <span className="mt-2 block truncate text-[13px] font-medium text-ink">
+                    <span className="mt-2 block truncate text-[13px] font-medium text-[var(--ds-ink)]">
                       {asset.alt || fileName(asset.url)}
                     </span>
                     <span className={cn(META, 'mt-0.5 block truncate')}>

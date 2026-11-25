@@ -319,7 +319,7 @@ export default function ContentPage() {
                       )
                     }
                     className={cn(
-                      'flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-slate-50',
+                      'flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-[var(--ds-surface-sunk)]',
                       FOCUS
                     )}
                   >
@@ -328,7 +328,7 @@ export default function ContentPage() {
                       strokeWidth={2}
                       aria-hidden="true"
                       className={cn(
-                        'shrink-0 text-slate-400 transition-transform motion-reduce:transition-none',
+                        'shrink-0 text-[var(--ds-faint)] transition-transform motion-reduce:transition-none',
                         open && 'rotate-90'
                       )}
                     />
@@ -356,7 +356,7 @@ export default function ContentPage() {
                 </div>
 
                 {open ? (
-                  <div className="border-t border-slate-200 px-4 pt-1 pb-2">
+                  <div className="border-t border-[var(--ds-line)] px-4 pt-1 pb-2">
                     {group.blocks.map(block => (
                       <BlockEditor
                         key={block.key}

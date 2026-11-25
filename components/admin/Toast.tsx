@@ -51,9 +51,9 @@ export default function Toast({
       {message ? (
         <div
           className={cn(
-            'pointer-events-auto flex max-w-[min(90vw,420px)] items-start gap-3 rounded-lg border bg-white p-3',
+            'pointer-events-auto flex max-w-[min(90vw,420px)] items-start gap-3 rounded-lg border bg-[var(--ds-surface)] p-3',
             'shadow-[0_8px_24px_-8px_rgb(15_23_42/0.18)]',
-            failed ? 'border-red-200' : 'border-slate-200',
+            failed ? 'border-red-200' : 'border-[var(--ds-line)]',
             'animate-in duration-200 fade-in slide-in-from-bottom-2 motion-reduce:animate-none'
           )}
         >
@@ -77,12 +77,12 @@ export default function Toast({
             <p
               className={cn(
                 'text-[12px] leading-4 font-semibold',
-                failed ? 'text-red-800' : 'text-ink'
+                failed ? 'text-red-800' : 'text-[var(--ds-ink)]'
               )}
             >
               {failed ? 'Problem' : 'Done'}
             </p>
-            <p className="mt-0.5 text-[13px] leading-5 text-slate-600">{message.text}</p>
+            <p className="mt-0.5 text-[13px] leading-5 text-[var(--ds-muted)]">{message.text}</p>
           </div>
 
           <button
@@ -90,7 +90,7 @@ export default function Toast({
             onClick={onDismiss}
             aria-label="Dismiss"
             className={cn(
-              '-mt-1 -mr-1 shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-ink',
+              '-mt-1 -mr-1 shrink-0 rounded-md p-1.5 text-[var(--ds-faint)] hover:bg-[var(--ds-surface-sunk)] hover:text-[var(--ds-ink)]',
               FOCUS
             )}
           >

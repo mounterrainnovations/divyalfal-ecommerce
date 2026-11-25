@@ -291,7 +291,7 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {GROUPS.map(group => (
               <section key={group.title} className={CARD}>
-                <div className="border-b border-slate-200 px-4 py-3">
+                <div className="border-b border-[var(--ds-line)] px-4 py-3">
                   <h2 className={SECTION_TITLE}>{group.title}</h2>
                   {group.note ? (
                     <p className={cn(META, 'mt-1 max-w-[68ch]')}>{group.note}</p>

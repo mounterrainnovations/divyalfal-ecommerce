@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { ImageOff, Plus, Search } from 'lucide-react';
 import DataTable, { type Column } from '@/components/admin/DataTable';
@@ -52,6 +53,14 @@ const rupees = (value: number) => `₹${value.toLocaleString('en-IN')}`;
  * always a server result and never a client-side filter of a stale page.
  */
 export default function ProductsPage() {
+  // The term the top bar handed over, if it handed one over. `?q=` is the portal's one
+  // cross-screen link: the search in the header submits here rather than filtering a table it
+  // cannot see, so this screen has to honour it on arrival AND on every later submission from
+  // the header (which re-pushes the same route with a new query and would otherwise be
+  // ignored, because the component is already mounted).
+  const params = useSearchParams();
+  const handed = params.get('q') ?? '';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -59,10 +68,20 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState('');
 
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState(handed);
+  const [search, setSearch] = useState(handed);
   const [sort, setSort] = useState<string>('newest');
   const [reloads, setReloads] = useState(0);
+
+  // A second search from the header re-pushes `/dashboard/products?q=…` while this component
+  // is already mounted, so the initialiser above never runs again. This is what makes the
+  // header's second and third search work. Setting state to the value it already holds is a
+  // no-op in React, so the mount pass costs nothing.
+  useEffect(() => {
+    setSearchInput(handed);
+    setSearch(handed);
+    setPage(1);
+  }, [handed]);
 
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [sheet, setSheet] = useState<{ mode: 'create' | 'edit'; id?: string } | null>(null);
@@ -130,13 +149,13 @@ export default function ProductsPage() {
             width={36}
             height={36}
             unoptimized
-            className="h-9 w-9 rounded-md border border-slate-200 object-cover"
+            className="h-9 w-9 rounded-md border border-[var(--ds-line)] object-cover"
           />
         ) : (
           <span
             title="No photographs"
             aria-label="No photographs"
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-400"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--ds-line)] bg-[var(--ds-surface-sunk)] text-[var(--ds-faint)]"
           >
             <ImageOff size={14} strokeWidth={1.75} aria-hidden="true" />
           </span>
@@ -152,7 +171,7 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={() => openEdit(product)}
-            className="block max-w-full truncate text-left text-[13px] font-medium text-ink hover:underline"
+            className="block max-w-full truncate text-left text-[13px] font-medium text-[var(--ds-ink)] hover:underline"
           >
             {product.name}
           </button>
@@ -166,7 +185,7 @@ export default function ProductsPage() {
       key: 'category',
       head: 'Category',
       className: 'hidden sm:table-cell',
-      cell: product => <span className="text-slate-600">{product.category}</span>,
+      cell: product => <span className="text-[var(--ds-muted)]">{product.category}</span>,
     },
     {
       key: 'price',
@@ -175,8 +194,8 @@ export default function ProductsPage() {
       cell: product =>
         product.sale && product.salePrice ? (
           <span className="inline-flex items-center justify-end gap-2 tabular-nums">
-            <s className="text-slate-400">{rupees(product.price)}</s>
-            <span className="font-medium text-ink">{rupees(product.salePrice)}</span>
+            <s className="text-[var(--ds-faint)]">{rupees(product.price)}</s>
+            <span className="font-medium text-[var(--ds-ink)]">{rupees(product.salePrice)}</span>
             <span className={badge('danger')}>Sale</span>
           </span>
         ) : (
@@ -191,7 +210,7 @@ export default function ProductsPage() {
         product.photos.length === 0 ? (
           <span className={badge('warn')}>None</span>
         ) : (
-          <span className="tabular-nums text-slate-600">{product.photos.length}</span>
+          <span className="tabular-nums text-[var(--ds-muted)]">{product.photos.length}</span>
         ),
     },
     {
@@ -257,7 +276,7 @@ export default function ProductsPage() {
                       size={14}
                       strokeWidth={1.75}
                       aria-hidden="true"
-                      className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400"
+                      className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[var(--ds-faint)]"
                     />
                     <TextInput
                       id="product-search"

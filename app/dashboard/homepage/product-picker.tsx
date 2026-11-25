@@ -72,7 +72,7 @@ export default function ProductPicker({
       }
     >
       <div className="space-y-6">
-        <p className="max-w-[68ch] text-[13px] text-slate-500">
+        <p className="max-w-[68ch] text-[13px] text-[var(--ds-faint)]">
           {picked.length === 0
             ? `Nothing is chosen, so this movement shows ${automatic}. Choose garments below to fix the selection instead.`
             : `${picked.length} chosen, shown in this order. Clear the selection to go back to ${automatic}.`}
@@ -81,7 +81,7 @@ export default function ProductPicker({
         {picked.length > 0 ? (
           <div>
             <p className={cn(LABEL, 'mb-2')}>Chosen, in order</p>
-            <ul className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
+            <ul className="divide-y divide-[var(--ds-line)] overflow-hidden rounded-md border border-[var(--ds-line)]">
               {picked.map((id, index) => {
                 const product = byId.get(id)!;
                 return (
@@ -91,7 +91,7 @@ export default function ProductPicker({
                   >
                     <span className={cn(LABEL, 'w-4 shrink-0 tabular-nums')}>{index + 1}</span>
                     <Photo product={product} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--ds-ink)]">
                       {product.name}
                     </span>
                     <button
@@ -130,29 +130,29 @@ export default function ProductPicker({
         <div>
           <p className={cn(LABEL, 'mb-2')}>The catalogue</p>
           {rest.length === 0 ? (
-            <p className="text-[13px] text-slate-500">
+            <p className="text-[13px] text-[var(--ds-faint)]">
               {products.length === 0
                 ? 'The catalogue is empty, so there is nothing to pick.'
                 : 'Every garment in the catalogue is already chosen.'}
             </p>
           ) : (
-            <ul className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200">
+            <ul className="divide-y divide-[var(--ds-line)] overflow-hidden rounded-md border border-[var(--ds-line)]">
               {rest.map(product => (
                 <li key={product.id}>
                   <button
                     type="button"
                     onClick={() => onChange([...picked, product.id])}
                     className={cn(
-                      'flex w-full items-center gap-3 px-2.5 py-2 text-left hover:bg-slate-50',
+                      'flex w-full items-center gap-3 px-2.5 py-2 text-left hover:bg-[var(--ds-surface-sunk)]',
                       FOCUS
                     )}
                   >
                     <Photo product={product} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--ds-ink)]">
                       {product.name}
                     </span>
                     <span className={cn(LABEL, 'shrink-0')}>{product.category}</span>
-                    <span className={cn(LABEL, 'shrink-0 text-ink')}>Add</span>
+                    <span className={cn(LABEL, 'shrink-0 text-[var(--ds-ink)]')}>Add</span>
                   </button>
                 </li>
               ))}
@@ -172,8 +172,8 @@ function Photo({ product }: { product: Product }) {
         title="No photographs"
         aria-label="No photographs"
         className={cn(
-          'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200',
-          'bg-slate-50 text-[11px] text-slate-400'
+          'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--ds-line)]',
+          'bg-[var(--ds-surface-sunk)] text-[11px] text-[var(--ds-faint)]'
         )}
       >
         —
@@ -187,7 +187,7 @@ function Photo({ product }: { product: Product }) {
       width={36}
       height={36}
       unoptimized
-      className="h-9 w-9 shrink-0 rounded-md border border-slate-200 object-cover"
+      className="h-9 w-9 shrink-0 rounded-md border border-[var(--ds-line)] object-cover"
     />
   );
 }
