@@ -44,16 +44,33 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize filters from URL params
+  /*
+   * Filters that arrived in the URL.
+   *
+   * `categories` has always been read here — it is how the homepage tiles and the navigation
+   * menu link into this page. `q` is new, and it is what makes the magnifier in the header a
+   * real control: this screen has always kept a `search` string in `filters` and
+   * `/api/products` has always accepted one, but nothing could ever put a term into it from
+   * outside, so no link could express a search.
+   *
+   * `q` rather than `search` in the URL because it is the shorter thing to type by hand and
+   * the one every other shop uses; `search` stays the name of the filter and of the API
+   * parameter, so only this line translates between them.
+   *
+   * Both branches run on every change of `searchParams`, so clearing `?q=` in the address bar
+   * clears the term rather than leaving the previous one stuck in a field nobody can see.
+   */
   useEffect(() => {
     const categoriesParam = searchParams.get('categories');
-    if (categoriesParam) {
-      const categoryList = categoriesParam.split(',').map(cat => decodeURIComponent(cat.trim()));
-      setFilters(prev => ({
-        ...prev,
-        categories: categoryList,
-      }));
-    }
+    const searchParam = searchParams.get('q');
+
+    setFilters(prev => ({
+      ...prev,
+      categories: categoriesParam
+        ? categoriesParam.split(',').map(cat => decodeURIComponent(cat.trim()))
+        : prev.categories,
+      search: searchParam ?? '',
+    }));
   }, [searchParams]);
 
   // Control Animation - Similar to navbar

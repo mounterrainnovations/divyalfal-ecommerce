@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useShowcase } from '@/lib/hooks/useShowcase';
-import { CONTAINER, HEADING, HEADING_GAP, SIZES } from '@/components/sections/section-shell';
+import { CONTAINER, HEADING, HEADING_GAP, SECTION, SIZES } from '@/components/sections/section-shell';
 import { cn } from '@/lib/utils';
 
 /**
@@ -28,10 +28,15 @@ import { cn } from '@/lib/utils';
  * 2. `bg-gray-50` is #f9fafb. Against a white page it is not a band; it is white. So the
  *    160px of vertical padding had no visible container and read as the page having stopped.
  *
- * Hence: half a `SECTION` on top, because the hero already supplies the other half (28px +
- * the hero's 24px = 56px = `py-14` below `md`; 40px + 48px = 88px ≈ `py-20` above it), a full
- * `SECTION` underneath where the next band supplies nothing, and a hairline top and bottom so
- * the tint has edges. The air is now inside something.
+ * Hence: a hairline top and bottom so the tint has edges — the air is now inside something —
+ * and, for a while, half a `SECTION` on top because the hero supplied the other half in
+ * padding.
+ *
+ * THAT HALF IS BACK TO A FULL `SECTION` NOW, and the reason is worth keeping. The hero was
+ * rebuilt full-bleed to the owner's mock-up, which meant its `p-6 sm:p-8 md:p-12` went away.
+ * That padding was this band's top half. Left alone, the seam would have closed from 89px to
+ * 28px and the tint would have looked stuck to the photograph. The two files have to move
+ * together: a hero with padding wants `pt-7 md:pt-10` here, a hero without it wants `SECTION`.
  */
 const Categories = () => {
   const { categories: all } = useShowcase();
@@ -42,7 +47,7 @@ const Categories = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="border-y border-gray-200 bg-gray-50 pt-7 pb-14 md:pt-10 md:pb-20">
+    <section className={cn(SECTION, "border-y border-gray-200 bg-gray-50")}>
       <div className={CONTAINER}>
         <h2 className={cn(HEADING, 'text-center', HEADING_GAP)}>Shop by Category</h2>
 

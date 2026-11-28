@@ -16,8 +16,25 @@ import { siteCopy } from '@/lib/content/site-copy';
 
 let pathname = '/';
 
+/**
+ * `useRouter` is here for `NavSearch`, the magnifier at the right end of the bar: it pushes
+ * `/products?q=…` on submit. The mock records the pushes so a test can assert where a search
+ * actually goes, rather than only that the field exists.
+ */
+const pushed: string[] = [];
+
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname,
+  useRouter: () => ({
+    push: (href: string) => {
+      pushed.push(href);
+    },
+    replace: () => {},
+    prefetch: () => {},
+    back: () => {},
+    forward: () => {},
+    refresh: () => {},
+  }),
 }));
 
 /** `useShowcase` fetches on mount; nothing here wants a real request. */

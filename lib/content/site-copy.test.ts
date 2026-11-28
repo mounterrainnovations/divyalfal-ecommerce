@@ -65,9 +65,13 @@ describe('siteCopy', () => {
     );
   });
 
-  it('spells the founder Alpa Rawat everywhere', () => {
+  it('spells the founder Alpa Rawat everywhere, including the new hero byline', () => {
     expect(JSON.stringify(siteCopy)).not.toContain('Alpa Rawal');
     expect(siteCopy.home.testimonials[0].quote).toContain('Alpa Rawat');
+    // The hero byline was added from a mock-up that spelled it `Rawal`. It is the most
+    // prominent place her name appears on the site, so it is pinned here too: the published
+    // spelling is one decision, not one per component.
+    expect(siteCopy.home.hero.byline).toBe('by Alpa Rawat');
   });
 
   it('does not revive the commented-out founder card', () => {
@@ -87,8 +91,32 @@ describe('siteCopy', () => {
     expect(JSON.stringify(siteCopy)).not.toContain('"href":"#"');
   });
 
-  it('carries only the wordmark and the two media sources in the hero', () => {
-    expect(Object.keys(siteCopy.home.hero)).toEqual(['wordmark', 'desktopImage', 'mobileVideo']);
+  it('carries the wordmark, the two media sources and the hero copy', () => {
+    /*
+     * This list grew. The hero had no words at all — a wordmark over a photograph — until the
+     * owner supplied a mock-up with an eyebrow, a byline, a sentence, two buttons and three
+     * marks. They live here rather than in the component so the Content screen can edit them,
+     * which is where every other line on the shop lives.
+     *
+     * The list is asserted in order rather than as a set so that a key added without a thought
+     * about where it belongs shows up as a failure.
+     */
+    expect(Object.keys(siteCopy.home.hero)).toEqual([
+      'wordmark',
+      'desktopImage',
+      'mobileVideo',
+      'eyebrow',
+      'byline',
+      'blurb',
+      'primaryCta',
+      'secondaryCta',
+      'marks',
+    ]);
+    // Every mark names a drawing the hero maps to an icon it already imports, never a file.
+    expect(siteCopy.home.hero.marks.map(mark => mark.icon)).toEqual(['needle', 'bloom', 'form']);
+    // Both buttons must land on a page that exists; a hero CTA into a 404 is the worst of them.
+    expect(siteCopy.home.hero.primaryCta.href).toBe('/products');
+    expect(siteCopy.home.hero.secondaryCta.href).toBe('/contact-us');
     // The brand's own spelling, not an uppercased presentation of it: Task 5 applies
     // `text-transform: uppercase` and the eyebrow tracking in CSS.
     expect(siteCopy.home.hero.wordmark).toBe('Divyafal');
@@ -338,7 +366,7 @@ describe('siteCopy snapshot', () => {
   it('has not gained or lost a single leaf', () => {
     // Explicit, so an added or removed key is a loud failure rather than a quiet
     // snapshot update. Change this number only together with an approved copy change.
-    expect(Object.keys(flat)).toHaveLength(370);
+    expect(Object.keys(flat)).toHaveLength(388);
   });
 
   // The 370 above is a string count. The numeric leaves (garment prices, testimonial ratings)
@@ -346,7 +374,7 @@ describe('siteCopy snapshot', () => {
   // seed stores them, so the database holds 370 + 13 = 383 blocks, not 370.
   it('has not gained or lost a single numeric leaf', () => {
     expect(Object.keys(numericLeaves(all))).toHaveLength(13);
-    expect(Object.keys(all)).toHaveLength(383);
+    expect(Object.keys(all)).toHaveLength(401);
   });
 
   it('matches the committed copy, string for string', () => {

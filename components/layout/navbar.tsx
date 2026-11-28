@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteCopy } from '@/lib/content/site-copy';
+import AnnouncementBar from '@/components/layout/announcement-bar';
+import NavSearch from '@/components/layout/nav-search';
 import {
   NavCategoryCards,
   NavCategoryList,
@@ -184,7 +186,7 @@ const NavBar = () => {
   return (
     <nav
       className={cn(
-        'fixed top-0 right-0 left-0 z-50 bg-white transition-shadow duration-300',
+        'fixed top-0 right-0 left-0 z-50 bg-[var(--paper)] transition-shadow duration-300',
         isScrolled
           ? 'shadow-[0_1px_0_0_rgba(0,0,0,0.08),0_8px_24px_-20px_rgba(0,0,0,0.45)]'
           : 'border-b border-gray-100'
@@ -203,7 +205,26 @@ const NavBar = () => {
         }
       }}
     >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/*
+        The announcement strip lives inside this fixed header rather than above it, because a
+        bar that scrolls away while the navigation stays put leaves the navigation sitting on
+        whatever was underneath. One fixed block, one height for `SiteChrome` to clear.
+
+        It folds away on scroll — height to zero rather than `display: none`, so it animates
+        with the rest of the bar — and `aria-hidden` goes with it so its two links leave the
+        tab order at the same moment they leave the screen.
+      */}
+      <div
+        aria-hidden={isScrolled}
+        className={cn(
+          'overflow-hidden transition-[height] duration-300 motion-reduce:transition-none',
+          isScrolled ? 'h-0' : 'h-10'
+        )}
+      >
+        <AnnouncementBar />
+      </div>
+
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8">
         {/* Desktop */}
         <div
           className={cn(
@@ -291,6 +312,10 @@ const NavBar = () => {
               </li>
             ))}
           </ul>
+
+          {/* The right end. One affordance, because one of the three in the mock-up is real:
+              see the comment in `nav-search.tsx` for why the heart and the bag are not here. */}
+          <NavSearch className="shrink-0" />
         </div>
 
         {/* Mobile bar: logo centred, menu button right, as before. */}

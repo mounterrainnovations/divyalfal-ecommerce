@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { flattenLeaves, numericLeaves, stringLeaves } from './flatten';
 import { siteCopy } from './site-copy';
 
-const STRING_LEAVES = 370; // asserted independently by site-copy.test.ts
+const STRING_LEAVES = 388; // asserted independently by site-copy.test.ts
 // Four best-seller prices, four fresh-arrival prices, five testimonial ratings.
 const NUMERIC_LEAVES = 13;
 

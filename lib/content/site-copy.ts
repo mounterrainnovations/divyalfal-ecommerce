@@ -36,6 +36,19 @@
  *     an extraction one.
  */
 export const siteCopy = {
+  /*
+   * The strip above the navigation.
+   *
+   * Transcribed from the owner's mock-up, like the hero's copy. `appointment` points at the
+   * contact page because that is the only way this shop can actually take a booking today —
+   * there is no scheduling system, and a link that opened nothing would be worse than no
+   * link. The words are the owner's; the destination is the truthful one.
+   */
+  announcement: {
+    tagline: ['Custom Couture', 'Occasion Wear', 'Contemporary Ethnic'],
+    appointment: { label: 'Book a Studio Appointment', href: '/contact-us' },
+  },
+
   nav: {
     logo: {
       src: '/DivyafalLogo.png',
@@ -59,6 +72,43 @@ export const siteCopy = {
       desktopImage: '/slideshow/dmw-136.jpg',
       mobileVideo:
         'https://duwwgyobnpuqsqdromzj.supabase.co/storage/v1/object/public/product-images/bg_video.webm',
+
+      /*
+       * The hero's words.
+       *
+       * EVERY STRING BELOW CAME FROM THE OWNER'S OWN MOCK-UP, transcribed, not written here.
+       * The hero had no copy at all before this — a wordmark over a photograph — so these are
+       * new to the codebase but not new to the brand: they are what the owner asked the page
+       * to say. They live in `siteCopy` rather than in the component so the Content screen can
+       * edit them once they are seeded, which is where every other line on the shop lives.
+       */
+      eyebrow: 'Fashion Studio',
+      /*
+       * `Rawat`, not `Rawal`, and this is the one line in the mock-up that was not copied
+       * from it verbatim.
+       *
+       * The owner's mock-up reads "BY ALPA RAWAL", and so does the logo asset in the bar
+       * directly above this. But the live testimonials spell her `Alpa Rawat`, this file's
+       * own header records that as a deliberate decision, and a test enforces it. A mock-up
+       * is a drawing; a surname is a fact about a person, and two of the three signals here
+       * could equally be copies of the same original error. So the published decision stands
+       * until the owner says otherwise — at which point this line and the three in the
+       * testimonials change together, and so does the logo.
+       */
+      byline: 'by Alpa Rawat',
+      blurb: 'Timeless ethnic and contemporary couture, crafted for every occasion.',
+      primaryCta: { label: 'Explore Collections', href: '/products' },
+      secondaryCta: { label: 'Book a Consultation', href: '/contact-us' },
+      /*
+       * The three marks under the buttons. `icon` names a drawing, not a file: the component
+       * maps each to a line icon it already imports, so nothing here points at an asset that
+       * has to exist.
+       */
+      marks: [
+        { icon: 'needle', label: 'Custom Couture' },
+        { icon: 'bloom', label: 'Occasion Wear' },
+        { icon: 'form', label: 'Personalised Styling' },
+      ],
     },
 
     categories: {

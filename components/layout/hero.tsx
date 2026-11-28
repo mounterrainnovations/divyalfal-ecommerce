@@ -1,52 +1,51 @@
+import Link from 'next/link';
+import { ArrowRight, Flower2, Shirt, Sparkles, type LucideIcon } from 'lucide-react';
 import HeroSlideshow, { type HeroSlide } from '@/components/layout/hero-slideshow';
 import { siteCopy } from '@/lib/content/site-copy';
 
 /**
  * The homepage hero.
  *
- * ## What was wrong with the sizing
+ * ## Full bleed, and what that cost
  *
- * The box was `h-screen` with its own `p-6 sm:p-8 md:p-12`, and the photographs in
- * `/public/slideshow` are all 1400x1120 — 5:4, landscape, a documentary frame of a real show
- * with the models spread across the full width of it. On a 390x844 phone the inner box came
- * out 342 wide by 700 tall: a 0.49 ratio asked of a 1.25 picture, so `object-cover` threw away
- * 61% of every photograph's width and showed the middle third of a five-model line-up. That is
- * "hero picture hai vo size nahi hai" exactly — not the file, the box around it.
+ * The hero used to be an inset ratio box: `p-6 sm:p-8 md:p-12` around a rounded picture. The
+ * owner's mock-up is edge to edge with the words lying on the photograph, so the padding and
+ * the rounding are gone and the plate runs to the viewport on all four sides.
  *
- * So the box is now a ratio rather than a viewport height, and the ratio is chosen to stay near
- * the source's own 1.25 and to widen only as the viewport gives it the width to widen with:
- * square on a phone (a 20% crop off the sides, which every one of these frames survives),
- * 4:3 on a tablet (within a few percent of the source, so essentially the whole photograph),
- * 16:9 on a desktop, capped so the hero and the navigation together still clear the fold on a
- * laptop. Because every one of those is a ratio and not a measurement, the space is reserved
- * before the first byte of the image arrives and nothing shifts as it loads.
+ * That padding was load-bearing. `components/sections/categories.tsx` deliberately takes half
+ * a `SECTION` on top because the hero below it was supplying 24-48px of white — it says so in
+ * its own comment. Removing the padding here without restoring that section's full top padding
+ * would have closed the seam to 28px and made the band look stuck to the photograph. Both
+ * files changed together; neither is correct alone.
  *
- * The outer padding stays. It is what gives `components/sections/categories.tsx` the half of
- * its top rhythm that it deliberately does not supply itself — see the comment there.
+ * ## Why a viewport height is right here and was wrong before
  *
- * ## Why the mobile-only video is gone
+ * The previous hero was `h-screen` and that was the bug: a 0.49 ratio asked of a 1.25
+ * photograph threw away 61% of every frame on a phone. The fix was ratios. This hero is tall
+ * again — but it is tall because it now has to hold five stacked things (eyebrow, wordmark,
+ * byline, sentence, two buttons, three marks) and a photograph behind them, and those have a
+ * real minimum height. So the box is `min-h` plus a ratio: the ratio governs on a wide screen
+ * where it is generous, and the minimum governs on a narrow one where the content is what
+ * decides. `svh` rather than `vh` so a phone's collapsing address bar does not resize it
+ * mid-scroll.
  *
- * The hero used to render a remote Supabase `.webm` below 768px and the photograph above it,
- * decided by `useMedia`, which starts `false` on the server and corrects itself in an effect —
- * so a phone painted the desktop photograph and then swapped it for a video, and the brief's
- * "3-4 images that slide" would never once have been seen on the device most visitors use.
- * One hero at every width is the point of the change. The video's URL is still in
- * `siteCopy.home.hero.mobileVideo`, so nothing has been lost, only unrendered.
+ * On a phone the content sits over a square-ish crop rather than beside the picture, because
+ * the alternative at 390px is four words per line.
  */
 
 /**
  * The four plates.
  *
  * All four are Divyafal's own runway photography, already in the repository, from the same
- * gallery the Atelier section plays; the first is the one the hero shows today, kept first and
- * read from `siteCopy` so that the hero's canonical image stays canonical. The other two files
- * in that folder are not here on purpose: `dmw-17.jpg` is the lamp-lighting ceremony (an event
- * photograph, not a garment one) and `dmw-326.jpg` is a thirty-person company call with an
- * empty runway filling its lower third, which is the first thing a 16:9 crop would keep.
+ * gallery the Atelier section plays; the first is the one the hero has always shown, kept
+ * first and read from `siteCopy` so the canonical image stays canonical. The other two files
+ * in that folder are excluded on purpose: `dmw-17.jpg` is the lamp-lighting ceremony (an event
+ * photograph, not a garment one) and `dmw-326.jpg` is a thirty-person company call whose lower
+ * third is empty runway, which is the first thing a wide crop keeps.
  *
- * `position` is tuned per plate, and all of it is vertical: the two walking shots were taken
- * with the hall's lighting truss in the top quarter of the frame, so their focal point sits
- * low enough that the widest crop drops the rig rather than the hems.
+ * `position` is tuned per plate, and all of it is vertical: these were shot with the hall's
+ * lighting truss in the top quarter, so the focal point sits low enough that the widest crop
+ * drops the rig rather than the hems.
  */
 const HERO_SLIDES: HeroSlide[] = [
   {
@@ -71,45 +70,134 @@ const HERO_SLIDES: HeroSlide[] = [
   },
 ];
 
+/**
+ * The three marks, by name.
+ *
+ * `siteCopy` names a drawing rather than a file so that editing the copy can never point at an
+ * asset that does not exist. An unknown name falls back to the sparkle rather than rendering
+ * nothing, because a missing icon beside a present label reads as a broken image.
+ */
+const MARK_ICONS: Record<string, LucideIcon> = {
+  needle: Sparkles,
+  bloom: Flower2,
+  form: Shirt,
+};
+
 const Hero = () => {
+  const { hero } = siteCopy.home;
+
   return (
-    <section className="relative w-full p-6 sm:p-8 md:p-12">
-      <div className="relative aspect-square w-full overflow-hidden rounded-md sm:aspect-4/3 lg:aspect-video lg:max-h-[calc(100svh_-_9rem)]">
+    <section className="relative w-full">
+      <div className="relative min-h-[34rem] w-full sm:min-h-[36rem] lg:aspect-[21/9] lg:min-h-[38rem] lg:max-h-[calc(100svh_-_7.5rem)]">
         <HeroSlideshow
           slides={HERO_SLIDES}
           /* Named for what it is rather than "carousel", which a screen reader already says
              via `aria-roledescription`. */
-          label={`${siteCopy.home.hero.wordmark} runway photographs`}
-          /* The hero is the full width of the viewport at every breakpoint, minus its own
-             padding. Without this, next/image assumes the same thing but cannot prove it, and
-             serves its largest render to a phone. */
+          label={`${hero.wordmark} runway photographs`}
+          /* Edge to edge at every width, so the hint is exact and next/image stops serving its
+             largest render to a phone. */
           sizes="100vw"
         >
           {/*
-            The scrim.
+            The scrim, and it is two gradients rather than one.
 
-            It is a gradient and not a flat wash because these photographs are lit from above
-            and already dark along the bottom edge; a uniform veil would take the colour out of
-            the garments, which are the only reason the picture is there. This darkens only
-            where the wordmark sits.
+            Left to right is what makes the words legible: these photographs are bright through
+            the middle, and the text column sits on the left third. Bottom to top is what keeps
+            the dots and the marks readable where the runway floor is palest. A single flat veil
+            would do both and take the colour out of the garments, which are the only reason
+            the photograph is there at all.
           */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/10"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
           />
 
-          {/*
-            The wordmark, and the page's `h1`.
+          <div className="absolute inset-0 z-10 flex items-center">
+            <div className="mx-auto w-full max-w-[1600px] px-6 pb-16 sm:px-8 lg:px-14 lg:pb-12">
+              <div className="max-w-xl">
+                <p className="text-[11px] tracking-[0.34em] text-white/75 uppercase sm:text-xs">
+                  {hero.eyebrow}
+                </p>
 
-            The old hero had its overlay commented out, so the homepage shipped with no
-            first-level heading at all — the document outline began at the "Shop by Category"
-            `h2`. The brand name is the honest thing to put there: it is already in `siteCopy`,
-            it is what the shop is called, and it needs no new sentence invented for it.
-          */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-6 pb-14 md:pb-20">
-            <h1 className="font-serif text-4xl font-normal tracking-[0.14em] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] sm:text-5xl lg:text-6xl">
-              {siteCopy.home.hero.wordmark}
-            </h1>
+                {/*
+                  The page's `h1`. The old hero had its overlay commented out, so the homepage
+                  shipped with no first-level heading at all and the document outline began at
+                  the "Shop by Category" `h2`.
+                */}
+                <h1 className="mt-4 font-serif text-5xl leading-[0.95] font-normal tracking-[0.1em] text-white uppercase sm:text-6xl lg:text-7xl">
+                  {hero.wordmark}
+                </h1>
+
+                {/* The byline between two rules, as the mock-up has it. The rules are
+                    decoration and are hidden from the reader; the words are not. */}
+                <p className="mt-5 flex items-center gap-4 text-[11px] tracking-[0.28em] text-white/80 uppercase sm:text-xs">
+                  <span aria-hidden="true" className="h-px w-10 bg-white/35 sm:w-14" />
+                  {hero.byline}
+                  <span aria-hidden="true" className="h-px w-10 bg-white/35 sm:w-14" />
+                </p>
+
+                <p className="mt-6 max-w-md text-base leading-relaxed text-white/90 sm:text-lg">
+                  {hero.blurb}
+                </p>
+
+                <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
+                  <Link
+                    href={hero.primaryCta.href}
+                    className="group inline-flex items-center gap-2.5 bg-[var(--accent-sale)] px-6 py-3.5 text-[13px] tracking-[0.08em] text-white transition-colors duration-200 hover:bg-[#751f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white motion-reduce:transition-none sm:px-7"
+                  >
+                    {hero.primaryCta.label}
+                    <ArrowRight
+                      size={16}
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                      className="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                    />
+                  </Link>
+
+                  <Link
+                    href={hero.secondaryCta.href}
+                    className="inline-flex items-center border border-white/70 px-6 py-3.5 text-[13px] tracking-[0.08em] text-white transition-colors duration-200 hover:bg-white hover:text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white motion-reduce:transition-none sm:px-7"
+                  >
+                    {hero.secondaryCta.label}
+                  </Link>
+                </div>
+
+                {/*
+                  The three marks. A list, because that is what it is, and the separators are
+                  borders on the items rather than characters between them — a pipe typed into
+                  the markup is read aloud.
+                */}
+                <ul className="mt-10 flex flex-wrap items-stretch gap-x-5 gap-y-4 sm:gap-x-7 lg:mt-12">
+                  {hero.marks.map((mark, index) => {
+                    const Icon = MARK_ICONS[mark.icon] ?? Sparkles;
+                    return (
+                      <li
+                        key={mark.label}
+                        className={
+                          index === 0
+                            ? 'flex items-center gap-2.5'
+                            : 'flex items-center gap-2.5 border-l border-white/25 pl-5 sm:pl-7'
+                        }
+                      >
+                        <Icon
+                          size={18}
+                          strokeWidth={1.4}
+                          aria-hidden="true"
+                          className="shrink-0 text-white/70"
+                        />
+                        <span className="max-w-[7rem] text-[11px] leading-tight tracking-[0.1em] text-white/85 uppercase sm:text-xs">
+                          {mark.label}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
           </div>
         </HeroSlideshow>
       </div>

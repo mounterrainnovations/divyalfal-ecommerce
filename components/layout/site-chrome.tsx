@@ -34,8 +34,14 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   return (
     <>
       <NavBar />
-      {/* Clears the fixed navbar. The portal, above, gets neither. */}
-      <main className="pt-24">{children}</main>
+      {/*
+        Clears the fixed header, which is now the announcement strip (40px) plus the bar
+        (96px at rest). It is a single number because the header is a single fixed block —
+        see the comment in `navbar.tsx` about why the strip lives inside it. The header
+        condenses to 72px on scroll; this does not follow it, because a padding that shrank
+        as you scrolled would pull the whole page up under your eyes.
+      */}
+      <main className="pt-[136px]">{children}</main>
     </>
   );
 }
