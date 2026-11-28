@@ -55,7 +55,7 @@ function spec(...paragraphs: string[]): string {
 const CARE =
   '<strong>Care</strong> — dry clean only. Store folded in muslin, away from direct sunlight.';
 
-const MADE = '<strong>Made in Bhopal</strong> · Divyafal atelier · Alpa Rawat';
+const MADE = '<strong>Made in Bhopal</strong> · Divyafal atelier · Alpa Rawal';
 
 export const CATALOGUE: SeedProduct[] = [
   // --- public/mostrec ---------------------------------------------------------------------

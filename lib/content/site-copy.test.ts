@@ -22,14 +22,14 @@ describe('siteCopy', () => {
   it('preserves all five testimonials verbatim and unattributed', () => {
     expect(siteCopy.home.testimonials).toHaveLength(5);
     expect(siteCopy.home.testimonials[0].quote).toBe(
-      'Wearing Divyafal by Alpa Rawat was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.'
+      'Wearing Divyafal by Alpa Rawal was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.'
     );
     expect(siteCopy.home.testimonials.every(t => !('name' in t) || t.name === '')).toBe(true);
   });
 
   it('preserves the typographic apostrophes in the testimonials', () => {
     expect(siteCopy.home.testimonials[1].quote).toBe(
-      'Alpa Rawat’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.'
+      'Alpa Rawal’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.'
     );
     expect(siteCopy.home.testimonials[2].quote).toBe(
       'Divyafal’ lives up to its name. My outfit felt like a rare treasure timeless, personal, and heirloom-worthy.'
@@ -65,13 +65,16 @@ describe('siteCopy', () => {
     );
   });
 
-  it('spells the founder Alpa Rawat everywhere, including the new hero byline', () => {
-    expect(JSON.stringify(siteCopy)).not.toContain('Alpa Rawal');
-    expect(siteCopy.home.testimonials[0].quote).toContain('Alpa Rawat');
+  it('spells the founder Alpa Rawal everywhere, including the hero byline', () => {
+    // `Rawat` was the published spelling until the owner confirmed otherwise. It is asserted
+    // absent rather than merely unused, because it survived in two testimonials, a seed and a
+    // snapshot after the first attempt to remove it.
+    expect(JSON.stringify(siteCopy)).not.toContain('Alpa Rawat');
+    expect(siteCopy.home.testimonials[0].quote).toContain('Alpa Rawal');
     // The hero byline was added from a mock-up that spelled it `Rawal`. It is the most
     // prominent place her name appears on the site, so it is pinned here too: the published
     // spelling is one decision, not one per component.
-    expect(siteCopy.home.hero.byline).toBe('by Alpa Rawat');
+    expect(siteCopy.home.hero.byline).toBe('by Alpa Rawal');
   });
 
   it('does not revive the commented-out founder card', () => {

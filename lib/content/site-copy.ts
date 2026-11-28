@@ -17,9 +17,18 @@
  *      placeholder phone and email are gone, including where the policy pages
  *      printed the placeholder email in prose. Neither placeholder is written
  *      anywhere in this file, comments included, so a raw grep gate stays green.
- *   2. The founder is spelled `Alpa Rawat`, as the live testimonials spell her. A
- *      misspelling of her surname sits in a commented-out block and is not carried
- *      at all: markup the client switched off is not published content.
+ *   2. The founder is spelled `Alpa Rawal`.
+ *
+ *      This was wrong for a while and is worth recording. The original transcription
+ *      standardised on `Rawat` because the two live testimonials spelled it that way,
+ *      and `Rawal` — which is what the logo asset says — was written off as the
+ *      misspelling. It was the other way round: the owner has confirmed `Rawal`. So
+ *      the testimonials carried her surname wrong on the public homepage, and the
+ *      logo was right all along.
+ *
+ *      The lesson is the ordering, not the letter: a majority of occurrences in a
+ *      codebase is not evidence about a person's name, because every one of them can
+ *      descend from the same first mistake. Only the owner settles it.
  *   3. `footer.social` is empty -- the old markup had only placeholder anchors and
  *      no real profile URLs have been supplied.
  *
@@ -84,18 +93,11 @@ export const siteCopy = {
        */
       eyebrow: 'Fashion Studio',
       /*
-       * `Rawat`, not `Rawal`, and this is the one line in the mock-up that was not copied
-       * from it verbatim.
-       *
-       * The owner's mock-up reads "BY ALPA RAWAL", and so does the logo asset in the bar
-       * directly above this. But the live testimonials spell her `Alpa Rawat`, this file's
-       * own header records that as a deliberate decision, and a test enforces it. A mock-up
-       * is a drawing; a surname is a fact about a person, and two of the three signals here
-       * could equally be copies of the same original error. So the published decision stands
-       * until the owner says otherwise — at which point this line and the three in the
-       * testimonials change together, and so does the logo.
+       * `Rawal`, which is what the owner's mock-up and the logo asset both say, and what
+       * the owner has since confirmed. The testimonials were corrected to match; see the
+       * note at the top of this file for why they were wrong in the first place.
        */
-      byline: 'by Alpa Rawat',
+      byline: 'by Alpa Rawal',
       blurb: 'Timeless ethnic and contemporary couture, crafted for every occasion.',
       primaryCta: { label: 'Explore Collections', href: '/products' },
       secondaryCta: { label: 'Book a Consultation', href: '/contact-us' },
@@ -238,14 +240,14 @@ export const siteCopy = {
       {
         name: '',
         quote:
-          'Wearing Divyafal by Alpa Rawat was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.',
+          'Wearing Divyafal by Alpa Rawal was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.',
         image: '/testimonials/1.png',
         rating: 5,
       },
       {
         name: '',
         quote:
-          'Alpa Rawat’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.',
+          'Alpa Rawal’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.',
         image: '/testimonials/2.png',
         rating: 5,
       },

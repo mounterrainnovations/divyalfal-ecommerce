@@ -70,7 +70,7 @@ export const DEFAULT_TESTIMONIALS: Testimonial[] = [
     id: 'seed-1',
     name: '',
     message:
-      'Wearing Divyafal by Alpa Rawat was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.',
+      'Wearing Divyafal by Alpa Rawal was an experience not just a dress, but a story. I felt truly unique and ethereal in my lehenga.',
     image: '/testimonials/1.png',
     rating: 5,
   },
@@ -78,7 +78,7 @@ export const DEFAULT_TESTIMONIALS: Testimonial[] = [
     id: 'seed-2',
     name: '',
     message:
-      'Alpa Rawat’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.',
+      'Alpa Rawal’s craftsmanship is unmatched. Every stitch reflects artistry, blending structure and elegance into wearable art.',
     image: '/testimonials/2.png',
     rating: 5,
   },

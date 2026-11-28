@@ -8,7 +8,7 @@
 
 ## 1. Intent and why
 
-Divyafal is a luxury couture studio (est. 2010, Bhopal; founder-designer Alpa Rawat). The site
+Divyafal is a luxury couture studio (est. 2010, Bhopal; founder-designer Alpa Rawal). The site
 currently works but looks like a generic Tailwind storefront: `rounded-3xl` cards, pastel gradient
 banners (`rose-100 via-pink-50 to-purple-100`), default Inter/Times fallbacks, twelve stacked
 sections of near-equal weight. Nothing in it signals the price of the clothes.
@@ -86,7 +86,10 @@ Settled with the owner after a builder review of this document.
    read/unread and archive. The contact form stops discarding submissions. No email service.
 4. **Both content bugs are fixed as bugs, not content changes.** The footer takes the real phone
    (9977057045) and email (divyafalthecreations@gmail.com) from `contact-form.tsx`; the founder is
-   standardised to **Alpa Rawat** (the spelling used twice). Social links stay `href="#"` until the
+   standardised to **Alpa Rawal** (CORRECTED 2026-11-28: this line originally said `Rawat`,
+   reasoning that it was "the spelling used twice". The owner has confirmed `Rawal`, which is
+   also what the logo asset says — the two testimonials had carried her surname wrong, and
+   counting occurrences was never evidence about a person's name). Social links stay `href="#"` until the
    owner supplies real URLs — tracked in §13.
 
 **Builder's calls, recorded here so a planner does not reopen them:**
